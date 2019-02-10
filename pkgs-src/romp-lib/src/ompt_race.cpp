@@ -2334,6 +2334,18 @@ CompileConditions(char& direction,  LockSetPtr& hist_lockset, LockSetPtr& cur_lo
     return ret;
 }
 
+void record(LabelPtr& label, int& current_access_type, void* address)
+{
+   string label_str = "?";
+   if (label != nullptr && label != NULL)
+       label_str = label->ToString();
+   string access_type = to_string(current_access_type);
+   string address_str = to_string((uint64_t)address);
+   string rec = label_str + " | " + access_type + " | " + address_str;
+   printf("%s\n", rec.c_str());
+}
+
+
 static inline bool 
 ReadShadowDataAndCheck(
         AccessHistory* from_me, LabelPtr& label, LockSetPtr& lockset, 
@@ -2814,6 +2826,7 @@ void ompt_finalize(ompt_data_t *tool_data)
            GenerateReportDynamic(rec.type, rec.instn_addr, rec.address);
         }
     }
+    //if (fp != NULL) fclose(gTraceFile);
 }
 
 ompt_start_tool_result_t* ompt_start_tool(
@@ -2841,12 +2854,18 @@ ompt_start_tool_result_t* ompt_start_tool(
         KA_TRACE(0, STDERR, 0, "process elf", "get .linemap data pionter failed", 0);
         //exit(-1);                
     }   
+    //gTraceFile = fopen("record.txt", "wa");
     static ompt_start_tool_result_t ompt_start_tool_result = {&ompt_initialize,&ompt_finalize, 0};
     return &ompt_start_tool_result;
 }
 
+int romp_foo(void* addr) __attribute__((noinline));
 
-
+int 
+romp_foo(void* addr)
+{
+  return (int)(((uint64_t)addr) + 10);
+}
 
 /* Description: 
  *    The driver function that does check to every byte. The function first get the task id of the current exeucting task. 

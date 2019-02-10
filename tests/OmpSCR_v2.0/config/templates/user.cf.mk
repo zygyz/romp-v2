@@ -39,12 +39,12 @@ OSCR_C_OMPSTUBSFLAG=
 # 1.5. (Optional)
 #	Flags to obtain some report or information about the parallelization
 #
-OSCR_C_REPORT=
+OSCR_C_REPORT=-L/home/yg31/data-race/romp/pkgs-src/llvm-openmp/openmp/llvm-openmp-install/lib
 
 #
 # 1.6. (Optional) Other common flags (e.g. optimization)
 #
-OSCR_C_OTHERS=-g -O2 -I/home/yg31/data-race/pkgs-src/client-dev/more-test/hpc-benchmarks/OmpSCR_v2.0/include -L/home/yg31/data-race/pkgs/tcmalloc/lib -fpermissive -ltcmalloc -lm
+OSCR_C_OTHERS=-O3
 
 
 
@@ -79,12 +79,12 @@ OSCR_CPP_OMPSTUBSFLAG=
 # 2.5. (Optional)
 #	Flags to obtain some report or information about the parallelization
 #
-OSCR_CPP_REPORT=
+OSCR_CPP_REPORT=-L/home/yg31/data-race/romp/pkgs-src/llvm-openmp/openmp/llvm-openmp-install/lib
 
 #
 # 2.6. (Optional) Other common flags (e.g. optimization)
 #
-OSCR_CPP_OTHERS=-g -O2 -std=c++11 -L/home/yg31/data-race/pkgs/tcmalloc/lib -fpermissive -ltcmalloc -lm
+OSCR_CPP_OTHERS=-O3
 
 
 
