@@ -1,7 +1,7 @@
 CC	= /usr/bin/g++
-BOOST_ROOT=`pwd`/../dyninst/dyninst-build/boost/src/boost
-ELFUTIL_ROOT=`pwd`/../dyninst/dyninst-build/elfutils
-#DYNINST_ROOT=`pwd`/../dyninst/dyninst-install
+BOOST_ROOT=`spack location --install-dir boost`
+ELFUTIL_ROOT=`spack location --install-dir elfutils`
+DYNINST_ROOT=`spack location --install-dir dyninst`
 CFLAGS	= -Werror -I$(DYNINST_ROOT)/include -I$(ELFUTIL_ROOT)/include -std=c++11
 EXECNAME=omp_race_client
 

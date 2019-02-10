@@ -372,7 +372,6 @@ PrintPointInfo(BPatch_point* point)
     size_t inst_size = insn.size();
     const void* inst_raw = insn.ptr();
     if (insn.readsMemory()) {
-        fprintf(stdout, "inst readsMemory: ");
         PrintBytes(inst_raw, inst_size);
     } 
 }
@@ -416,7 +415,6 @@ AnalyzeMemAccess(void* instnaddr, vector<Assignment::Ptr>& assignments, vector<u
    int assn = 0;
    for (auto ait = assignments.begin(); ait != assignments.end(); ++ait) {
       auto inputs = (*ait)->inputs();
-      cout << assn++ << " num input " << inputs.size() << endl;
       for (auto input : inputs) {
           switch(input.absloc().type()) {
             case Absloc::Register:
@@ -424,7 +422,6 @@ AnalyzeMemAccess(void* instnaddr, vector<Assignment::Ptr>& assignments, vector<u
             case Absloc::Stack:
                 break;
             case Absloc::Heap:
-                cout << "input is heap, addr: " << hex << input.absloc().addr() << dec << endl;
                 memAddrs.push_back((uint64_t)input.absloc().addr());
                 break;
             case Absloc::Unknown:
@@ -495,10 +492,8 @@ CreateAndInsertSnippet(BPatch_addressSpace* app,
         } 
 
         if (only_reads_rodata) {
-            cout << hex << "\ninstruction@" << instnAddr << dec << " only reads rodata " << endl;
             continue; 
         } else {
-            cout << "reads data outside of rodata " << endl;
         }
 
         if (memory_access->isAPrefetch_NP()) { // This point is a prefetch
@@ -958,11 +953,9 @@ void LookupReadOnlyRegion(
     }    
     vector<BPatch_object*> objs;
     app_image->getObjects(objs);  
-    cout << "objs num: " << objs.size() << endl;
     BPatch_object * main_program_object = nullptr;
     for (auto obj : objs) {
         if (strcmp(arg, obj->pathName().c_str()) == 0) {
-            cout << "found main program object: " << obj->pathName() << endl;
             main_program_object = obj; 
             break;
         }
@@ -974,13 +967,11 @@ void LookupReadOnlyRegion(
     SymtabAPI::Symtab* symtab = SymtabAPI::convert(main_program_object);
     Region* reg = nullptr;
     if (symtab->findRegion(reg, ".rodata")) {
-        cout << "found .rodata!" << endl;
     }
     Offset offset = reg->getMemOffset();
     unsigned long size = reg->getMemSize();
     rodata_offset = (uint64_t)offset;
     rodata_upper = (uint64_t)(offset + size);
-    cout << ".rodata offset: " << hex << "0x" << rodata_offset << ".rodata upper bound: 0x" << rodata_upper << dec << endl;
 } 
 
 void InsertParsedDebugSection(
@@ -998,11 +989,9 @@ void InsertParsedDebugSection(
     }    
     vector<BPatch_object*> objs;
     app_image->getObjects(objs);  
-    cout << "objs num: " << objs.size() << endl;
     BPatch_object * obj_to_insert = nullptr;
     for (auto obj : objs) {
         if (strcmp(arg, obj->pathName().c_str()) == 0) {
-            cout << "found main program object: " << obj->pathName() << endl;
             obj_to_insert = obj; 
             break;
         }
@@ -1012,7 +1001,6 @@ void InsertParsedDebugSection(
         exit(-1);
     }
     SymtabAPI::Symtab* symtab = SymtabAPI::convert(obj_to_insert);
-    cout << "string table size: " << string_table_chunk_size << " line map size: " << line_map_chunk_size << endl;
     symtab->addRegion(0, string_table_chunk, string_table_chunk_size, STRING_TABLE_NAME, Region::RT_DATA, true);      
     symtab->addRegion(0, line_map_chunk, line_map_chunk_size, LINEMAP_SECTION_NAME, Region::RT_DATA, true);
 }
