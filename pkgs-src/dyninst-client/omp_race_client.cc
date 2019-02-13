@@ -267,6 +267,7 @@ StartInstrumenting(accessType_t accessType,
                    const char* argv[]) 
 {
     BPatch_addressSpace* handle = NULL;
+    bpatch.setInstrStackFrames(true);
     switch(accessType) {
         case CREATE:
             handle = bpatch.processCreate(name, argv);
@@ -411,7 +412,7 @@ void
 AnalyzeMemAccess(void* instnaddr, vector<Assignment::Ptr>& assignments, vector<uint64_t>& memAddrs) 
 {
    Assignment::Ptr memAssign;
-   cout << "\n\n" << hex << instnaddr << dec << " num assignments: " << assignments.size() << endl;
+   //cout << "\n\n" << hex << instnaddr << dec << " num assignments: " << assignments.size() << endl;
    int assn = 0;
    for (auto ait = assignments.begin(); ait != assignments.end(); ++ait) {
       auto inputs = (*ait)->inputs();
@@ -461,7 +462,6 @@ CreateAndInsertSnippet(BPatch_addressSpace* app,
             cerr << "cannot find basic block associated with the instn addr " << hex << instnAddr << dec << endl;
             return false;
         }
-       
         int size_mach_instn = 0;
         string instn_raw_str = "";
         bool has_lock_prefix = false;  
@@ -471,7 +471,7 @@ CreateAndInsertSnippet(BPatch_addressSpace* app,
             AssignmentConverter ac(true, false);
             vector<Assignment::Ptr> assignments;
            //cout << "convert assignment " << endl;
-            ac.convert(insn, (unsigned long)instnAddr, parseAPIfunc, parseAPIblock, assignments);
+           ac.convert(insn, (unsigned long)instnAddr, parseAPIfunc, parseAPIblock, assignments);
             vector<uint64_t> heapMemAddrs;
             AnalyzeMemAccess(instnAddr, assignments, heapMemAddrs);            
             if (heapMemAddrs.size() > 0) {
@@ -493,12 +493,12 @@ CreateAndInsertSnippet(BPatch_addressSpace* app,
 
         if (only_reads_rodata) {
             continue; 
-        } else {
-        }
+        } 
 
         if (memory_access->isAPrefetch_NP()) { // This point is a prefetch
             continue;
         } 
+
         int flag = 0;
 
         if (memory_access->isALoad()) { // This point is a read.
@@ -517,6 +517,7 @@ CreateAndInsertSnippet(BPatch_addressSpace* app,
         if (flag == 3) { // regulate the load/store to store
             flag = 2;
         }
+
         vector<BPatch_snippet*> args;      
         BPatch_snippet* address = new BPatch_effectiveAddressExpr();     
         args.push_back(address);
@@ -525,11 +526,14 @@ CreateAndInsertSnippet(BPatch_addressSpace* app,
         BPatch_snippet* type =  new BPatch_constExpr(flag);
         args.push_back(type);
 
+        /*
         vector<BPatch_register> regs;  
         app->getRegisters(regs);
+        */
         BPatch_snippet* instn_addr = new BPatch_constExpr(instnAddr);
         args.push_back(instn_addr);
         BPatch_snippet* has_hw_lock = new BPatch_constExpr(has_lock_prefix); 
+        args.push_back(has_hw_lock);
          
         BPatch_funcCallExpr check_access_call(*(check_access_funcs[0]), args);  
           
@@ -579,15 +583,15 @@ InstrumentMemoryAccesses(BPatch_addressSpace* app, const char* romp_path)
         cerr << "address space nullptr " << endl;    
         return false;
     }
+    if (!app->loadLibrary(romp_path)) {
+        cerr << "Could not load romp library : " << romp_path << endl; 
+        return false;
+    }
     vector<BPatch_function*> functions;
     MakeFunctionVector(app, functions, romp_path);
     if (functions.size() == 0) {
         cerr << "no functions for instrumentation " << endl;
         exit(1);     
-    }
-    if (!app->loadLibrary(romp_path)) {
-        cerr << "Could not load library : " << romp_path << endl; 
-        return false;
     }
     BPatch_image* app_image = app->getImage();
     vector<BPatch_function*> check_access_funcs;
