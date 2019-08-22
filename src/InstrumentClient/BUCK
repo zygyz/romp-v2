@@ -1,0 +1,10 @@
+cxx_binary(
+  name = 'test',
+  srcs = ['TestCompile.cpp',],
+  deps = [
+    '//deps:boost_system',
+    '//deps:dyninst',
+    '//deps:glog',
+  ],
+  compiler_flags = ['-std=c++11',],
+)
