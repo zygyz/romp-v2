@@ -5,7 +5,7 @@
 using namespace std;
 using namespace Dyninst;
 
-int main(int argc, const char* argv[]) {
+int main(int argc, char* argv[]) {
   BPatch_addressSpace* app;
   google::InitGoogleLogging(argv[0]);
   LOG(INFO) << "TEST TEST ";
