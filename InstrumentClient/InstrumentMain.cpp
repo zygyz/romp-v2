@@ -15,6 +15,7 @@ using namespace std;
 DEFINE_string(program, "", "program to be instrumented");
 
 int main(int argc, char* argv[]) {
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
   google::InitGoogleLogging(argv[0]);
   FLAGS_alsologtostderr = 1;
   if (FLAGS_program == "") {
