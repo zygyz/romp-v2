@@ -21,7 +21,3 @@ InstrumentClient::initInstrumenter(const string& programName) {
   return ptr;
 }
 
-void 
-InstrumentClient::instrumentMemoryAccess(const string& rompPath) {
-
-}
