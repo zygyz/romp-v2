@@ -20,3 +20,8 @@ InstrumentClient::initInstrumenter(const string& programName) {
   unique_ptr<BPatch_addressSpace> ptr(handle);  
   return ptr;
 }
+
+void 
+InstrumentClient::instrumentMemoryAccess(const string& rompPath) {
+
+}
