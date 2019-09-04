@@ -1,6 +1,6 @@
 find_package(Boost REQUIRED)
 find_package(Dyninst REQUIRED dyninstAPI SymtabAPI InstructionAPI ParseAPI)
-find_package(Glog REQUIRED)
+find_package(Folly REQUIRED)
 
 include_directories(${DYNINST_INCLUDE_DIR})
 
