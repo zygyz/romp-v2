@@ -3,8 +3,6 @@ find_package(Dyninst REQUIRED dyninstAPI symtabAPI instructionAPI parseAPI)
 find_package(gflags REQUIRED)
 find_package(glog REQUIRED)
 
-#include_directories(${DYNINST_INCLUDE_DIR})
-
 add_executable(InstrumentMain InstrumentMain.cpp 
                               InstrumentClient.cpp)
 
