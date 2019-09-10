@@ -1,7 +1,10 @@
+#include <glog/logging.h>
 #include "Initialize.h"
 
 
 using namespace std;
+
+namespace romp {
 
 extern "C" {
 
@@ -11,6 +14,8 @@ checkAccess(void* address,
             uint64_t instnAddr,
             bool hwLock) {
    
+}
+
 }
 
 }
