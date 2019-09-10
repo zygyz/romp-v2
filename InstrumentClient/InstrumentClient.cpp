@@ -23,7 +23,7 @@ InstrumentClient::initInstrumenter(
     LOG(FATAL) << "cannot open binary: " << programName;    
   }
   unique_ptr<BPatch_addressSpace> ptr(handle);  
-  if (!ptr->loadLibrary(rompLibPath)) {
+  if (!ptr->loadLibrary(rompLibPath.c_str())) {
     LOG(FATAL) << "cannot load romp library"; 
   }
   return ptr;
