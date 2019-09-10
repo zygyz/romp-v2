@@ -22,7 +22,7 @@ namespace romp {
               const std::string& rompLibPath); 
 //      void instrumentMemoryAccess(const string& rompPath);    
       std::vector<BPatch_function*> getCheckAccessFuncs(
-              std::unique_ptr<BPatch_addressSpace> addrSpacePtr);
+              std::unique_ptr<BPatch_addressSpace>& addrSpacePtr);
     private:    
       std::unique_ptr<BPatch_addressSpace> addrSpacePtr_;
       std::shared_ptr<BPatch> bpatchPtr_;

@@ -35,8 +35,8 @@ InstrumentClient::initInstrumenter(
 
 vector<BPatch_function*>
 InstrumentClient::getCheckAccessFuncs(
-        unique_ptr<BPatch_addressSpace> addrSpacePtr) {
-  if (addrSpacePtr == nullptr) {
+        unique_ptr<BPatch_addressSpace>& addrSpacePtr) {
+  if (!addrSpacePtr) {
     LOG(FATAL) << "null pointer";
   }
   auto appImage = addrSpacePtr->getImage();
