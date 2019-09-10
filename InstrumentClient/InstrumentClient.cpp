@@ -33,6 +33,10 @@ InstrumentClient::initInstrumenter(
   return ptr;
 }
 
+/* 
+ * Get the dyninst representation of the `checkAccess` function
+ * defined in romp library code RompLib.cpp.
+ */
 vector<BPatch_function*>
 InstrumentClient::getCheckAccessFuncs(
         unique_ptr<BPatch_addressSpace>& addrSpacePtr) {
@@ -40,10 +44,38 @@ InstrumentClient::getCheckAccessFuncs(
     LOG(FATAL) << "null pointer";
   }
   auto appImage = addrSpacePtr->getImage();
+  if (!appImage) {
+    LOG(FATAL) << "cannot get image";
+  }
   vector<BPatch_function*> checkAccessFuncs;
   appImage->findFunction("checkAccess", checkAccessFuncs);
   if (checkAccessFuncs.size() == 0) {
      LOG(FATAL) << "cannot find function `checkAccess` in romp lib";
   }
   return checkAccessFuncs;
+}
+
+/* 
+ * Get dyninst representation of all all functions in the 
+ * program being instrumented. Ideally, no function should 
+ * be skipped.
+ */ 
+void 
+InstrumentClient::getFunctionsVector(
+        unique_ptr<BPatch_addressSpace>& addrSpacePtr,
+        vector<BPatch_function*>& funcVec) {
+  auto appImage = addrSpacePtr->getImage();
+  if (!appImage) {
+    LOG(FATAL) << "cannot get image";
+  }
+  auto appModules = appImage->getModules();
+  if (!appModules) {
+    LOG(FATAL) << "cannot get modules";
+  }
+  for (auto& module : appModules) {
+    auto procedures = module->getProcedures();
+    for (auto& procedure : procedures) {
+        func_vec.push_back(procedure);
+    }
+  }
 }
