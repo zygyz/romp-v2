@@ -75,7 +75,7 @@ InstrumentClient::getFunctionsVector(
   for (auto& module : *appModules) {
     auto procedures = module->getProcedures();
     for (auto& procedure : *procedures) {
-        func_vec.push_back(procedure);
+        funcVec.push_back(procedure);
     }
   }
 }
