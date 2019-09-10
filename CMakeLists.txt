@@ -3,5 +3,5 @@ project (ROMP-v2)
 
 #add_subdirectory (InstrumentClient)
 
-add_subdirectory(Romp)
+add_subdirectory(RompLib)
 
