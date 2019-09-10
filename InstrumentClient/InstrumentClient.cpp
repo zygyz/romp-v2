@@ -11,6 +11,7 @@ InstrumentClient::InstrumentClient(
         shared_ptr<BPatch> bpatchPtr) {
   bpatchPtr_ = move(bpatchPtr);
   addrSpacePtr_ = initInstrumenter(programName, rompLibPath);
+  checkAccessFuncs_ = getCheckAccessFuncs(addrSpacePtr_);
   LOG(INFO) << "InstrumentClient initialized";
 }
 
@@ -23,6 +24,7 @@ InstrumentClient::initInstrumenter(
     LOG(FATAL) << "cannot open binary: " << programName;    
   }
   unique_ptr<BPatch_addressSpace> ptr(handle);  
+  // load romp library 
   if (!ptr->loadLibrary(rompLibPath.c_str())) {
     LOG(FATAL) << "cannot load romp library"; 
   } else {
@@ -31,3 +33,17 @@ InstrumentClient::initInstrumenter(
   return ptr;
 }
 
+vector<BPatch_function*>
+InstrumentClient::getCheckAccessFuncs(
+        unique_ptr<BPatch_addressSpace> addrSpacePtr) {
+  if (addrSpacePtr == nullptr) {
+    LOG(FATAL) << "null pointer";
+  }
+  auto appImage = addrSpacePtr->getImage();
+  vector<BPatch_function*> checkAccessFuncs;
+  appImage->findFunction("checkAccess", checkAccessFuncs);
+  if (checkAccessFuncs.size() == 0) {
+     LOG(FATAL) << "cannot find function `checkAccess` in romp lib";
+  }
+  return checkAccessFuncs;
+}
