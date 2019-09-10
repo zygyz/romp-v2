@@ -15,6 +15,7 @@ int omptInitialize(ompt_function_lookup_t functionLookup,
                    ompt_data_t* toolData) {
   google::InitGoogleLogging("romp");
   LOG(INFO) << "start initializing ompt";      
+
 }
 
 /**

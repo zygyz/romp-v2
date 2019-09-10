@@ -1,4 +1,3 @@
-#include <glog/logging.h>
 #include "Initialize.h"
 
 
@@ -14,6 +13,8 @@ checkAccess(void* address,
             uint64_t instnAddr,
             bool hwLock) {
    
+ LOG(INFO) << "test check access call";
+
 }
 
 }
