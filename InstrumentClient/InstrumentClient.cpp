@@ -72,9 +72,9 @@ InstrumentClient::getFunctionsVector(
   if (!appModules) {
     LOG(FATAL) << "cannot get modules";
   }
-  for (auto& module : appModules) {
+  for (auto& module : *appModules) {
     auto procedures = module->getProcedures();
-    for (auto& procedure : procedures) {
+    for (auto& procedure : *procedures) {
         func_vec.push_back(procedure);
     }
   }
