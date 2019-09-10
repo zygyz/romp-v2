@@ -25,6 +25,8 @@ InstrumentClient::initInstrumenter(
   unique_ptr<BPatch_addressSpace> ptr(handle);  
   if (!ptr->loadLibrary(rompLibPath.c_str())) {
     LOG(FATAL) << "cannot load romp library"; 
+  } else {
+    LOG(INFO) << "loaded romp library at: " << rompLibPath;
   }
   return ptr;
 }
