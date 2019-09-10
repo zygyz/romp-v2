@@ -15,7 +15,7 @@ int omptInitialize(ompt_function_lookup_t functionLookup,
 /**
  *  release resources and log info upon finalization of tool
  */
-int omptFinalize(ompt_data_t* toolData) {
+void omptFinalize(ompt_data_t* toolData) {
 
 }
 
