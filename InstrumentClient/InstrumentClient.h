@@ -11,9 +11,14 @@
 namespace romp {
   class InstrumentClient {
     public:
-      InstrumentClient(const std::string& programName, std::shared_ptr<BPatch> bpatchPtr);
+      InstrumentClient(
+              const std::string& programName, 
+              const std::string& rompLibPath,
+              std::shared_ptr<BPatch> bpatchPtr);
     private:
-      std::unique_ptr<BPatch_addressSpace> initInstrumenter(const std::string& programName); 
+      std::unique_ptr<BPatch_addressSpace> initInstrumenter(
+              const std::string& programName,
+              const std::string& rompLibPath); 
 //      void instrumentMemoryAccess(const string& rompPath);
     private:    
       std::unique_ptr<BPatch_addressSpace> addrSpacePtr_;

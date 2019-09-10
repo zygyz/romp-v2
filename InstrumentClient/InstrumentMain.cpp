@@ -13,6 +13,7 @@ using namespace romp;
 using namespace std;
 
 DEFINE_string(program, "", "program to be instrumented");
+DEFINE_string(rompPath, "", "path to romp library");
 
 int main(int argc, char* argv[]) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
@@ -21,8 +22,13 @@ int main(int argc, char* argv[]) {
   if (FLAGS_program == "") {
     LOG(FATAL) << "no program name specified";
   } 
+  if (FLAGS_rompPath == "") {
+    LOG(FATAL) << "path to romp library is not specified";
+  }
   auto bpatchPtr = make_shared<BPatch>(); 
-  unique_ptr<InstrumentClient> client(new InstrumentClient(FLAGS_program, bpatchPtr));
+  unique_ptr<InstrumentClient> client(
+     new InstrumentClient(FLAGS_program, FLAGS_rompPath, bpatchPtr)
+  );
   LOG(INFO) << "TEST TEST ";
   return 0;
 }
