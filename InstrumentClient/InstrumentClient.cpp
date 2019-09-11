@@ -1,4 +1,5 @@
 #include "InstrumentClient.h"
+
 #include <glog/logging.h>
 
 using namespace Dyninst;
