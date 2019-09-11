@@ -16,7 +16,8 @@ namespace romp {
               const std::string& programName, 
               const std::string& rompLibPath,
               std::shared_ptr<BPatch> bpatchPtr,
-              const std::string& );
+              const std::string& arch,
+              const std::string& modSuffix);
       void instrumentMemoryAccess();    
     private:
       std::unique_ptr<BPatch_addressSpace> initInstrumenter(

@@ -28,8 +28,7 @@ int main(int argc, char* argv[]) {
                           FLAGS_rompPath, 
                           bpatchPtr, 
                           FLAGS_arch,
-                          FLAGS_modSuffix)
-  );
+                          FLAGS_modSuffix));
   LOG(INFO) << "TEST TEST ";
   return 0;
 }
