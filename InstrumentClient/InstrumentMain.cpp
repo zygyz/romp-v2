@@ -10,6 +10,7 @@ using namespace std;
 DEFINE_string(program, "", "program to be instrumented");
 DEFINE_string(rompPath, "", "path to romp library");
 DEFINE_string(arch, "x86", "arch of the binary to be instrumented");
+DEFINE_string(modSuffix, ".inst", "suffix for name of instrumented binary");
 
 int main(int argc, char* argv[]) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
@@ -23,7 +24,11 @@ int main(int argc, char* argv[]) {
   }
   auto bpatchPtr = make_shared<BPatch>(); 
   unique_ptr<InstrumentClient> client(
-     new InstrumentClient(FLAGS_program, FLAGS_rompPath, bpatchPtr, FLAGS_arch)
+     new InstrumentClient(FLAGS_program, 
+                          FLAGS_rompPath, 
+                          bpatchPtr, 
+                          FLAGS_arch,
+                          FLAGS_modSuffix)
   );
   LOG(INFO) << "TEST TEST ";
   return 0;

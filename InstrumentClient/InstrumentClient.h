@@ -35,10 +35,14 @@ namespace romp {
       bool hasHardwareLock(
               const Dyninst::InstructionAPI::Instruction& instruction,
               const std::string& arch);
+      void finishInstrumentation(
+              std::unique_ptr<BPatch_addressSpace>& addrSpacePtr); 
     private:    
       std::unique_ptr<BPatch_addressSpace> addrSpacePtr_;
       std::shared_ptr<BPatch> bpatchPtr_;
       std::vector<BPatch_function*> checkAccessFuncs_;
+      std::string programName_;
       std::string arch_;
+      std::string modSuffix_;
   };
 }

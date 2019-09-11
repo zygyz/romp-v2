@@ -10,9 +10,12 @@ InstrumentClient::InstrumentClient(
         const string& programName, 
         const string& rompLibPath,
         shared_ptr<BPatch> bpatchPtr,
-        const string& arch) {
+        const string& arch,
+        const string& modSuffix) {
   bpatchPtr_ = move(bpatchPtr);
+  programName_ = programName;
   arch_ = arch;
+  modSuffix_ = modSuffix;
   addrSpacePtr_ = initInstrumenter(programName, rompLibPath);
   checkAccessFuncs_ = getCheckAccessFuncs(addrSpacePtr_);
   LOG(INFO) << "InstrumentClient initialized with arch: " << arch_;
@@ -92,6 +95,7 @@ void
 InstrumentClient::instrumentMemoryAccess() {  
   auto functions = getFunctionsVector(addrSpacePtr_);
   instrumentMemoryAccessInternal(addrSpacePtr_, functions);
+  finishInstrumentation(addrSpacePtr_);
 }
 
 /*
@@ -196,4 +200,27 @@ InstrumentClient::insertSnippet(
     }
   }
   LOG(INFO) << "check access snippet insertion is a success";
+}
+
+/* 
+ * Some post instrumentation process. Slight modification 
+ * from the example in dyninst manual
+ */
+void
+InstrumentClient::finishInstrumentation(
+        unique_ptr<BPatch_addressSpace>& addrSpacePtr) {
+  auto appProc = dynamic_cast<BPatch_process*>(addrSpacePtr.get());
+  auto appBin = dynamic_cast<BPatch_binaryEdit*>(addrSpacePtr.get());
+  if (appProc) {
+    if (!appProc->continueExecution()) {
+        LOG(WARNING) << "continue exeuction failed";
+    }
+    while (!appProc->isTerminated()) {
+      bpatchPtr_->waitForStatusChange();
+    }
+  } else if (appBin) {
+    if (!appBin->writeFile(programName_ + modSuffix_)) {
+      LOG(FATAL) << "failed to write instrumented binary to file";
+    }
+  } 
 }
