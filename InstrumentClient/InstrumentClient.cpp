@@ -126,7 +126,7 @@ InstrumentClient::instrumentMemoryAccessInternal(
  * Could be modified for other architeture.
  */
 bool
-InstrumentClient::hasHardWareLock(
+InstrumentClient::hasHardwareLock(
         const InstructionAPI::Instruction& instruction,
         const std::string& arch) {
   if (arch == "x86") { 
@@ -169,7 +169,6 @@ InstrumentClient::insertSnippet(
     } else {
       LOG(WARNING) << "unknown memory access type in function: " 
                    << point->getCalledFunctionName();
-                    << " continue"; 
       continue;
     }
     auto instructionAddress = point->getAddress();         
