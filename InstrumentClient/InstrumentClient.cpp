@@ -199,7 +199,6 @@ InstrumentClient::insertSnippet(
         LOG(FATAL) << "snippet insertion failed";
     }
   }
-  LOG(INFO) << "check access snippet insertion is a success";
 }
 
 /* 

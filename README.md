@@ -12,11 +12,11 @@
 Checkout my version of spack, which contains some modification to package.py for llvm-openmp 
 and also the pacakge spec for romp.
 
-git clone git@github.com:zygyz/spack.git
+`git clone git@github.com:zygyz/spack.git`
 
 
 ### Installing
-spack install romp@experimental
+`spack install romp@experimental`
 
 ### Caveats
     - For DRB047 in dataracebench, please use the byte level granularity checking otherwise the word level granularity checking causes false positives 
