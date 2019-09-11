@@ -28,12 +28,10 @@ namespace romp {
       void instrumentMemoryAccessInternal(
               std::unique_ptr<BPatch_addressSpace>& addrSpacePtr,
               std::vector<BPatch_function*>& funcVec);
-      /*
       void insertSnippet(
               std::unique_ptr<BPatch_addressSpace>& addrSpacePtr, 
               std::vector<BPatch_point*>* pointsVecPtr, 
               BPatch_function* function);
-      */
     private:    
       std::unique_ptr<BPatch_addressSpace> addrSpacePtr_;
       std::shared_ptr<BPatch> bpatchPtr_;

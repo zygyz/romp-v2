@@ -11,7 +11,8 @@ void
 checkAccess(void* address,
             uint32_t bytesAccessed,
             uint64_t instnAddr,
-            bool hwLock) {
+            bool hwLock,
+            bool isWrite) {
    
  LOG(INFO) << "test check access call";
 

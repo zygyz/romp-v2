@@ -107,12 +107,52 @@ InstrumentClient::instrumentMemoryAccessInternal(
   for (auto& function : funcVec) {
     auto pointsVecPtr = function->findPoint(opcodes);
     if (!pointsVecPtr) {
-      LOG(WARNING) << "no load/store points for function " << function->getName();    
+      LOG(WARNING) << "no load/store points for function " 
+          << function->getName();    
       continue;
     } else if (pointsVecPtr->size() == 0) {
-      LOG(WARNING) << "load/store points vector size is 0 for function " << function->getName();
+      LOG(WARNING) << "load/store points vector size is 0 for function " 
+          << function->getName();
       continue;
     }
-    //insertSnippet(addrSpacePtr, pointsVecPtr, function);
+    insertSnippet(addrSpacePtr, pointsVecPtr, function);
   }
+}
+
+/*
+ * Insert checkAccess code snippet to load/store point
+ */
+void
+InstrumentClient::insertSnippet(
+        unique_ptr<BPatch_addressSpace>& addrSpacePtr,
+        vector<BPatch_point*>* pointsVecPtr,
+        BPatch_function* function) {
+  if (!pointsVecPtr) {
+    LOG(FATAL) << "null pointer";
+  } 
+  for (auto& point : *pointsVecPtr) {
+    auto memoryAccess = point->getMemoryAccess();
+    if (!memoryAccess) {
+      LOG(FATAL) << "null memory access";
+    }
+    auto instructionAddress = point->getAddress();
+    auto instruction = point->getInsnAtPoint();
+    if (memoryAccess->isAPrefetch_NP()) {
+      LOG(INFO) << "current point is a prefetch, continue";
+      continue;
+    }  
+    if (memoryAccess->isAStore()) {
+
+    } else if (memoryAccess->isALoad()) { // not a store
+        
+    }
+
+
+    if (memoryAccess->isALoad() && memoryAccess->isA
+    if (memoryAccess->isALoad()) { 
+     // current point is a read
+        
+    }
+  }
+
 }
