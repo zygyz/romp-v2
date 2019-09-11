@@ -219,7 +219,7 @@ InstrumentClient::finishInstrumentation(
       bpatchPtr_->waitForStatusChange();
     }
   } else if (appBin) {
-    if (!appBin->writeFile(programName_ + modSuffix_)) {
+    if (!appBin->writeFile((programName_ + modSuffix_).c_str()) {
       LOG(FATAL) << "failed to write instrumented binary to file";
     }
   } 
