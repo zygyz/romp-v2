@@ -24,6 +24,7 @@ InstrumentClient::InstrumentClient(
   if (!checkAccessFuncs_.at(0)) {
     LOG(FATAL) << "null first element";
   }
+  LOG(INFO) << "checkAccesFunc name: " << checkAccessFuncs_.at(0)->getName();
   LOG(INFO) << "InstrumentClient initialized with arch: " << arch_;
 }
 
