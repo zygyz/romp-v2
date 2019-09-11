@@ -15,7 +15,8 @@ namespace romp {
       InstrumentClient(
               const std::string& programName, 
               const std::string& rompLibPath,
-              std::shared_ptr<BPatch> bpatchPtr);
+              std::shared_ptr<BPatch> bpatchPtr,
+              const std::string& );
       void instrumentMemoryAccess();    
     private:
       std::unique_ptr<BPatch_addressSpace> initInstrumenter(
@@ -28,13 +29,16 @@ namespace romp {
       void instrumentMemoryAccessInternal(
               std::unique_ptr<BPatch_addressSpace>& addrSpacePtr,
               std::vector<BPatch_function*>& funcVec);
-      void insertSnippet(
-              std::unique_ptr<BPatch_addressSpace>& addrSpacePtr, 
-              std::vector<BPatch_point*>* pointsVecPtr, 
-              BPatch_function* function);
+      void insertSnippet(std::unique_ptr<BPatch_addressSpace>& addrSpacePtr, 
+                         std::vector<BPatch_point*>* pointsVecPtr, 
+                         BPatch_function* function);
+      bool hasHardwareLock(
+              const Dyninst::InstructionAPI::Instruction& instruction,
+              const std::string& arch);
     private:    
       std::unique_ptr<BPatch_addressSpace> addrSpacePtr_;
       std::shared_ptr<BPatch> bpatchPtr_;
       std::vector<BPatch_function*> checkAccessFuncs_;
+      std::string arch_;
   };
 }
