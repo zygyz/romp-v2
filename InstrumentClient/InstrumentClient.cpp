@@ -60,10 +60,10 @@ InstrumentClient::getCheckAccessFuncs(
  * program being instrumented. Ideally, no function should 
  * be skipped.
  */ 
-void 
+vector<BPatch_function*> 
 InstrumentClient::getFunctionsVector(
-        unique_ptr<BPatch_addressSpace>& addrSpacePtr,
-        vector<BPatch_function*>& funcVec) {
+        unique_ptr<BPatch_addressSpace>& addrSpacePtr) {
+  vector<BPatch_function*> funcVec;
   auto appImage = addrSpacePtr->getImage();
   if (!appImage) {
     LOG(FATAL) << "cannot get image";
@@ -77,5 +77,41 @@ InstrumentClient::getFunctionsVector(
     for (auto& procedure : *procedures) {
         funcVec.push_back(procedure);
     }
+  }
+  return funcVec;
+}
+
+/* 
+ * Public interface for InstrumentClient, wraps the internal 
+ * implementation of instrumentation of memory accesses
+ */
+void
+InstrumentClient::instrumentMemoryAccess() {  
+  auto functions = getFunctionsVector(addrSpacePtr_, 
+  instrumentMemoryAccessInternal(addrSpacePtr_, functions);
+}
+
+/*
+ * Instrument memory accesses in each function by inserting the 
+ * `checkAccess` function call 
+ */ 
+void
+InstrumentClient::instrumentMemoryAccessInternal(
+    unique_ptr<BPatch_addressSpace>& addrSpacePtr,
+    vector<BPatch_function*>& funcVec) {   
+  BPatch_Set<BPatch_opCode> opcodes;
+  opcodes.insert(BPatch_opLoad);
+  opcodes.insert(BPatch_opStore);
+  addrSpacePtr->beginInsertionSet();
+  for (auto& function : funcVec) {
+    auto pointsVecPtr = function->findPoint(opcodes);
+    if (!pointsVecPtr) {
+      LOG(WARNING) << "no load/store points for function " << function->getName();    
+      continue;
+    } else if (pointsVecPtr->size() == 0) {
+      LOG(WARNING) << "load/store points vector size is 0 for function " << function->getName();
+      continue;
+    }
+    //insertSnippet(addrSpacePtr, pointsVecPtr, function);
   }
 }
