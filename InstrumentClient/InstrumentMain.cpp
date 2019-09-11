@@ -29,6 +29,6 @@ int main(int argc, char* argv[]) {
                           bpatchPtr, 
                           FLAGS_arch,
                           FLAGS_modSuffix));
-  LOG(INFO) << "TEST TEST ";
+  client->instrumentMemoryAccess();
   return 0;
 }
