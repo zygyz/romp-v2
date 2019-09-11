@@ -87,7 +87,7 @@ InstrumentClient::getFunctionsVector(
  */
 void
 InstrumentClient::instrumentMemoryAccess() {  
-  auto functions = getFunctionsVector(addrSpacePtr_, 
+  auto functions = getFunctionsVector(addrSpacePtr_);
   instrumentMemoryAccessInternal(addrSpacePtr_, functions);
 }
 
