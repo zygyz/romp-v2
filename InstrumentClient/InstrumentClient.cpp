@@ -119,6 +119,9 @@ InstrumentClient::instrumentMemoryAccessInternal(
     }
     insertSnippet(addrSpacePtr, pointsVecPtr, function);
   }
+  if (!addrSpacePtr->finalizeInsertionSet(true)) {
+    LOG(FATAL) << "error in batch insertion of snippets";
+  }
 }
 
 /* 
