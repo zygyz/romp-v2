@@ -8,4 +8,4 @@ add_executable(InstrumentMain InstrumentMain.cpp
 
 target_link_libraries(InstrumentMain dyninstAPI parseAPI symtabAPI instructionAPI gflags glog) 
 
-install(TARGETS InstrumentMain DESTINATION bin/client)
+install(TARGETS InstrumentMain DESTINATION bin)
