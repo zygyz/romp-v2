@@ -78,7 +78,10 @@ InstrumentClient::getFunctionsVector(
   if (!appModules) {
     LOG(FATAL) << "cannot get modules";
   }
+  char nameBuffer[MODULE_NAME_LENGTH];
   for (auto& module : *appModules) {
+    LOG(INFO) << "module name: " << module->getFullName(nameBuffer, MODULE_NAME_LENGTH);
+    LOG(INFO) << "module name: " << module->libraryName();
     auto procedures = module->getProcedures();
     for (auto& procedure : *procedures) {
         funcVec.push_back(procedure);

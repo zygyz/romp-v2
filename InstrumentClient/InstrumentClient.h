@@ -9,6 +9,8 @@
 #include "BPatch_point.h"
 #include "BPatch_process.h"
 
+#define MODULE_NAME_LENGTH 128
+
 namespace romp {
   class InstrumentClient {
     public:
