@@ -80,8 +80,14 @@ InstrumentClient::getFunctionsVector(
   }
   char nameBuffer[MODULE_NAME_LENGTH];
   for (auto& module : *appModules) {
-    LOG(INFO) << "module name: " << module->getFullName(nameBuffer, MODULE_NAME_LENGTH);
-    LOG(INFO) << "module name: " << module->libraryName();
+    LOG(INFO) << "module name: " 
+              << module->getFullName(nameBuffer, MODULE_NAME_LENGTH);
+    if (module->isSharedLib()) { 
+      // skip instrumenting shared library,because the instrumented binary 
+      // does not load these instrumneted shared libraries
+      LOG(INFO) << "skipping shared library: " << module->libraryName();
+      continue;
+    }
     auto procedures = module->getProcedures();
     for (auto& procedure : *procedures) {
         funcVec.push_back(procedure);
