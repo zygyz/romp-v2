@@ -9,6 +9,7 @@ add_executable(InstrumentMain InstrumentMain.cpp
   
 if (CUSTOM_DYNINST MATCHES "ON")
     message(STATUS "dyninst library path: -L${DYNINST_LIBRARIES_PATH}")
+    include_directories(/home/yg31/dyninst/include)
     target_link_libraries(InstrumentMain -L/home/yg31/dyninst/lib)
     target_link_libraries(InstrumentMain gflags glog) 
 else()
