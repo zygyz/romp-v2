@@ -1,5 +1,5 @@
 option(CUSTOM_DYNINST "use custom dyninst build" OFF)
-SET(DYNINST_LIBRARIES_PATH "")
+set(DYNINST_LIBRARIES_PATH "" CACHE STRING "dyninst library string")
 find_package(Boost REQUIRED)
 find_package(gflags REQUIRED)
 find_package(glog REQUIRED)
@@ -8,7 +8,7 @@ add_executable(InstrumentMain InstrumentMain.cpp
                               InstrumentClient.cpp)
   
 if (CUSTOM_DYNINST MATCHES "ON")
-    message(STATUS "dyninst library path: ${DYNINST_LIBRARIES_PATH}")
+    message(STATUS "dyninst library path: ${DYNINST_LIBRARIES_PATH}|DYNINST_LIBRARIES_PATH")
     target_link_libraries(InstrumentMain "${DYNINST_LIBRARIES_PATH}" gflags glog) 
 else()
   find_package(Dyninst REQUIRED dyninstAPI symtabAPI instructionAPI parseAPI)
