@@ -9,7 +9,7 @@ add_executable(InstrumentMain InstrumentMain.cpp
   
 if (CUSTOM_DYNINST MATCHES "ON")
     message(STATUS "dyninst library path: ${DYNINST_LIBRARIES_PATH}")
-    target_link_libraries(InstrumentMain "${DYNINST_LIBRARIES_PATH}" gflags glog) 
+    target_link_libraries(InstrumentMain -L"${DYNINST_LIBRARIES_PATH}" gflags glog) 
 else()
   find_package(Dyninst REQUIRED dyninstAPI symtabAPI instructionAPI parseAPI)
   target_link_libraries(InstrumentMain dyninstAPI parseAPI symtabAPI instructionAPI gflags glog) 
