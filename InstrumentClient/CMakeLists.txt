@@ -8,7 +8,7 @@ add_executable(InstrumentMain InstrumentMain.cpp
                               InstrumentClient.cpp)
   
 if (CUSTOM_DYNINST MATCHES "ON")
-    include_directories(${DYNINST_PATH}/include)
+    #include_directories(${DYNINST_PATH}/include)
     find_library(DYNINST_LIB dyninstAPI)
     find_library(INSTRUCTION_LIB instructionAPI)
     find_library(SYMTAB_LIB symtabAPI)
