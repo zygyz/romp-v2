@@ -9,7 +9,7 @@ add_executable(InstrumentMain InstrumentMain.cpp
   
 if (CUSTOM_DYNINST MATCHES "ON")
     include_directories(${DYNINST_LIBRARIES_PATH}/include)
-    target_link_libraries(InstrumentMain -L${DYNINST_LIBRARIES_PATH}/lib)
+    target_link_libraries(InstrumentMain -L${DYNINST_LIBRARIES_PATH}/lib/libdyninstAPI.so.10.1)
     target_link_libraries(InstrumentMain -ldyninstAPI -linstructionAPI 
                            -lsymtabAPI -lparseAPI -lboost_system)
     target_link_libraries(InstrumentMain gflags glog) 
