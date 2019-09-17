@@ -1,6 +1,6 @@
 option(CUSTOM_DYNINST "use custom dyninst build" OFF)
 set(DYNINST_LIBRARIES_PATH "" CACHE STRING "dyninst library string")
-find_package(Boost REQUIRED)
+find_package(Boost REQUIRED boost_system)
 find_package(gflags REQUIRED)
 find_package(glog REQUIRED)
 
@@ -13,6 +13,7 @@ if (CUSTOM_DYNINST MATCHES "ON")
         target_link_libraries(InstrumentMain -ldyninstAPI -linstructionAPI 
                           -lparseAPI -lsymtabAPI)
     target_link_libraries(InstrumentMain gflags glog) 
+    target_link_libraries(InstrumentMain boost_system)
 else()
   find_package(Dyninst REQUIRED dyninstAPI symtabAPI instructionAPI parseAPI)
   target_link_libraries(InstrumentMain dyninstAPI parseAPI symtabAPI 
