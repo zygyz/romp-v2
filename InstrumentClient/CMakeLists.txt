@@ -10,8 +10,8 @@ add_executable(InstrumentMain InstrumentMain.cpp
 if (CUSTOM_DYNINST MATCHES "ON")
     include_directories(${DYNINST_LIBRARIES_PATH}/include)
     target_link_libraries(InstrumentMain -L${DYNINST_LIBRARIES_PATH}/lib)
-    #    target_link_libraries(InstrumentMain dyninstAPI instructionAPI 
-    #                      parseAPI symtabAPI)
+        target_link_libraries(InstrumentMain -ldyninstAPI -linstructionAPI 
+                          -lparseAPI -lsymtabAPI)
     target_link_libraries(InstrumentMain gflags glog) 
 else()
   find_package(Dyninst REQUIRED dyninstAPI symtabAPI instructionAPI parseAPI)
