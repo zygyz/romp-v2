@@ -1,6 +1,6 @@
 option(CUSTOM_DYNINST "use custom dyninst build" OFF)
 set(DYNINST_LIBRARIES_PATH "" CACHE STRING "dyninst library string")
-find_package(Boost REQUIRED boost_system)
+find_package(Boost REQUIRED)
 find_package(gflags REQUIRED)
 find_package(glog REQUIRED)
 
