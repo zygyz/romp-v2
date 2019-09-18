@@ -1,5 +1,4 @@
 option(CUSTOM_DYNINST "use custom dyninst build" OFF)
-#$set(DYNINST_PATH "" CACHE STRING "root path to custom installed dyninst")
 find_package(gflags REQUIRED)
 find_package(glog REQUIRED)
 
@@ -7,9 +6,9 @@ add_executable(InstrumentMain InstrumentMain.cpp
                               InstrumentClient.cpp)
   
 if (CUSTOM_DYNINST MATCHES "ON")
-    find_path(DYNINST_INCLUDE_PATH BPatch.h)
+    # find the dyninst install directory by searching BPatch.h 
+    find_path(DYNINST_INCLUDE_PATH BPatch.h) 
     include_directories(${DYNINST_INCLUDE_PATH})
-    #include_directories(${DYNINST_PATH}/include)
     find_library(DYNINST_LIB dyninstAPI)
     find_library(INSTRUCTION_LIB instructionAPI)
     find_library(SYMTAB_LIB symtabAPI)
