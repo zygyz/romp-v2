@@ -8,8 +8,7 @@ add_executable(InstrumentMain InstrumentMain.cpp
   
 if (CUSTOM_DYNINST MATCHES "ON")
     find_path(DYNINST_INCLUDE_PATH BPatch.h)
-    message(STATUS "path: ${DYNINST_INCLUDE_PATH}")
-    include_directories(DYNINST_INCLUDE_PATH)
+    include_directories(${DYNINST_INCLUDE_PATH})
     #include_directories(${DYNINST_PATH}/include)
     find_library(DYNINST_LIB dyninstAPI)
     find_library(INSTRUCTION_LIB instructionAPI)
