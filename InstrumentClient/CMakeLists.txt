@@ -6,7 +6,7 @@ find_package(glog REQUIRED)
 add_executable(InstrumentMain InstrumentMain.cpp 
                               InstrumentClient.cpp)
   
-if (CUSTOM_DYNINST MATCHES "ON" 
+if (CUSTOM_DYNINST MATCHES "ON")
     find_path(DYNINST_INCLUDE_PATH BPatch.h)
     include_directories(DYNINST_INCLUDE_PATH)
     #include_directories(${DYNINST_PATH}/include)
