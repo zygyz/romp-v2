@@ -1,14 +1,15 @@
 option(CUSTOM_DYNINST "use custom dyninst build" OFF)
-set(DYNINST_PATH "" CACHE STRING "root path to custom installed dyninst")
-find_package(Boost REQUIRED)
+#$set(DYNINST_PATH "" CACHE STRING "root path to custom installed dyninst")
 find_package(gflags REQUIRED)
 find_package(glog REQUIRED)
 
 add_executable(InstrumentMain InstrumentMain.cpp 
                               InstrumentClient.cpp)
   
-if (CUSTOM_DYNINST MATCHES "ON")
-    include_directories(${DYNINST_PATH}/include)
+if (CUSTOM_DYNINST MATCHES "ON" 
+    find_path(DYNINST_INCLUDE_PATH BPatch.h)
+    include_directories(DYNINST_INCLUDE_PATH)
+    #include_directories(${DYNINST_PATH}/include)
     find_library(DYNINST_LIB dyninstAPI)
     find_library(INSTRUCTION_LIB instructionAPI)
     find_library(SYMTAB_LIB symtabAPI)
@@ -21,6 +22,7 @@ if (CUSTOM_DYNINST MATCHES "ON")
     target_link_libraries(InstrumentMain "${BOOST_SYSTEM_LIB}")
     target_link_libraries(InstrumentMain gflags glog) 
 else()
+  find_package(Boost REQUIRED)
   find_package(Dyninst REQUIRED dyninstAPI symtabAPI instructionAPI parseAPI)
   target_link_libraries(InstrumentMain dyninstAPI parseAPI symtabAPI 
                         instructionAPI gflags glog) 
