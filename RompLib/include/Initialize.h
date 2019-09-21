@@ -22,7 +22,7 @@ int omptInitialize(ompt_function_lookup_t functionLookup,
  *  release resources and log info upon finalization of tool
  */
 void omptFinalize(ompt_data_t* toolData) {
-
+  LOG(INFO) << "finalizing ompt";
 }
 
 /** 
@@ -34,5 +34,6 @@ ompt_start_tool_result_t* ompt_start_tool(
   ompt_data_t data;
   static ompt_start_tool_result_t startToolResult = { 
       &omptInitialize, &omptFinalize, data}; 
+  LOG(INFO) << "ompt_start_tool";
   return &startToolResult;
 }
