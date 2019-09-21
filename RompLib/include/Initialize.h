@@ -3,6 +3,8 @@
 #include <glog/logging.h>
 #include <ompt.h>
 
+namespace romp{
+
 extern "C" {
 
 /* This header file defines functions that are used 
@@ -39,4 +41,7 @@ ompt_start_tool_result_t* ompt_start_tool(
   LOG(INFO) << "ompt_start_tool";
   return &startToolResult;
 }
+
+}
+
 }
