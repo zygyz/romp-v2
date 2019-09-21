@@ -14,11 +14,13 @@ checkAccess(void* address,
             bool hwLock,
             bool isWrite) {
    
+    /*
  LOG(INFO) << "address: " << address 
            << " bytesAccessed: " << bytesAccessed 
            << " instnAddr: " << instnAddr
            << " hwlock: " << hwLock
            << " isWrite: " << isWrite;
+           */
 
 }
 
