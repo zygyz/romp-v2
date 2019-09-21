@@ -3,6 +3,8 @@
 #include <glog/logging.h>
 #include <ompt.h>
 
+extern "C" {
+
 /* This header file defines functions that are used 
  * to initialize OMPT interface. 
  */
@@ -36,4 +38,5 @@ ompt_start_tool_result_t* ompt_start_tool(
       &omptInitialize, &omptFinalize, data}; 
   LOG(INFO) << "ompt_start_tool";
   return &startToolResult;
+}
 }
