@@ -85,7 +85,7 @@ InstrumentClient::getFunctionsVector(
     if (module->isSharedLib()) { 
       // skip instrumenting shared library,because the instrumented binary 
       // does not load these instrumneted shared libraries
-      LOG(INFO) << "skipping shared library: " << nameBuffer;
+      LOG(INFO) << "skipping module: " << nameBuffer;
       continue;
     }
     auto procedures = module->getProcedures();

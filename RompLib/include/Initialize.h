@@ -32,6 +32,7 @@ ompt_start_tool_result_t* ompt_start_tool(
         unsigned int ompVersion,
         const char* runtimeVersion) {
   ompt_data_t data;
-  static ompt_start_tool_result_t startToolResult = { &omptInitialize, &omptFinalize, data}; 
+  static ompt_start_tool_result_t startToolResult = { 
+      &omptInitialize, &omptFinalize, data}; 
   return &startToolResult;
 }
