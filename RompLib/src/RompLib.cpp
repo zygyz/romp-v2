@@ -4,10 +4,6 @@ using namespace std;
 
 namespace romp {
 
-
-
-extern "C" {
-
 /** 
  *  initialize OMPT interface by registering callback functions
  */
@@ -39,6 +35,11 @@ ompt_start_tool_result_t* ompt_start_tool(
   LOG(INFO) << "ompt_start_tool";
   return &startToolResult;
 }
+
+
+
+
+extern "C" {
 
 void 
 checkAccess(void* address,
