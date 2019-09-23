@@ -29,4 +29,3 @@ void omptFinalize(ompt_data_t* toolData) {
 
 }
 
-}
