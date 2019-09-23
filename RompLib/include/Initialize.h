@@ -8,7 +8,7 @@ namespace romp{
 /* This header file defines functions that are used 
  * to initialize OMPT interface. 
  */
-
+extern "C" {
 /** 
  *  initialize OMPT interface by registering callback functions
  */
@@ -38,6 +38,8 @@ ompt_start_tool_result_t* ompt_start_tool(
       &omptInitialize, &omptFinalize, data}; 
   LOG(INFO) << "ompt_start_tool";
   return &startToolResult;
+}
+
 }
 
 }
