@@ -6,6 +6,10 @@ using namespace std;
 
 namespace romp {
 
+
+
+extern "C" {
+
 int omptInitialize(ompt_function_lookup_t functionLookup,
                    int initialDeviceNum,
                    ompt_data_t* toolData) {
@@ -34,9 +38,6 @@ ompt_start_tool_result_t* ompt_start_tool(
   return &startToolResult;
 }
 
-
-
-extern "C" {
 
 void 
 checkAccess(void* address,

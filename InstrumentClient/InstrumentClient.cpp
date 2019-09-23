@@ -59,9 +59,9 @@ InstrumentClient::getCheckAccessFuncs(
      LOG(FATAL) << "cannot find function `checkAccess` in romp lib";
   }
   vector<BPatch_function*> omptStartToolFuncs;
-  appImage->findFunction("ompt_start_tool", checkAccessFuncs);
-  if (checkAccessFuncs.size() == 0) {
-     LOG(FATAL) << "cannot find function `checkAccess` in romp lib";
+  appImage->findFunction("ompt_start_tool", omptStartFuncs);
+  if (omptStartToolFuncs.size() == 0) {
+     LOG(FATAL) << "cannot find function `ompt_start_tool` in romp lib";
   }
 
 
