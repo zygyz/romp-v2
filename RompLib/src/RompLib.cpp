@@ -1,4 +1,4 @@
-#include "Initialize.h"
+//#include "Initialize.h"
 
 using namespace std;
 
@@ -7,6 +7,25 @@ namespace romp {
 
 
 extern "C" {
+
+/** 
+ *  initialize OMPT interface by registering callback functions
+ */
+int omptInitialize(ompt_function_lookup_t functionLookup,
+                   int initialDeviceNum,
+                   ompt_data_t* toolData) {
+  google::InitGoogleLogging("romp");
+  LOG(INFO) << "start initializing ompt";      
+
+}
+
+/**
+ *  release resources and log info upon finalization of tool
+ */
+void omptFinalize(ompt_data_t* toolData) {
+  LOG(INFO) << "finalizing ompt";
+}
+
 
 /** 
  * implement ompt_start_tool which is defined in OpenMP spec 5.0
