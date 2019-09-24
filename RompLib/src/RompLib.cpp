@@ -5,6 +5,9 @@ using namespace std;
 
 namespace romp {
 
+
+extern "C" {
+
 /** 
  * implement ompt_start_tool which is defined in OpenMP spec 5.0
  */
@@ -17,8 +20,6 @@ ompt_start_tool_result_t* ompt_start_tool(
   LOG(INFO) << "ompt_start_tool";
   return &startToolResult;
 }
-
-extern "C" {
 
 void 
 checkAccess(void* address,
