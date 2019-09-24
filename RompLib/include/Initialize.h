@@ -15,7 +15,6 @@ int omptInitialize(ompt_function_lookup_t functionLookup,
                    ompt_data_t* toolData) {
   google::InitGoogleLogging("romp");
   LOG(INFO) << "start initializing ompt";      
-  cout << "start initializing ompt" << endl;
 
 }
 
@@ -24,7 +23,6 @@ int omptInitialize(ompt_function_lookup_t functionLookup,
  */
 void omptFinalize(ompt_data_t* toolData) {
   LOG(INFO) << "finalizing ompt";
-  cout << "finalizing ompt" << endl;
 }
 
 
@@ -38,7 +36,6 @@ ompt_start_tool_result_t* ompt_start_tool(
   static ompt_start_tool_result_t startToolResult = { 
       &omptInitialize, &omptFinalize, data}; 
   LOG(INFO) << "ompt_start_tool";
-  cout << "ompt_start_tool" << endl;
   return &startToolResult;
 }
 
