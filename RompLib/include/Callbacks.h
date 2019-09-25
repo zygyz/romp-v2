@@ -2,6 +2,7 @@
 #include <glog/logging.h>
 #include <ompt.h>
 
+namespace romp {
 /*
  * ompt callback functions declarations
  */
@@ -13,3 +14,4 @@ void on_ompt_callback_implicit_task(
         unsigned int actualParallelism,
         unsigned int index,
         int flags);
+}
