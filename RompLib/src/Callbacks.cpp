@@ -37,4 +37,17 @@ void on_ompt_callback_mutex_released(
   LOG(INFO) << "on_ompt_callback_mutex_released called";
 }
 
+void on_ompt_callback_work(
+    ompt_work_t wsType,
+    ompt_scope_endpoint_t endPoint,
+    ompt_data_t *parallelData,
+    ompt_data_t *taskData,
+    uint64_t count,
+    const void *codePtrRa) {
+  LOG(INFO) << "on_ompt_callback_work called";
+
 }
+
+
+}
+
