@@ -1,3 +1,6 @@
+#include <glog/logging.h>
+#include <glog/raw_logging.h>
+
 #include "Initialize.h"
 
 namespace romp {
@@ -14,7 +17,7 @@ ompt_start_tool_result_t* ompt_start_tool(
   ompt_data_t data;
   static ompt_start_tool_result_t startToolResult = { 
       &omptInitialize, &omptFinalize, data}; 
-  RAW_LOG(INFO) << "ompt_start_tool";
+  LOG(INFO) << "ompt_start_tool";
   return &startToolResult;
 }
 
@@ -24,12 +27,9 @@ checkAccess(void* address,
             uint64_t instnAddr,
             bool hwLock,
             bool isWrite) {
-   
- RAW_LOG(INFO) << "address: " << address 
-           << " bytesAccessed: " << bytesAccessed 
-           << " instnAddr: " << instnAddr
-           << " hwlock: " << hwLock
-           << " isWrite: " << isWrite;
+  RAW_LOG(INFO, "address:%s bytesAccessed:%u instnAddr: %lx hwLock: %u,
+                 isWrite: %u", address, bytesAccessed, instnAddr, 
+                 hwLock, isWrite);
 }
 
 }

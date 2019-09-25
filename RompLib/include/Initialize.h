@@ -1,4 +1,5 @@
 #pragma once
+#include <glog/logging.h>
 #include "Callbacks.h"
 
 /* 
@@ -27,7 +28,7 @@ int omptInitialize(ompt_function_lookup_t functionLookup,
                    int initialDeviceNum,
                    ompt_data_t* toolData) {
   google::InitGoogleLogging("romp");
-  RAW_LOG(INFO) << "start initializing ompt";
+  LOG(INFO) << "start initializing ompt";
   auto ompt_set_callback = 
       (ompt_set_callback_t)functionLookup("ompt_set_callback");
 
@@ -53,7 +54,7 @@ int omptInitialize(ompt_function_lookup_t functionLookup,
  *  release resources and log info upon finalization of tool
  */
 void omptFinalize(ompt_data_t* toolData) {
-  RAW_LOG(INFO) << "finalizing ompt";
+  LOG(INFO) << "finalizing ompt";
 }
 
 
