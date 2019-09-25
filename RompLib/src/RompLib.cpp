@@ -27,8 +27,8 @@ checkAccess(void* address,
             uint64_t instnAddr,
             bool hwLock,
             bool isWrite) {
-  RAW_LOG(INFO, "address:%s bytesAccessed:%u instnAddr: %lx hwLock: %u,
-                 isWrite: %u", address, bytesAccessed, instnAddr, 
+  RAW_LOG(INFO, "address:%s bytesAccessed:%u instnAddr: %lx hwLock: %u,"
+                "isWrite: %u", address, bytesAccessed, instnAddr, 
                  hwLock, isWrite);
 }
 
