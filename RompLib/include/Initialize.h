@@ -1,5 +1,4 @@
 #pragma once
-#include <iostream>
 #include "Callbacks.h"
 
 /* 
@@ -31,7 +30,6 @@ int omptInitialize(ompt_function_lookup_t functionLookup,
   LOG(INFO) << "start initializing ompt";
   auto ompt_set_callback = (ompt_set_callback_t)functionLookup("ompt_set_callback");
   register_callback(ompt_callback_implicit_task);
-  std::cout << "start initializing ompt\n";
   return 1;
 
 }
@@ -41,7 +39,6 @@ int omptInitialize(ompt_function_lookup_t functionLookup,
  */
 void omptFinalize(ompt_data_t* toolData) {
   LOG(INFO) << "finalizing ompt";
-  std::cout << "finalizing ompt\n";
 }
 
 
