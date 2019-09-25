@@ -8,6 +8,7 @@
 */
 namespace romp{
 
+bool gOmptInitialized = false; 
 /* 
  * Define macro for registering ompt callback functions. 
  */
@@ -46,7 +47,7 @@ int omptInitialize(ompt_function_lookup_t functionLookup,
   register_callback(ompt_callback_thread_begin);
   register_callback(ompt_callback_thread_end);
   register_callback(ompt_callback_dispatch);
-
+  gOmptInitialized = true;
   return 1;
 }
 
