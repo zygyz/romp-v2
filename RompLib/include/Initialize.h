@@ -9,7 +9,7 @@ namespace romp{
 /* 
  * Define macro for registering ompt callback functions. 
  */
-#define register_callback(name, type)                        \
+#define register_callback_t(name, type)                      \
 do {                                                         \
   type f_##name = &on_##name;                                \
   if (ompt_set_callback(name, (ompt_callback_t)f_##name) ==  \
