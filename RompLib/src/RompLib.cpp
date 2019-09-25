@@ -27,13 +27,17 @@ checkAccess(void* address,
             uint64_t instnAddr,
             bool hwLock,
             bool isWrite) {
+    /*
   RAW_LOG(INFO, "address:%lx bytesAccessed:%u instnAddr: %lx hwLock: %u,"
                 "isWrite: %u", address, bytesAccessed, instnAddr, 
                  hwLock, isWrite);
+   */
+   /*
   if (!gOmptInitialized) {
     RAW_LOG(INFO, "%s", "ompt not initialized yet");
     return;
   }
+  */
 }
 
 }
