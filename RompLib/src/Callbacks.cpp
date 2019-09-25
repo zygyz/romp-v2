@@ -38,25 +38,33 @@ void on_ompt_callback_mutex_released(
 }
 
 void on_ompt_callback_work(
-    ompt_work_t wsType,
-    ompt_scope_endpoint_t endPoint,
-    ompt_data_t *parallelData,
-    ompt_data_t *taskData,
-    uint64_t count,
-    const void *codePtrRa) {
+      ompt_work_t wsType,
+      ompt_scope_endpoint_t endPoint,
+      ompt_data_t *parallelData,
+      ompt_data_t *taskData,
+      uint64_t count,
+      const void *codePtrRa) {
   LOG(INFO) << "on_ompt_callback_work called";
 
 }
 
 void on_ompt_callback_parallel_begin(
-    ompt_data_t *encounteringTaskData,
-    const ompt_frame_t *encounteringTaskFrame,
-    ompt_data_t *parallelData,
-    unsigned int requestedParallelism,
-    int flags,
-    const void *codePtrRa) {
+       ompt_data_t *encounteringTaskData,
+       const ompt_frame_t *encounteringTaskFrame,
+       ompt_data_t *parallelData,
+       unsigned int requestedParallelism,
+       int flags,
+       const void *codePtrRa) {
 
 }
+
+void on_ompt_callback_parallel_end( 
+       ompt_data_t *parallelData,
+       ompt_data_t *encounteringTaskData,
+       int flags,
+       const void *codePtrRa) {
+
+}  
 
 }
 

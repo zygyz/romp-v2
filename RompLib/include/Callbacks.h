@@ -49,4 +49,11 @@ void on_ompt_callback_parallel_begin(
         int flags,
         const void *codePtrRa);
 
+void on_ompt_callback_parallel_end(
+        ompt_data_t *parallelData,
+        ompt_data_t *encounteringTaskData,
+        int flags,
+        const void *codePtrRa);
+
+
 }
