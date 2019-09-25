@@ -1,5 +1,5 @@
 #pragma once
-#include <glog/logging.h>
+#include <glog/raw_logging.h>
 #include <ompt.h>
 
 namespace romp {

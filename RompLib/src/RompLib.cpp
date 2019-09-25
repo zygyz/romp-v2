@@ -14,7 +14,7 @@ ompt_start_tool_result_t* ompt_start_tool(
   ompt_data_t data;
   static ompt_start_tool_result_t startToolResult = { 
       &omptInitialize, &omptFinalize, data}; 
-  LOG(INFO) << "ompt_start_tool";
+  RAW_LOG(INFO) << "ompt_start_tool";
   return &startToolResult;
 }
 
@@ -25,13 +25,11 @@ checkAccess(void* address,
             bool hwLock,
             bool isWrite) {
    
-    /*
- LOG(INFO) << "address: " << address 
+ RAW_LOG(INFO) << "address: " << address 
            << " bytesAccessed: " << bytesAccessed 
            << " instnAddr: " << instnAddr
            << " hwlock: " << hwLock
            << " isWrite: " << isWrite;
-           */
 }
 
 }

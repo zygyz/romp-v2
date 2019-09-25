@@ -27,7 +27,7 @@ int omptInitialize(ompt_function_lookup_t functionLookup,
                    int initialDeviceNum,
                    ompt_data_t* toolData) {
   google::InitGoogleLogging("romp");
-  LOG(INFO) << "start initializing ompt";
+  RAW_LOG(INFO) << "start initializing ompt";
   auto ompt_set_callback = 
       (ompt_set_callback_t)functionLookup("ompt_set_callback");
 
@@ -53,7 +53,7 @@ int omptInitialize(ompt_function_lookup_t functionLookup,
  *  release resources and log info upon finalization of tool
  */
 void omptFinalize(ompt_data_t* toolData) {
-  LOG(INFO) << "finalizing ompt";
+  RAW_LOG(INFO) << "finalizing ompt";
 }
 
 
