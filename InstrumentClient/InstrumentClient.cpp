@@ -7,7 +7,7 @@ using namespace romp;
 using namespace std;
 
 #define MATCH_LIB(buffer, target) \
-      strncmp(string(buffer), target, target.length()) == 0      
+      strncmp(buffer, target, strlen(target)) == 0      
 
 InstrumentClient::InstrumentClient(
         const string& programName, 
@@ -86,8 +86,7 @@ InstrumentClient::getFunctionsVector(
     LOG(INFO) << "module name: " 
               << module->getFullName(nameBuffer, MODULE_NAME_LENGTH);
     if (module->isSharedLib()) { 
-      auto targetLib = string("libc.so.6");
-      if (MATCH_LIB(nameBuffer, targetLib)) {
+      if (MATCH_LIB(nameBuffer, "libc.so.6")) {
         LOG(INFO) << "skipping module: " << nameBuffer;
         continue; 
       }
