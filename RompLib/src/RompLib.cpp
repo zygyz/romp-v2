@@ -1,7 +1,5 @@
 #include "Initialize.h"
 
-using namespace std;
-
 namespace romp {
 
 
@@ -16,8 +14,7 @@ ompt_start_tool_result_t* ompt_start_tool(
   ompt_data_t data;
   static ompt_start_tool_result_t startToolResult = { 
       &omptInitialize, &omptFinalize, data}; 
-  //LOG(INFO) << "ompt_start_tool";
-  std::cout << "ompt_start_tool called\n";
+  LOG(INFO) << "ompt_start_tool";
   return &startToolResult;
 }
 
