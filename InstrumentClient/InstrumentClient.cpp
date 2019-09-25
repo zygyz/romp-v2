@@ -6,6 +6,9 @@ using namespace Dyninst;
 using namespace romp;
 using namespace std;
 
+#define MATCH_LIB(buffer, target) \
+      strncmp(string(buffer), target, strlen(target)) == 0      
+
 InstrumentClient::InstrumentClient(
         const string& programName, 
         const string& rompLibPath,
@@ -83,10 +86,10 @@ InstrumentClient::getFunctionsVector(
     LOG(INFO) << "module name: " 
               << module->getFullName(nameBuffer, MODULE_NAME_LENGTH);
     if (module->isSharedLib()) { 
-      // skip instrumenting shared library,because the instrumented binary 
-      // does not load these instrumneted shared libraries
-      // LOG(INFO) << "skipping module: " << nameBuffer;
-      //  continue;
+      if (MATCH_LIB(nameBuffer, string("libc.so.6"))) {
+        LOG(INFO) << "skipping module: " << nameBuffer;
+        continue; 
+      }
     }
     auto procedures = module->getProcedures();
     for (auto& procedure : *procedures) {
