@@ -38,6 +38,8 @@ int omptInitialize(ompt_function_lookup_t functionLookup,
   register_callback(ompt_callback_work);
   register_callback(ompt_callback_parallel_begin);
   register_callback(ompt_callback_parallel_end);
+  register_callback(ompt_callback_task_create);
+  register_callback(ompt_callback_task_schedule);
   return 1;
 }
 

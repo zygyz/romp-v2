@@ -66,5 +66,25 @@ void on_ompt_callback_parallel_end(
 
 }  
 
+void on_ompt_callback_task_create(
+        ompt_data_t *encounteringTaskData,
+        const ompt_frame_t *encounteringTaskFrame,
+        ompt_data_t *newTaskData,
+        int flags,
+        int hasDependences,
+        const void *codePtrRa) {
+
 }
+
+void on_ompt_callback_task_schedule(
+        ompt_data_t *priorTaskData,
+        ompt_task_status_t priorTaskStatus,
+        ompt_data_t *nextTaskData) {
+
+}
+
+}
+
+
+
 
