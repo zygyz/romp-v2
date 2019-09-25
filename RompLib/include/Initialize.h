@@ -28,10 +28,12 @@ int omptInitialize(ompt_function_lookup_t functionLookup,
                    ompt_data_t* toolData) {
   google::InitGoogleLogging("romp");
   LOG(INFO) << "start initializing ompt";
-  auto ompt_set_callback = (ompt_set_callback_t)functionLookup("ompt_set_callback");
+  auto ompt_set_callback = 
+      (ompt_set_callback_t)functionLookup("ompt_set_callback");
   register_callback(ompt_callback_implicit_task);
+  register_callback(ompt_callback_sync_region);
+  register_callback_t(ompt_callback_mutex_acquired, ompt_callback_mutex_t);
   return 1;
-
 }
 
 /**
