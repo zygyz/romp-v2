@@ -41,4 +41,12 @@ void on_ompt_callback_work(
         uint64_t count,
         const void *codePtrRa);
 
+void on_ompt_callback_parallel_begin(
+        ompt_data_t *encounteringTaskData,
+        const ompt_frame_t *encounteringTaskFrame,
+        ompt_data_t *parallelData,
+        unsigned int requestedParallelism,
+        int flags,
+        const void *codePtrRa);
+
 }
