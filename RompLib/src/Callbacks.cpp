@@ -19,7 +19,14 @@ void on_ompt_callback_sync_region(
        ompt_data_t *taskData,
        const void* codePtrRa) {
   LOG(INFO) << "on_ompt_callback_sync_region called";
+  
+}
 
+void on_ompt_callback_mutex_acquired(
+        ompt_mutex_t kind,
+        ompt_wait_id_t waitId,
+        const void *codePtrRa) {
+  LOG(INFO) << "on_ompt_callback_mutex_acquired called";
 }
 
 }

@@ -22,4 +22,10 @@ void on_ompt_callback_sync_region(
         ompt_data_t *taskData,
         const void* codePtrRa); 
 
+// has signature of ompt_callback_mutex_t
+void on_ompt_callback_mutex_acquired(
+        ompt_mutex_t kind,
+        ompt_wait_id_t waitId,
+        const void *codePtrRa);   
+      
 }
