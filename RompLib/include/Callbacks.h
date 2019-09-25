@@ -73,4 +73,11 @@ void on_ompt_callback_dependences(
        const ompt_dependence_t *deps,
        int ndeps); 
 
+void on_ompt_callback_thread_begin(
+       ompt_thread_t threadType,
+       ompt_data_t *threadData);
+
+void on_ompt_callback_thread_end(
+       ompt_data_t *threadData);
+
 }
