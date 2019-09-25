@@ -7,10 +7,9 @@ void on_ompt_callback_implicit_task(
        ompt_data_t* parallelData,
        ompt_data_t* taskData,
        unsigned int actualParallelism,
-       unsigned int index) {
+       unsigned int index,
+       int flags) {
   LOG(INFO) << "on_ompt_callback_implicit_task called"; 
 }
 
 }
-
-
