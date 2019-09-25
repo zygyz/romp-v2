@@ -16,7 +16,8 @@ ompt_start_tool_result_t* ompt_start_tool(
   ompt_data_t data;
   static ompt_start_tool_result_t startToolResult = { 
       &omptInitialize, &omptFinalize, data}; 
-  LOG(INFO) << "ompt_start_tool";
+  //LOG(INFO) << "ompt_start_tool";
+  std::cout << "ompt_start_tool called\n";
   return &startToolResult;
 }
 

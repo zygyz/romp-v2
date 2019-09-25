@@ -1,4 +1,5 @@
 #include "Callbacks.h"
+#include <iostream>
 
 namespace romp {   
 
@@ -9,7 +10,9 @@ void on_ompt_callback_implicit_task(
        unsigned int actualParallelism,
        unsigned int index,
        int flags) {
-  LOG(INFO) << "on_ompt_callback_implicit_task called"; 
+   
+  std::cout << "on_ompt_callback_implicit_task called\n";
+  //LOG(INFO) << "on_ompt_callback_implicit_task called"; 
 }
 
 }
