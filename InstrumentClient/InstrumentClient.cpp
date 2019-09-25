@@ -7,7 +7,7 @@ using namespace romp;
 using namespace std;
 
 #define MATCH_LIB(buffer, target) \
-      strncmp(string(buffer), target, strlen(target)) == 0      
+      strncmp(string(buffer), target, target.length()) == 0      
 
 InstrumentClient::InstrumentClient(
         const string& programName, 
