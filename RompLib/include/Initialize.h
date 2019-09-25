@@ -9,6 +9,8 @@
 namespace romp{
 
 bool gOmptInitialized = false; 
+ompt_get_task_info_t ompt_get_task_info;
+ompt_get_thread_data_t ompt_get_thread_data;
 /* 
  * Define macro for registering ompt callback functions. 
  */
@@ -25,13 +27,13 @@ do {                                                         \
 /** 
  *  initialize OMPT interface by registering callback functions
  */
-int omptInitialize(ompt_function_lookup_t functionLookup,
+int omptInitialize(ompt_function_lookup_t lookup,
                    int initialDeviceNum,
                    ompt_data_t* toolData) {
   google::InitGoogleLogging("romp");
   LOG(INFO) << "start initializing ompt";
   auto ompt_set_callback = 
-      (ompt_set_callback_t)functionLookup("ompt_set_callback");
+      (ompt_set_callback_t)lookup("ompt_set_callback");
 
   register_callback_t(ompt_callback_mutex_acquired, ompt_callback_mutex_t);
   register_callback_t(ompt_callback_mutex_released, ompt_callback_mutex_t);
@@ -47,6 +49,9 @@ int omptInitialize(ompt_function_lookup_t functionLookup,
   register_callback(ompt_callback_thread_begin);
   register_callback(ompt_callback_thread_end);
   register_callback(ompt_callback_dispatch);
+
+  ompt_get_task_info = (ompt_get_task_info_t)lookup("ompt_get_task_info");
+
   gOmptInitialized = true;
   return 1;
 }
