@@ -64,7 +64,13 @@ void on_ompt_callback_task_create(
        const void *codePtrRa);
 
 void on_ompt_callback_task_schedule(
-        ompt_data_t *priorTaskData,
-        ompt_task_status_t priorTaskStatus,
-        ompt_data_t *nextTaskData);
+       ompt_data_t *priorTaskData,
+       ompt_task_status_t priorTaskStatus,
+       ompt_data_t *nextTaskData);
+
+void on_ompt_callback_dependences(
+       ompt_data_t *taskData,
+       const ompt_dependence_t *deps,
+       int ndeps); 
+
 }

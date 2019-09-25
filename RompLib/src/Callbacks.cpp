@@ -83,6 +83,15 @@ void on_ompt_callback_task_schedule(
 
 }
 
+void on_ompt_callback_dependences(
+        ompt_data_t *taskData,
+        const ompt_dependence_t *deps,
+        int ndeps) {
+
+}
+
+
+
 }
 
 
