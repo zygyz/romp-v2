@@ -33,6 +33,7 @@ int omptInitialize(ompt_function_lookup_t functionLookup,
   register_callback(ompt_callback_implicit_task);
   register_callback(ompt_callback_sync_region);
   register_callback_t(ompt_callback_mutex_acquired, ompt_callback_mutex_t);
+  register_callback_t(ompt_callback_mutex_released, ompt_callback_mutex_t);
   return 1;
 }
 

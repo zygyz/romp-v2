@@ -27,6 +27,14 @@ void on_ompt_callback_mutex_acquired(
         ompt_wait_id_t waitId,
         const void *codePtrRa) {
   LOG(INFO) << "on_ompt_callback_mutex_acquired called";
+
+}
+
+void on_ompt_callback_mutex_released(
+        ompt_mutex_t kind,
+        ompt_wait_id_t waitId,
+        const void *codePtrRa) {
+  LOG(INFO) << "on_ompt_callback_mutex_released called";
 }
 
 }
