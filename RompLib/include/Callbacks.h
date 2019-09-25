@@ -80,4 +80,17 @@ void on_ompt_callback_thread_begin(
 void on_ompt_callback_thread_end(
        ompt_data_t *threadData);
 
+void on_ompt_callback_dispatch(
+       ompt_data_t *parallelData,
+       ompt_data_t *taskData,
+       ompt_dispatch_t kind,
+       ompt_data_t instance);
+
+// has the type signature ompt_callback_sync_region_t
+void on_ompt_callback_reduction(
+       ompt_sync_region_t kind,
+       ompt_scope_endpoint_t endPoint,
+       ompt_data_t *parallelData,
+       ompt_data_t *taskData,
+       const void *codePtrRa);
 }
