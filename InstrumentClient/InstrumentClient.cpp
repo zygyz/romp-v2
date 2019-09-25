@@ -86,7 +86,8 @@ InstrumentClient::getFunctionsVector(
     LOG(INFO) << "module name: " 
               << module->getFullName(nameBuffer, MODULE_NAME_LENGTH);
     if (module->isSharedLib()) { 
-      if (MATCH_LIB(nameBuffer, string("libc.so.6"))) {
+      auto targetLib = string("libc.so.6");
+      if (MATCH_LIB(nameBuffer, targetLib)) {
         LOG(INFO) << "skipping module: " << nameBuffer;
         continue; 
       }
