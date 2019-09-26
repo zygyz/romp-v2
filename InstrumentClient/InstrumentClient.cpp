@@ -82,13 +82,20 @@ InstrumentClient::getFunctionsVector(
     LOG(FATAL) << "cannot get modules";
   }
   char nameBuffer[MODULE_NAME_LENGTH];
+  vector<string> skipLibraryName = { "libc.so.6", 
+                                     "libpthread.so.0",
+                                     "libgcc_s.so.1",
+                                     "libgomp.so.1"
+  };
   for (auto& module : *appModules) {
     LOG(INFO) << "module name: " 
               << module->getFullName(nameBuffer, MODULE_NAME_LENGTH);
     if (module->isSharedLib()) { 
-      if (MATCH_LIB(nameBuffer, "libc.so.6")) {
-        LOG(INFO) << "skipping module: " << nameBuffer;
-        continue; 
+      for (const auto& libName : skipLibraryName) {
+        if (MATCH_LIB(nameBuffer, libName.c_str())) P{
+          LOG(INFO) << "skipping module: " << nameBuffer;
+          continue;
+        }
       }
     }
     auto procedures = module->getProcedures();
