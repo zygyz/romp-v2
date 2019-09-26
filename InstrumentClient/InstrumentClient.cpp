@@ -86,13 +86,13 @@ InstrumentClient::getFunctionsVector(
                                      "libpthread.so.0",
                                      "libgcc_s.so.1",
                                      "libgomp.so.1"
-  };
+                                    };
   for (auto& module : *appModules) {
     LOG(INFO) << "module name: " 
               << module->getFullName(nameBuffer, MODULE_NAME_LENGTH);
     if (module->isSharedLib()) { 
       for (const auto& libName : skipLibraryName) {
-        if (MATCH_LIB(nameBuffer, libName.c_str())) P{
+        if (MATCH_LIB(nameBuffer, libName.c_str())) {
           LOG(INFO) << "skipping module: " << nameBuffer;
           continue;
         }
