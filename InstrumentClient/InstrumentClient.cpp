@@ -7,7 +7,7 @@ using namespace romp;
 using namespace std;
 
 #define MATCH_LIB(buffer, target) \
-      strncmp(buffer, target, strlen(target)) == 0      
+      buffer.find(target) != string::npos
 
 InstrumentClient::InstrumentClient(
         const string& programName, 
@@ -45,21 +45,21 @@ InstrumentClient::initInstrumenter(
 /* 
  * Get the dyninst representation of the `checkAccess` function
  * defined in romp library code RompLib.cpp.
- */
+*/
 vector<BPatch_function*>
 InstrumentClient::getCheckAccessFuncs(
-        unique_ptr<BPatch_addressSpace>& addrSpacePtr) {
+      unique_ptr<BPatch_addressSpace>& addrSpacePtr) {
   if (!addrSpacePtr) {
     LOG(FATAL) << "null pointer";
-  }
+   }
   auto appImage = addrSpacePtr->getImage();
   if (!appImage) {
     LOG(FATAL) << "cannot get image";
-  }
-  vector<BPatch_function*> checkAccessFuncs;
-  appImage->findFunction("checkAccess", checkAccessFuncs);
+   }
+   vector<BPatch_function*> checkAccessFuncs;
+   appImage->findFunction("checkAccess", checkAccessFuncs);
   if (checkAccessFuncs.size() == 0) {
-     LOG(FATAL) << "cannot find function `checkAccess` in romp lib";
+    LOG(FATAL) << "cannot find function `checkAccess` in romp lib";
   }
   return checkAccessFuncs;
 }
@@ -90,10 +90,10 @@ InstrumentClient::getFunctionsVector(
                                      "libdl.so.2",
                                    //  "libomp.so",
                                      "ld-linux-x86-64.so.2",
-                                     //"libstdc++.so.6",
+                                     "libstdc++.so.6",
                                      "libomptrace.so",
-                                     "/home/yg31/.spack/stage/romp",
-                                     "/home/yg31/.spack/stage/llvm-openmp",
+                                     "/stage/romp",
+                                     "/stage/llvm-openmp",
                                     };
   for (auto& module : *appModules) {
     LOG(INFO) << "module name: " 
