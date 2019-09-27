@@ -86,7 +86,7 @@ InstrumentClient::getFunctionsVector(
                                      "libpthread.so.0",
                                      "libgcc_s.so.1",
                                      "libgomp.so.1", 
-                                     "libm.so.6",
+                                    // "libm.so.6",
                                      "libdl.so.2",
                                      "libomp.so",
                                      "ld-linux-x86-64.so.2",
