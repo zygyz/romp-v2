@@ -83,7 +83,7 @@ InstrumentClient::getFunctionsVector(
   }
   char nameBuffer[MODULE_NAME_LENGTH];
   vector<string> skipLibraryName = { "libc.so.6", 
-                                     "libpthread.so.0",
+                                   //  "libpthread.so.0",
                                      "libgcc_s.so.1",
                                    //  "libgomp.so.1", 
                                     // "libm.so.6",
