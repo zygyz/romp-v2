@@ -88,7 +88,7 @@ InstrumentClient::getFunctionsVector(
                                    //  "libgomp.so.1", 
                                     // "libm.so.6",
                                      "libdl.so.2",
-                                     "libomp.so",
+                                   //  "libomp.so",
                                      "ld-linux-x86-64.so.2",
                                      "libstdc++.so.6",
                                      "libomptrace.so",
