@@ -6,6 +6,9 @@ using namespace Dyninst;
 using namespace romp;
 using namespace std;
 
+#define MATCH_LIB(buffer, target) \
+      buffer.find(target) != string::npos
+
 InstrumentClient::InstrumentClient(
         const string& programName, 
         const string& rompLibPath,
@@ -38,7 +41,7 @@ InstrumentClient::initInstrumenter(
   unique_ptr<BPatch_addressSpace> ptr(handle);  
   // load romp library 
   if (!ptr->loadLibrary(rompLibPath.c_str())) {
-    LOG(FATAL) << "cannot load romp library"; 
+    LOG(FATAL) << "cannot load romp library: " << rompLibPath;
   } else {
     LOG(INFO) << "loaded romp library at: " << rompLibPath;
   }
@@ -48,21 +51,21 @@ InstrumentClient::initInstrumenter(
 /* 
  * Get the dyninst representation of the `checkAccess` function
  * defined in romp library code RompLib.cpp.
- */
+*/
 vector<BPatch_function*>
 InstrumentClient::getCheckAccessFuncs(
-        unique_ptr<BPatch_addressSpace>& addrSpacePtr) {
+      unique_ptr<BPatch_addressSpace>& addrSpacePtr) {
   if (!addrSpacePtr) {
     LOG(FATAL) << "null pointer";
-  }
+   }
   auto appImage = addrSpacePtr->getImage();
   if (!appImage) {
     LOG(FATAL) << "cannot get image";
-  }
-  vector<BPatch_function*> checkAccessFuncs;
-  appImage->findFunction("checkAccess", checkAccessFuncs);
+   }
+   vector<BPatch_function*> checkAccessFuncs;
+   appImage->findFunction("checkAccess", checkAccessFuncs);
   if (checkAccessFuncs.size() == 0) {
-     LOG(FATAL) << "cannot find function `checkAccess` in romp lib";
+    LOG(FATAL) << "cannot find function `checkAccess` in romp lib";
   }
   return checkAccessFuncs;
 }
@@ -84,7 +87,35 @@ InstrumentClient::getFunctionsVector(
   if (!appModules) {
     LOG(FATAL) << "cannot get modules";
   }
+  char nameBuffer[MODULE_NAME_LENGTH];
+  vector<string> skipLibraryName = { "libc.so.6", 
+                                     "libpthread.so.0",
+                                     "libgcc_s.so.1",
+                                   //  "libgomp.so.1", 
+                                    // "libm.so.6",
+                                     "libdl.so.2",
+                                   //  "libomp.so",
+                                     "ld-linux-x86-64.so.2",
+                                     "libstdc++.so.6",
+                                     "libomptrace.so",
+                                     "/stage/romp", 
+                                     "/stage/llvm-openmp",
+                                    };
   for (auto& module : *appModules) {
+    LOG(INFO) << "module name: " 
+              << module->getFullName(nameBuffer, MODULE_NAME_LENGTH);
+    auto canSkip = false;
+    if (module->isSharedLib()) { 
+      for (const auto& libName : skipLibraryName) {
+        if (MATCH_LIB(string(nameBuffer), libName)) {
+          LOG(INFO) << "skipping module: " << nameBuffer;
+          canSkip = true; 
+          break;
+        }
+      }
+      if (canSkip)
+        continue;
+    }
     auto procedures = module->getProcedures();
     for (auto& procedure : *procedures) {
         funcVec.push_back(procedure);
