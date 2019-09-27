@@ -93,7 +93,7 @@ InstrumentClient::getFunctionsVector(
                                      "libstdc++.so.6",
                                      "libomptrace.so",
                                      "/stage/romp", 
-                                   //  "/stage/llvm-openmp",
+                                     "/stage/llvm-openmp",
                                     };
   for (auto& module : *appModules) {
     LOG(INFO) << "module name: " 
