@@ -83,16 +83,16 @@ InstrumentClient::getFunctionsVector(
   }
   char nameBuffer[MODULE_NAME_LENGTH];
   vector<string> skipLibraryName = { "libc.so.6", 
-                                   //  "libpthread.so.0",
+                                     "libpthread.so.0",
                                      "libgcc_s.so.1",
                                    //  "libgomp.so.1", 
                                     // "libm.so.6",
                                      "libdl.so.2",
                                    //  "libomp.so",
                                      "ld-linux-x86-64.so.2",
-                                     "libstdc++.so.6",
+                                   //  "libstdc++.so.6",
                                      "libomptrace.so",
-                                     "/stage/romp",
+                                     "/stage/romp", 
                                      "/stage/llvm-openmp",
                                     };
   for (auto& module : *appModules) {
