@@ -101,7 +101,7 @@ InstrumentClient::getFunctionsVector(
     auto canSkip = false;
     if (module->isSharedLib()) { 
       for (const auto& libName : skipLibraryName) {
-        if (MATCH_LIB(nameBuffer, libName.c_str())) {
+        if (MATCH_LIB(string(nameBuffer), libName)) {
           LOG(INFO) << "skipping module: " << nameBuffer;
           canSkip = true; 
           break;
