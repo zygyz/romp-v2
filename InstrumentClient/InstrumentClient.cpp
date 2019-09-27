@@ -87,13 +87,16 @@ InstrumentClient::getFunctionsVector(
                                      "libgcc_s.so.1",
                                      "libgomp.so.1", 
                                      "libm.so.6",
-                                     "libbdl.so.2",
-                                     "ld-linux-x86-64.so.2"
+                                     "libdl.so.2",
+                                     "libomp.so",
+                                     "ld-linux-x86-64.so.2",
+                                     "libstdc++.so.6",
+                                     "libomptrace.so",
                                     };
   for (auto& module : *appModules) {
     LOG(INFO) << "module name: " 
               << module->getFullName(nameBuffer, MODULE_NAME_LENGTH);
-    bool canSkip = false;
+    auto canSkip = false;
     if (module->isSharedLib()) { 
       for (const auto& libName : skipLibraryName) {
         if (MATCH_LIB(nameBuffer, libName.c_str())) {
