@@ -90,7 +90,7 @@ InstrumentClient::getFunctionsVector(
                                      "libdl.so.2",
                                    //  "libomp.so",
                                      "ld-linux-x86-64.so.2",
-                                     "libstdc++.so.6",
+                                     //"libstdc++.so.6",
                                      "libomptrace.so",
                                      "/home/yg31/.spack/stage/romp",
                                      "/home/yg31/.spack/stage/llvm-openmp",
