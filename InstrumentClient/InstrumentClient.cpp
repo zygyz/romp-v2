@@ -85,7 +85,10 @@ InstrumentClient::getFunctionsVector(
   vector<string> skipLibraryName = { "libc.so.6", 
                                      "libpthread.so.0",
                                      "libgcc_s.so.1",
-                                     "libgomp.so.1"
+                                     "libgomp.so.1", 
+                                     "libm.so.6",
+                                     "libbdl.so.2",
+                                     "ld-linux-x86-64.so.2"
                                     };
   for (auto& module : *appModules) {
     LOG(INFO) << "module name: " 
