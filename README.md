@@ -54,4 +54,13 @@ The dyninst client code is in `InstrumentClient`. Core functions are in
 vector. Currently, three libraries could be instrumented and linked without
 generating segmentation fault: `libomp.so, libgromp.so.1, libm.so.6`. 
 
+### Build local version of dyninst
 
+Sometimes, it would be convenient to build dyninst on local machine with 
+appropriate modification for the purpose of debugging. To enable this,
+one put dyninst source code in the home directory: `$HOME/dyninst`, then
+one can install romp with the following command:
+
+```
+spack install romp@develop +debug_dyninst 
+```
