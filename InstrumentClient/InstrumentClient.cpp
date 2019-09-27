@@ -93,14 +93,18 @@ InstrumentClient::getFunctionsVector(
   for (auto& module : *appModules) {
     LOG(INFO) << "module name: " 
               << module->getFullName(nameBuffer, MODULE_NAME_LENGTH);
+    bool canSkip = false;
     if (module->isSharedLib()) { 
       for (const auto& libName : skipLibraryName) {
         if (MATCH_LIB(nameBuffer, libName.c_str())) {
           LOG(INFO) << "skipping module: " << nameBuffer;
-          continue;
+          canSkip = true; 
+          break;
         }
       }
     }
+    if (canSkip)
+      continue;
     auto procedures = module->getProcedures();
     for (auto& procedure : *procedures) {
         funcVec.push_back(procedure);
