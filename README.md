@@ -58,7 +58,7 @@ generating segmentation fault: `libomp.so, libgromp.so.1, libm.so.6`.
 
 Sometimes, it would be convenient to build dyninst on local machine with 
 appropriate modification for the purpose of debugging. To enable this,
-one put dyninst source code in the home directory: `$HOME/dyninst`, then
+one can put dyninst source code in the home directory: `$HOME/dyninst`, then
 one can install romp with the following command:
 
 ```
