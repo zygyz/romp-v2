@@ -91,7 +91,7 @@ InstrumentClient::getFunctionsVector(
                                      "libomp.so",
                                      "ld-linux-x86-64.so.2",
                                      "libstdc++.so.6",
-                                     "libomptrace.so",
+                                     "libomptrace.so"
                                     };
   for (auto& module : *appModules) {
     LOG(INFO) << "module name: " 
