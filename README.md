@@ -9,7 +9,8 @@
 2. Architecture:  x86_64
 
 ### Prerequisites
-Checkout my version of spack, which contains some modification to package.py for llvm-openmp 
+Checkout my version of spack, which contains some modification to package.py 
+for llvm-openmp 
 and also the pacakge spec for romp.
 
 `git clone git@github.com:zygyz/spack.git`
@@ -47,4 +48,10 @@ This will generate a.out.inst
 ```
 LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ./a.out.inst
 ```
+
+The dyninst client code is in `InstrumentClient`. Core functions are in 
+`InstrumentClient.cpp`. Library names are listed in `skipLibraryName` 
+vector. Currently, three libraries could be instrumented and linked without
+generating segmentation fault: `libomp.so, libgromp.so.1, libm.so.6`. 
+
 
