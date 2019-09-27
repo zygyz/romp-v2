@@ -1,4 +1,4 @@
-## Please refer to the read me in experimental branch for now
+## Please refer to the readme in experimental branch for now
 
 
 
