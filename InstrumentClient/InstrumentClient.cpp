@@ -82,33 +82,12 @@ InstrumentClient::getFunctionsVector(
     LOG(FATAL) << "cannot get modules";
   }
   char nameBuffer[MODULE_NAME_LENGTH];
-  vector<string> skipLibraryName = { "libc.so.6", 
-                                     "libpthread.so.0",
-                                     "libgcc_s.so.1",
-                                   //  "libgomp.so.1", 
-                                    // "libm.so.6",
-                                     "libdl.so.2",
-                                   //  "libomp.so",
-                                     "ld-linux-x86-64.so.2",
-                                     "libstdc++.so.6",
-                                     "libomptrace.so",
-                                     "/stage/romp", 
-                                     "/stage/llvm-openmp",
-                                    };
   for (auto& module : *appModules) {
     LOG(INFO) << "module name: " 
               << module->getFullName(nameBuffer, MODULE_NAME_LENGTH);
-    auto canSkip = false;
     if (module->isSharedLib()) { 
-      for (const auto& libName : skipLibraryName) {
-        if (MATCH_LIB(string(nameBuffer), libName)) {
-          LOG(INFO) << "skipping module: " << nameBuffer;
-          canSkip = true; 
-          break;
-        }
-      }
-      if (canSkip)
-        continue;
+      LOG(INFO) << "skip module: " << nameBuffer;
+      continue;
     }
     auto procedures = module->getProcedures();
     for (auto& procedure : *procedures) {
