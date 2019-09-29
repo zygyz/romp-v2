@@ -1,7 +1,5 @@
 #pragma once
 #include <glog/logging.h>
-#include "Callbacks.h"
-#include "QueryFuncs.h"
 
 /* 
  * This header file defines functions that are used 
@@ -28,7 +26,6 @@ int omptInitialize(ompt_function_lookup_t lookup,
                    ompt_data_t* toolData);
 
 void omptFinalize(ompt_data_t* toolData);
-
 
 }
 
