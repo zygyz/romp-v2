@@ -2,6 +2,7 @@
 #include <glog/raw_logging.h>
 
 #include "Initialize.h"
+#include "QueryFuncs.h"
 
 namespace romp {
 
@@ -21,23 +22,23 @@ ompt_start_tool_result_t* ompt_start_tool(
   return &startToolResult;
 }
 
-void 
-checkAccess(void* address,
+void checkAccess(void* address,
             uint32_t bytesAccessed,
             uint64_t instnAddr,
             bool hwLock,
             bool isWrite) {
-    /*
   RAW_LOG(INFO, "address:%lx bytesAccessed:%u instnAddr: %lx hwLock: %u,"
                 "isWrite: %u", address, bytesAccessed, instnAddr, 
                  hwLock, isWrite);
-   */
-   /*
   if (!gOmptInitialized) {
     RAW_LOG(INFO, "%s", "ompt not initialized yet");
     return;
   }
-  */
+  int threadNum, taskType;
+  auto taskInfo = omptGetTaskInfo(0, eTaskData, taskType, threadNum);
+  if (taskInfo == nullptr) {
+    return; 
+  }
 }
 
 }

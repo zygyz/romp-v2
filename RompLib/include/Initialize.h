@@ -1,6 +1,7 @@
 #pragma once
 #include <glog/logging.h>
 #include "Callbacks.h"
+#include "QueryFuncs.h"
 
 /* 
  * This header file defines functions that are used 
@@ -9,8 +10,6 @@
 namespace romp{
 
 bool gOmptInitialized = false; 
-ompt_get_task_info_t ompt_get_task_info;
-ompt_get_thread_data_t ompt_get_thread_data;
 /* 
  * Define macro for registering ompt callback functions. 
  */
@@ -50,7 +49,7 @@ int omptInitialize(ompt_function_lookup_t lookup,
   register_callback(ompt_callback_thread_end);
   register_callback(ompt_callback_dispatch);
 
-  ompt_get_task_info = (ompt_get_task_info_t)lookup("ompt_get_task_info");
+  omptGetTaskInfo = (ompt_get_task_info_t)lookup("ompt_get_task_info");
 
   gOmptInitialized = true;
   return 1;
