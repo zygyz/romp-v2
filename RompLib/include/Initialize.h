@@ -8,7 +8,7 @@
 */
 namespace romp{
 
-bool gOmptInitialized; 
+extern bool gOmptInitialized; 
 /* 
  * Define macro for registering ompt callback functions. 
  */
