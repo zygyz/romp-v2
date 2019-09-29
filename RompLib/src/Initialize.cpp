@@ -13,6 +13,7 @@ int omptInitialize(ompt_function_lookup_t lookup,
                    int initialDeviceNum,
                    ompt_data_t* toolData) {
   google::InitGoogleLogging("romp");
+  gOmptInitialized = false;
   LOG(INFO) << "start initializing ompt";
   auto ompt_set_callback = 
       (ompt_set_callback_t)lookup("ompt_set_callback");
@@ -32,7 +33,7 @@ int omptInitialize(ompt_function_lookup_t lookup,
   register_callback(ompt_callback_thread_end);
   register_callback(ompt_callback_dispatch);
 
-  omptGetTaskInfo = (ompt_get_task_info_t)lookup("ompt_get_task_info");
+  //omptGetTaskInfo = (ompt_get_task_info_t)lookup("ompt_get_task_info");
 
   gOmptInitialized = true;
   return 1;
