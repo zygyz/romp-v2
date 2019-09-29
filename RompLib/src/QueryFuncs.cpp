@@ -36,21 +36,19 @@ void* queryTaskInfo(const int& ancestorLevel,
                     const OmptTaskQueryType& queryType, 
                     int& taskType,
                     int& threadNum) {
-  switch(queryType) {
-    case eTaskData:
-      ompt_data_t omptTaskData;
-      auto taskDataPtr = &omptTaskData;
-      auto taskDataPtrPtr = &taskDataPtr;
-      auto retVal = omptGetTaskInfo(0, &taskType, taskDataPtrPtr, NULL, NULL, 
+  if (queryType == eTaskData) {
+    ompt_data_t omptTaskData;
+    auto taskDataPtr = &omptTaskData;
+    auto taskDataPtrPtr = &taskDataPtr;
+    auto retVal = omptGetTaskInfo(0, &taskType, taskDataPtrPtr, NULL, NULL, 
                                     &threadNum);
-      if (isAvailable(retVal)) {
-        return taskDataPtr->ptr; 
-      } else {
-        return nullptr; 
-      }
-    default:
-      return nullptr;
+    if (isAvailable(retVal)) {
+      return taskDataPtr->ptr; 
+    } else {
+      return nullptr; 
+    }
   }
+  return nullptr;
 }
 
 }
