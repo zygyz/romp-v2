@@ -12,7 +12,7 @@ enum OmptTaskQueryType { eTaskData, eTaskFrame, eParallelData };
 
 bool isAvailable(const int& retVal);
 
-void* omptGetTaskInfo(
+void* queryTaskInfo(
         const int& ancestorLevel, 
         const OmptTaskQueryType& queryType,
         int& taskType,

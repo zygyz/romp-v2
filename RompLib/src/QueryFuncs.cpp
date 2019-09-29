@@ -32,7 +32,7 @@ bool isAvailable(const int& retVal) {
  * Query openmp task information given the task level and specified query type.
  * On success, return the pointer to the information. Otherwise, return nullptr.
  */
-void* omptQueryTaskInfo(const int& ancestorLevel
+void* queryTaskInfo(const int& ancestorLevel
                         const OmptTaskQueryType& queryType, 
                         int& taskType,
                         int& threadNum) {

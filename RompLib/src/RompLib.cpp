@@ -35,7 +35,7 @@ void checkAccess(void* address,
     return;
   }
   int threadNum, taskType;
-  auto taskInfo = omptGetTaskInfo(0, eTaskData, taskType, threadNum);
+  auto taskInfo = queryTaskInfo(0, eTaskData, taskType, threadNum);
   if (taskInfo == nullptr) {
     return; 
   }
