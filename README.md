@@ -21,6 +21,11 @@ Please use the branch `romp-build`
 Goal: Build ROMP directly using cmake so that changes to ROMP and dyninst
 could be built and tested without pushing changes to git repo. 
 
+However, we still use spack to install some dependent libraries: 
+```
+glags glog
+```
+
 1. Build dyninst. Suppose the dyninst is located in `/path/to/dyninst`, and 
  the artifact is installed in `path/to/dyninst/install`. Create a symlink:
  ``` ln -s /path/to/dyninst/install dyninst```
