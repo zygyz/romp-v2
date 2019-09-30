@@ -13,6 +13,8 @@ Checkout my version of spack, which contains some modification to package.py
 for llvm-openmp 
 and also the pacakge spec for romp.
 
+Please use the branch `romp-build`
+
 `git clone git@github.com:zygyz/spack.git`
 
 
