@@ -23,7 +23,7 @@ could be built and tested without pushing changes to git repo.
 
 However, we still use spack to install some dependent libraries: 
 ```
-glags glog llvm-openmp
+gflags glog llvm-openmp
 ```
 
 1. Build dyninst. Suppose the dyninst is located in `/path/to/dyninst`, and 
