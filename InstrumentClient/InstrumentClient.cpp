@@ -21,6 +21,12 @@ InstrumentClient::InstrumentClient(
   modSuffix_ = modSuffix;
   addrSpacePtr_ = initInstrumenter(programName, rompLibPath);
   checkAccessFuncs_ = getCheckAccessFuncs(addrSpacePtr_);
+  if (checkAccessFuncs_.size() == 0)  {
+      LOG(FATAL) << "error empty checkAccessFuncs_ vector";
+  }
+  if (!checkAccessFuncs_[0]) {
+      LOG(FATAL) << "error empty first checkAccessFuncs_ element";
+  }
   LOG(INFO) << "InstrumentClient initialized with arch: " << arch_;
 }
 
