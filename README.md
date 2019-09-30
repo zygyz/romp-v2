@@ -17,31 +17,45 @@ Please use the branch `romp-build`
 
 `git clone git@github.com:zygyz/spack.git`
 
+### Build ROMP without using spack
+Goal: Build ROMP directly using cmake so that changes to ROMP and dyninst
+could be built and tested without pushing changes to git repo. 
 
-### Installing
-`spack install romp@develop`
-
-#### Debug library instrumentation problem
-First, set environment variables
+1. Build dyninst. Suppose the dyninst is located in `/path/to/dyninst`, and 
+ the artifact is installed in `path/to/dyninst/install`. Create a symlink:
+ ``` ln -s /path/to/dyninst/install dyninst```
+ 
+2. set environement variables
 ```
-export ROMP_PATH=`spack location --install-dir romp`/lib/libomptrace.so
-
-export LD_LIRBARY_PATH=`spack location --install-dir dyninst`/lib:\
-`spack location --install-dir llvm-openmp`/lib:\
-`spack location --install-dir romp`/lib
-
-export LIBRARY_PATH=`spack location --install-dir llvm-openmp`/lib:\
-`spack location --install-dir romp`/lib
-
-export CPLUS_INCLUDE_PATH=`spack location --install-dir llvm-openmp`/include
-``` 
-Then, compile `tests/test_lib_inst.cpp` with:
+export GLOG_PREFIX=`spack location --install-dir glog`
+export GFLAGS_PREFIX=`spack location --install-dir gflags`
+export LLVM_PREFIX=`spack location --install-dir llvm-openmp`
+export CUSTOM_DYNINST_PREFIX=$HOME/dyninst
+```
+3. Change directory to `romp-v2`: 
+```mkdir build
+   mkdir install
+   cd build
+   cmake -DCMAKE_PREFIX_PATH="$GFLAGS_PREFIX;$GLOG_PREFIX;$CUSTOM_DYNINST_PREFIX"
+         -DLLVM_PATH=$LLVM_PREFIX -DCMAKE_CXX_FLAGS=-std=c++11 -DCUSTOM_DYNINST=ON 
+         -DCMAKE_INSTALL_PREFIX=`pwd`/../install ..
+   make
+   make install
+ ```
+4. Now dyninst client `InstrumentMain` is installed in `romp-v2/install/bin`
+   Before running instrumentation, set up several environemnt variables:
+  ```
+   export ROMP_PATH=/path/to/romp-v2/install/lib/libomptrace.so
+   export DYNINSTAPI_RT_LIB=$HOME/dyninst/lib/libdyninstAPI_RT.so
+   export LD_LIBRARY_PATH=`spack location --install-dir glog`/lib:\
+                          `spack location --install-dir llvm-openmp`/lib:\
+                           $HOME/dyninst/lib
+  ```
+5. Now compile `tests/test_lib_inst.cpp` with:
 ```
 g++ test.cpp -std=c++11 -lomp- fopenmp
 ```
-Then, get the instrument client located in
-`spack location --install-dir romp`/bin/InstrumentMain`
-
+6. Then, go to `romp-v2/install/bin`, 
 ```
 ./InstrumentMain --program=./a.out
 ```
@@ -55,14 +69,3 @@ The dyninst client code is in `InstrumentClient`. Core functions are in
 `InstrumentClient.cpp`. Library names are listed in `skipLibraryName` 
 vector. Currently, three libraries could be instrumented and linked without
 generating segmentation fault: `libomp.so, libgromp.so.1, libm.so.6`. 
-
-### Build local version of dyninst
-
-Sometimes, it would be convenient to build dyninst on local machine with 
-appropriate modification for the purpose of debugging. To enable this,
-one can put dyninst source code in the home directory: `$HOME/dyninst`, then
-one can install romp with the following command:
-
-```
-spack install romp@develop +debug_dyninst 
-```
