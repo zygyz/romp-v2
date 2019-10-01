@@ -6,6 +6,8 @@
 
 namespace romp {
 
+bool gOmptInitialized = false;
+
 /** 
  *  initialize OMPT interface by registering callback functions
  */
@@ -13,7 +15,6 @@ int omptInitialize(ompt_function_lookup_t lookup,
                    int initialDeviceNum,
                    ompt_data_t* toolData) {
   google::InitGoogleLogging("romp");
-  gOmptInitialized = false;
   LOG(INFO) << "start initializing ompt";
   auto ompt_set_callback = 
       (ompt_set_callback_t)lookup("ompt_set_callback");

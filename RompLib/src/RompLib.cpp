@@ -6,6 +6,7 @@
 
 namespace romp {
 
+bool gOmptInitialized = false;
 
 extern "C" {
 
@@ -27,6 +28,7 @@ void checkAccess(void* address,
             uint64_t instnAddr,
             bool hwLock,
             bool isWrite) {
+  /*
   RAW_LOG(INFO, "address:%lx bytesAccessed:%u instnAddr: %lx hwLock: %u,"
                 "isWrite: %u", address, bytesAccessed, instnAddr, 
                  hwLock, isWrite);
@@ -39,6 +41,12 @@ void checkAccess(void* address,
   if (taskInfo == nullptr) {
     return; 
   }
+  int teamSize;
+  auto parRegionInfo = queryParallelInfo(0, teamSize);
+  if (parRegionInfo == nullptr) {
+    return;
+  }
+  */
 }
 
 }
