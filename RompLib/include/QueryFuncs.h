@@ -10,7 +10,7 @@ extern ompt_get_task_info_t omptGetTaskInfo;
 
 enum OmptTaskQueryType { eTaskData, eTaskFrame, eParallelData };
 
-bool isAvailable(const int& retVal);
+bool infoIsAvailable(const int& retVal);
 
 void* queryTaskInfo(
         const int& ancestorLevel, 
