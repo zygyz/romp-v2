@@ -41,8 +41,8 @@ void* queryTaskInfo(const int& ancestorLevel,
     ompt_data_t omptTaskData;
     auto taskDataPtr = &omptTaskData;
     auto taskDataPtrPtr = &taskDataPtr;
-    auto retVal = omptGetTaskInfo(0, &taskType, taskDataPtrPtr, NULL, NULL, 
-                                    &threadNum);
+    auto retVal = omptGetTaskInfo(ancestorLevel, &taskType, taskDataPtrPtr, 
+                                  NULL, NULL, &threadNum);
   } else if (queryType == eTaskFrame) {
     //TODO: implement the query task frame procedure
   } else if (queryType == eParallelData) {
