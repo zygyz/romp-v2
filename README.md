@@ -50,7 +50,7 @@ export LIBRARY_PATH=`spack location --install-dir glog`/lib
    make install
  ```
 4. Now dyninst client `InstrumentMain` is installed in `romp-v2/install/bin`
-   Before running instrumentation, set up several environemnt variables:
+   Before running instrumentation, set up several environment variables:
   ```
    export ROMP_PATH=/path/to/romp-v2/install/lib/libomptrace.so
    export DYNINSTAPI_RT_LIB=$HOME/dyninst/lib/libdyninstAPI_RT.so
