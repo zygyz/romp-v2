@@ -1,4 +1,4 @@
-## Please refer to the readme in experimental branch for now
+
 
 
 
@@ -36,6 +36,7 @@ export GLOG_PREFIX=`spack location --install-dir glog`
 export GFLAGS_PREFIX=`spack location --install-dir gflags`
 export LLVM_PREFIX=`spack location --install-dir llvm-openmp`
 export CUSTOM_DYNINST_PREFIX=$HOME/dyninst
+export LIBRARY_PATH=`spack location --install-dir glog`/lib
 ```
 3. Change directory to `romp-v2`: 
 ```mkdir build
