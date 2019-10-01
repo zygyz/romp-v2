@@ -6,8 +6,6 @@
 
 namespace romp {
 
-bool gOmptInitialized = false;
-
 extern "C" {
 
 /** 
