@@ -33,7 +33,8 @@ int omptInitialize(ompt_function_lookup_t lookup,
   register_callback(ompt_callback_thread_end);
   register_callback(ompt_callback_dispatch);
 
-  //omptGetTaskInfo = (ompt_get_task_info_t)lookup("ompt_get_task_info");
+  omptGetTaskInfo = (ompt_get_task_info_t)lookup("ompt_get_task_info");
+  omptGetParallelInfo = (ompt_get_parallel_info_t)lookup("ompt_get_parallel_info");
 
   gOmptInitialized = true;
   return 1;

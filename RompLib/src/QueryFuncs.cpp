@@ -50,10 +50,29 @@ void* queryTaskInfo(const int& ancestorLevel,
   } else {
     RAW_LOG(FATAL, "%s\n", "unknown query type");  
   }
-  if (isAvailable(retVal)) {
+  if (infoIsAvailable(retVal)) {
     return taskDataPtr->ptr; 
   } else {
     return nullptr; 
+  }
+}
+
+/*
+ * Query openmp runtime information about the parallel region. 
+ * On success, return pointer to parallel region data. Otherwise, 
+ * return nullptr.
+ */
+void* queryParallelInfo(
+        const int& ancestorLevel,
+        int& teamSize) {
+  ompt_data_t omptParData;
+  auto parDataPtr = &omptParData;
+  auto parDataPtrPtr = &parDataPtr;
+  auto retVal = omptGetParallelData(ancestorLevel, parDataPtrPtr, &teamSize);
+  if (infoIsAvailable(retVal)) {
+    return parDataPtr->ptr;
+  } else {
+    return nullptr;
   }
 }
 
