@@ -28,7 +28,7 @@ gflags glog llvm-openmp
 
 1. Build dyninst. Suppose the dyninst is located in `/path/to/dyninst`, and 
  the artifact is installed in `path/to/dyninst/install`. Create a symlink:
- ``` ln -s /path/to/dyninst/install dyninst```
+ ``` ln -s /path/to/dyninst/install $HOME/dyninst```
  
 2. set environement variables
 ```
