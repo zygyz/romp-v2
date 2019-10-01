@@ -1,7 +1,8 @@
 
 
 
-
+This readme is mainly for the purpose of showing how to build romp directly with cmake.
+For a release version of romp, we encourage installation with spack. 
 
 ### System Requirements
 1. Operating Systems:  Linux
