@@ -26,7 +26,6 @@ void checkAccess(void* address,
             uint64_t instnAddr,
             bool hwLock,
             bool isWrite) {
-  /*
   RAW_LOG(INFO, "address:%lx bytesAccessed:%u instnAddr: %lx hwLock: %u,"
                 "isWrite: %u", address, bytesAccessed, instnAddr, 
                  hwLock, isWrite);
@@ -35,6 +34,8 @@ void checkAccess(void* address,
     return;
   }
   int threadNum, taskType;
+  auto taskInfo = queryTaskInfo(0, eTaskData, taskType, threadNum);
+ /*
   auto taskInfo = queryTaskInfo(0, eTaskData, taskType, threadNum);
   if (taskInfo == nullptr) {
     return; 

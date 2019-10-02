@@ -37,11 +37,11 @@ void* queryTaskInfo(const int& ancestorLevel,
                     int& taskType,
                     int& threadNum) {
   int retVal = -1;
+  ompt_data_t omptTaskData;
+  auto taskDataPtr = &omptTaskData;
   if (queryType == eTaskData) {
-    ompt_data_t omptTaskData;
-    auto taskDataPtr = &omptTaskData;
     auto taskDataPtrPtr = &taskDataPtr;
-    auto retVal = omptGetTaskInfo(ancestorLevel, &taskType, taskDataPtrPtr, 
+    retVal = omptGetTaskInfo(ancestorLevel, &taskType, taskDataPtrPtr, 
                                   NULL, NULL, &threadNum);
   } else if (queryType == eTaskFrame) {
     //TODO: implement the query task frame procedure
@@ -68,7 +68,7 @@ void* queryParallelInfo(
   ompt_data_t omptParData;
   auto parDataPtr = &omptParData;
   auto parDataPtrPtr = &parDataPtr;
-  auto retVal = omptGetParallelData(ancestorLevel, parDataPtrPtr, &teamSize);
+  auto retVal = omptGetParallelInfo(ancestorLevel, parDataPtrPtr, &teamSize);
   if (infoIsAvailable(retVal)) {
     return parDataPtr->ptr;
   } else {
