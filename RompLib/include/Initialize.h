@@ -55,7 +55,7 @@ int omptInitialize(ompt_function_lookup_t lookup,
 
   omptGetTaskInfo = (ompt_get_task_info_t)lookup("ompt_get_task_info");
   omptGetParallelInfo = (ompt_get_parallel_info_t)lookup("ompt_get_parallel_info");
-  omptGetThreadData = (ompt_get_thread_info_t)lookup("ompt_get_thread_data");
+  omptGetThreadData = (ompt_get_thread_data_t)lookup("ompt_get_thread_data");
 
   gOmptInitialized = true;
   return 1;
