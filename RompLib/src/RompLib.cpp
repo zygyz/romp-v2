@@ -50,7 +50,7 @@ void checkAccess(void* address,
   auto curTaskData = static_cast<TaskData*>(taskInfo);
   LabelPtr currentLabel = curTaskData->label;
   auto curThreadData = omptGetThreadData();
-   
+  
 }
 
 }
