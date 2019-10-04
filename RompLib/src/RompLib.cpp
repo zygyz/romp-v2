@@ -35,8 +35,6 @@ void checkAccess(void* address,
   }
   int threadNum, taskType;
   auto taskInfo = queryTaskInfo(0, eTaskData, taskType, threadNum);
- /*
-  auto taskInfo = queryTaskInfo(0, eTaskData, taskType, threadNum);
   if (taskInfo == nullptr) {
     return; 
   }
@@ -45,7 +43,6 @@ void checkAccess(void* address,
   if (parRegionInfo == nullptr) {
     return;
   }
-  */
 }
 
 }

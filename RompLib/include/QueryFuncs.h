@@ -8,6 +8,7 @@ namespace romp {
 
 extern ompt_get_task_info_t omptGetTaskInfo;
 extern ompt_get_parallel_info_t omptGetParallelInfo;
+extern ompt_get_thread_data_t omptGetThreadInfo;
 
 enum OmptTaskQueryType { eTaskData, eTaskFrame, eParallelData };
 
