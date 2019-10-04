@@ -1,9 +1,9 @@
 #include <glog/logging.h>
 #include <glog/raw_logging.h>
-#include <memory>
 
 #include "Initialize.h"
 #include "Label.h"
+#include "TaskData.h"
 #include "QueryFuncs.h"
 
 namespace romp {
@@ -47,7 +47,9 @@ void checkAccess(void* address,
   if (parRegionInfo == nullptr) {
     return;
   }
-  LabelPtr currentLabel = nullptr;
+  auto curTaskData = static_cast<TaskData*>(taskInfo);
+  LabelPtr currentLabel = curTaskData->label;
+  auto curThreadData = omptGetThreadData();
    
 }
 
