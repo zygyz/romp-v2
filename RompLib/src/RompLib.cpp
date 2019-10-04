@@ -1,10 +1,14 @@
 #include <glog/logging.h>
 #include <glog/raw_logging.h>
+#include <memory>
 
 #include "Initialize.h"
+#include "Label.h"
 #include "QueryFuncs.h"
 
 namespace romp {
+
+using LabelPtr = std::shared_ptr<Label>;
 
 extern "C" {
 
@@ -43,6 +47,8 @@ void checkAccess(void* address,
   if (parRegionInfo == nullptr) {
     return;
   }
+  LabelPtr currentLabel = nullptr;
+   
 }
 
 }
