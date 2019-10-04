@@ -38,17 +38,22 @@ void checkAccess(void* address,
     RAW_LOG(INFO, "%s", "ompt not initialized yet");
     return;
   }
+  AllTaskInfo allTaskInfo;
   int threadNum, taskType;
-  auto taskInfo = queryTaskInfo(0, eTaskData, taskType, threadNum);
-  if (taskInfo == nullptr) {
-    return; 
+  if (!queryAllTaskInfo(0, taskType, threadNum, allTaskInfo)) {
+    // task info is not available
+    return;
+  }
+  if (!allTaskInfo.taskData.ptr) { // pointer to task data is not set
+    return;
   }
   int teamSize;
   auto parRegionInfo = queryParallelInfo(0, teamSize);
   if (parRegionInfo == nullptr) {
     return;
   }
-  auto curTaskData = static_cast<TaskData*>(taskInfo);
+   
+  auto curTaskData = static_cast<TaskData*>(allTaskInfo.taskData.ptr);
   LabelPtr currentLabel = curTaskData->label;
   auto curThreadData = queryThreadInfo();
   if (!curThreadData) {

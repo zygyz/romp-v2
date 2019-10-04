@@ -29,6 +29,26 @@ bool infoIsAvailable(const int& retVal) {
 }
 
 /*
+ * Query all openmp task information given the task level in one time.
+ * This function could be called when multiple aspects of information about 
+ * openmp task is needed. 
+ */
+bool queryAllTaskInfo(const int& ancestorLevel, 
+                      int& taskType,
+                      int& threadNum,
+                      AllTaskInfo& allTaskInfo) {
+  auto taskDataPtr = &(allTaskInfo.taskData);
+  auto taskDataPtrPtr = &taskDataPtr;
+  auto taskFramePtr = &(allTaskInfo.taskFrame);
+  auto taskFramePtrPtr = &taskFramePtr;
+  auto parDataPtr = &(allTaskInfo.parallelData);
+  auto parDataPtrPtr = &parDataPtr; 
+  auto retVal = omptGetTaskInfo(ancestorLevel, &taskType, taskDataPtrPtr,
+                                taskFramePtrPtr, parDataPtrPtr, &threadNum);
+  return infoIsAvailable(retVal);
+}
+
+/*
  * Query openmp task information given the task level and specified query type.
  * On success, return the pointer to the information. Otherwise, return nullptr.
  */
@@ -45,6 +65,7 @@ void* queryTaskInfo(const int& ancestorLevel,
                                   NULL, NULL, &threadNum);
   } else if (queryType == eTaskFrame) {
     //TODO: implement the query task frame procedure
+     
   } else if (queryType == eParallelData) {
     //TODO: implement the query parallel data procedure
   } else {

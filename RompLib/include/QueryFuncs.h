@@ -10,9 +10,21 @@ extern ompt_get_task_info_t omptGetTaskInfo;
 extern ompt_get_parallel_info_t omptGetParallelInfo;
 extern ompt_get_thread_data_t omptGetThreadData;
 
+typedef struct AllTaskInfo {
+  ompt_data_t taskData;
+  ompt_frame_t taskFrame;
+  ompt_data_t parallelData;
+} AllTaskInfo;
+
 enum OmptTaskQueryType { eTaskData, eTaskFrame, eParallelData };
 
 bool infoIsAvailable(const int& retVal);
+
+bool queryAllTaskInfo( 
+         const int& ancestorLevel,
+         int& taskType,
+         int& threadNum,
+         AllTaskInfo& allTaskInfo);
 
 void* queryTaskInfo(
         const int& ancestorLevel, 
