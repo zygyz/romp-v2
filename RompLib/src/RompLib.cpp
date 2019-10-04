@@ -4,6 +4,7 @@
 #include "Initialize.h"
 #include "Label.h"
 #include "TaskData.h"
+#include "ThreadData.h"
 #include "QueryFuncs.h"
 
 namespace romp {
@@ -50,7 +51,7 @@ void checkAccess(void* address,
   auto curTaskData = static_cast<TaskData*>(taskInfo);
   LabelPtr currentLabel = curTaskData->label;
   auto curThreadData = omptGetThreadData();
-  
+      
 }
 
 }
