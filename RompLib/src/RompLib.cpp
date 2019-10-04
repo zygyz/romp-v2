@@ -50,8 +50,11 @@ void checkAccess(void* address,
   }
   auto curTaskData = static_cast<TaskData*>(taskInfo);
   LabelPtr currentLabel = curTaskData->label;
-  auto curThreadData = omptGetThreadData();
-      
+  auto curThreadData = queryThreadInfo();
+  if (!curThreadData) {
+    RAW_LOG(INFO, "%s\n", "thread data not set yet"); 
+    return;
+  }
 }
 
 }

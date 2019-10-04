@@ -76,4 +76,16 @@ void* queryParallelInfo(
   }
 }
 
+/*
+ * Query openmp runtime information about the thread. 
+ * On success, return pointer to thread data. Otherwise, return nullptr;
+ */
+void* queryThreadInfo() {
+  auto curThreadData = omptGetThreadData();
+  if (!curThreadData) {
+    return nullptr;
+  }
+  return curThreadData->ptr;
+}
+
 }

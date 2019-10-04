@@ -23,4 +23,7 @@ void* queryTaskInfo(
 void* queryParallelInfo(
         const int& ancestorLevel,
         int& teamSize);
+
+void* queryThreadInfo();
+
 }
