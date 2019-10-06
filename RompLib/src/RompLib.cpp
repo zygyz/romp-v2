@@ -3,6 +3,7 @@
 
 #include "Initialize.h"
 #include "Label.h"
+#include "LockSet.h"
 #include "TaskData.h"
 #include "ThreadData.h"
 #include "QueryFuncs.h"
@@ -10,6 +11,7 @@
 namespace romp {
 
 using LabelPtr = std::shared_ptr<Label>;
+using LockSetPtr = std::shared_ptr<LockSet>;
 
 extern "C" {
 
@@ -52,14 +54,16 @@ void checkAccess(void* address,
   if (parRegionInfo == nullptr) {
     return;
   }
-   
-  auto curTaskData = static_cast<TaskData*>(allTaskInfo.taskData.ptr);
-  LabelPtr currentLabel = curTaskData->label;
   auto curThreadData = queryThreadInfo();
   if (!curThreadData) {
     RAW_LOG(INFO, "%s\n", "thread data not set yet"); 
     return;
   }
+  // query data  
+  auto curTaskData = static_cast<TaskData*>(allTaskInfo.taskData.ptr);
+  LabelPtr currentLabel = curTaskData->label;
+  
+
 }
 
 }
