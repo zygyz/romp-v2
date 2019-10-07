@@ -61,9 +61,8 @@ void checkAccess(void* address,
   }
   // query data  
   auto curTaskData = static_cast<TaskData*>(allTaskInfo.taskData.ptr);
-  LabelPtr currentLabel = curTaskData->label;
-  
-
+  auto currentLabel = curTaskData->label;
+  auto currentLockSet = curTaskData->lockSet; 
 }
 
 }
