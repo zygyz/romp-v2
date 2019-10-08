@@ -13,15 +13,15 @@ typedef struct ThreadData {
   void* stackTopAddr;
   void* activeTaskExitFrame;
   void* lowestAccessedAddr;
-  ThreadData() {
-    stackBaseAddr = nullptr;
-    stackTopAddr = nullptr;
-    activeTaskExitFrame = nullptr;
-    lowestAccessedAddr = (void*)ADDR_MAX;
-  }
+  ThreadData() : stackBaseAddr(nullptr), 
+                 stackTopAddr(nullptr), 
+                 activeTaskExitFrame(nullptr), 
+                 lowestAccessedAddr((void*)ADDR_MAX) {}
+
   void setLowestAddr(void* addr) {
     lowestAccessedAddr = addr;
   }
+
   void resetLowestAddr() {
     lowestAccessedAddr = (void*)ADDR_MAX;
   }
