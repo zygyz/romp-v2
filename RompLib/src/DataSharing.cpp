@@ -9,18 +9,16 @@ namespace romp {
   
 /*
  * Analayze data sharing property of current memory access. 
- * Return true if the analysis is successful, otherwise return false.
- * If analysis is successful, data sharing type is set in dataSharingType.
- * We assert threadDataPtr is not nullptr;
+ * Return the type of data sharing if the analysis is successful, 
+ * otherwise return eUndefined. We assert threadDataPtr is not nullptr;
  */
-bool analyzeDataSharing(const void* threadDataPtr, 
+DataSharingType analyzeDataSharing(const void* threadDataPtr, 
                         const void* address,
-                        const ompt_frame_t& currentExitFrame,
-                        DataSharingType& dataSharingType) {
+                        const ompt_frame_t& currentExitFrame) {
   if (currentExitFrame.exit_frame == ompt_data_none || 
       currentExitFrame.exit_frame.ptr == nullptr) {
     RAW_LOG(INFO, "%s\n", "exit frame is not set");      
-    return false;
+    return eUndefined;
   }
   const auto curExitFrameAddr = currentExitFrame.exit_frame.ptr;
   const auto threadData = static_cast<ThreadData*>(threadDataPtr);
@@ -28,20 +26,23 @@ bool analyzeDataSharing(const void* threadDataPtr,
   const auto stackBaseAddr = threadData->stackBaseAddr;
   if (!stackTopAddr || !stackBaseAddr) {
     RAW_LOG(INFO, "%s\n", "thread stack bound is not completely set");
-    return false;
+    return eUndefined;
   }
   const auto addressValue = static_cast<uint64_t>(address);
   if (addressValue < static_cast<uint64_t>(stackBaseAddr) || 
       addressValue > static_cast<uint64_t>(stackTopAddr)) {
-    dataSharingType = eNonThreadPrivate;
-  } else {
-    if (addressValue < static_cast<uint64_t>(curExitFrameAddr)) {
-      dataSharingType = eThreadPrivateBelowExit;
+    // Current memory access falls out of the thread stack's 
+    // top and bottom boundary. Then the memory access is a 
+    // non thread private access.
+    return eNonThreadPrivate;
+  } 
+  if (addressValue < static_cast<uint64_t>(curExitFrameAddr)) {
+      return eThreadPrivateBelowExit;
     } else {
-      dataSharingType = eThreadPrivateAboveExit;
+      return eThreadPrivateAboveExit;
     }
   }
-  return true;
+  return eUndefined;
 }
 
 }

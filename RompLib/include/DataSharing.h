@@ -10,10 +10,9 @@ enum DataSharingType {
     eUndefined,
 };
 
-bool analyzeDataSharing(const void* threadDataPtr, 
-                        const void* address,
-                        const ompt_frame_t& currentExitFrame,
-                        DataSharingType& dataSharingType);
+DataSharingType analyzeDataSharing(const void* threadDataPtr, 
+                                   const void* address,
+                                   const ompt_frame_t& currentExitFrame);
 
 
 }

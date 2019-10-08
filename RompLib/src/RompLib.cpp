@@ -65,6 +65,7 @@ void checkAccess(void* address,
   auto currentLabel = curTaskData->label;
   auto currentLockSet = curTaskData->lockSet; 
 
+  if (!analyzeDataS
 }
 
 }
