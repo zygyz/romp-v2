@@ -1,6 +1,7 @@
 #include <glog/logging.h>
 #include <glog/raw_logging.h>
 
+#include "DataSharing.h"
 #include "Initialize.h"
 #include "Label.h"
 #include "LockSet.h"
@@ -63,6 +64,7 @@ void checkAccess(void* address,
   auto curTaskData = static_cast<TaskData*>(allTaskInfo.taskData.ptr);
   auto currentLabel = curTaskData->label;
   auto currentLockSet = curTaskData->lockSet; 
+
 }
 
 }
