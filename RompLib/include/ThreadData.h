@@ -1,5 +1,5 @@
 #pragma once
-#define ADDR_MAX 0xffffffffffff;
+#define ADDR_MAX 0xffffffffffff
 
 namespace romp {
 
