@@ -14,11 +14,10 @@ InstrumentClient::InstrumentClient(
         const string& rompLibPath,
         shared_ptr<BPatch> bpatchPtr,
         const string& arch,
-        const string& modSuffix) {
-  bpatchPtr_ = move(bpatchPtr);
-  programName_ = programName;
-  arch_ = arch;
-  modSuffix_ = modSuffix;
+        const string& modSuffix) : bpatchPtr_(move(bpatchPtr)), 
+                                   programName_(programName),
+                                   arch_(arch),
+                                   modSuffix_(modSuffix) {
   addrSpacePtr_ = initInstrumenter(programName, rompLibPath);
   checkAccessFuncs_ = getCheckAccessFuncs(addrSpacePtr_);
   if (checkAccessFuncs_.size() == 0)  {
@@ -54,7 +53,7 @@ InstrumentClient::initInstrumenter(
 */
 vector<BPatch_function*>
 InstrumentClient::getCheckAccessFuncs(
-      unique_ptr<BPatch_addressSpace>& addrSpacePtr) {
+      const unique_ptr<BPatch_addressSpace>& addrSpacePtr) {
   if (!addrSpacePtr) {
     LOG(FATAL) << "null pointer";
    }
@@ -77,7 +76,7 @@ InstrumentClient::getCheckAccessFuncs(
  */ 
 vector<BPatch_function*> 
 InstrumentClient::getFunctionsVector(
-        unique_ptr<BPatch_addressSpace>& addrSpacePtr) {
+        const unique_ptr<BPatch_addressSpace>& addrSpacePtr) {
   vector<BPatch_function*> funcVec;
   auto appImage = addrSpacePtr->getImage();
   if (!appImage) {
@@ -88,7 +87,7 @@ InstrumentClient::getFunctionsVector(
     LOG(FATAL) << "cannot get modules";
   }
   char nameBuffer[MODULE_NAME_LENGTH];
-  for (auto& module : *appModules) {
+  for (const auto& module : *appModules) {
     LOG(INFO) << "module name: " 
               << module->getFullName(nameBuffer, MODULE_NAME_LENGTH);
     if (module->isSharedLib()) { 
@@ -96,7 +95,7 @@ InstrumentClient::getFunctionsVector(
       continue;
     }
     auto procedures = module->getProcedures();
-    for (auto& procedure : *procedures) {
+    for (const auto& procedure : *procedures) {
         funcVec.push_back(procedure);
     }
   }
@@ -120,13 +119,13 @@ InstrumentClient::instrumentMemoryAccess() {
  */ 
 void
 InstrumentClient::instrumentMemoryAccessInternal(
-    unique_ptr<BPatch_addressSpace>& addrSpacePtr,
+    const unique_ptr<BPatch_addressSpace>& addrSpacePtr,
     vector<BPatch_function*>& funcVec) {   
   BPatch_Set<BPatch_opCode> opcodes;
   opcodes.insert(BPatch_opLoad);
   opcodes.insert(BPatch_opStore);
   addrSpacePtr->beginInsertionSet();
-  for (auto& function : funcVec) {
+  for (const auto& function : funcVec) {
     auto pointsVecPtr = function->findPoint(opcodes);
     if (!pointsVecPtr) {
       LOG(WARNING) << "no load/store points for function " 
@@ -137,7 +136,7 @@ InstrumentClient::instrumentMemoryAccessInternal(
           << function->getName();
       continue;
     }
-    insertSnippet(addrSpacePtr, pointsVecPtr, function);
+    insertSnippet(addrSpacePtr, pointsVecPtr);
   }
   if (!addrSpacePtr->finalizeInsertionSet(true)) {
     LOG(FATAL) << "error in batch insertion of snippets";
@@ -166,13 +165,12 @@ InstrumentClient::hasHardwareLock(
  */
 void
 InstrumentClient::insertSnippet(
-        unique_ptr<BPatch_addressSpace>& addrSpacePtr,
-        vector<BPatch_point*>* pointsVecPtr,
-        BPatch_function* function) {
+        const unique_ptr<BPatch_addressSpace>& addrSpacePtr,
+        const vector<BPatch_point*>* pointsVecPtr) {
   if (!pointsVecPtr) {
     LOG(FATAL) << "null pointer";
   } 
-  for (auto& point : *pointsVecPtr) {
+  for (const auto& point : *pointsVecPtr) {
     auto memoryAccess = point->getMemoryAccess();
     if (!memoryAccess) {
       LOG(FATAL) << "null memory access";
@@ -223,7 +221,7 @@ InstrumentClient::insertSnippet(
  */
 void
 InstrumentClient::finishInstrumentation(
-        unique_ptr<BPatch_addressSpace>& addrSpacePtr) {
+        const unique_ptr<BPatch_addressSpace>& addrSpacePtr) {
   auto appProc = dynamic_cast<BPatch_process*>(addrSpacePtr.get());
   auto appBin = dynamic_cast<BPatch_binaryEdit*>(addrSpacePtr.get());
   if (appProc) {
