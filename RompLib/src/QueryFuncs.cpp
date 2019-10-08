@@ -9,7 +9,7 @@ namespace romp {
 /* 
  * Helper function to determine if the query function get available result.
  */
-bool infoIsAvailable(const int& retVal) { 
+bool infoIsAvailable(const int retVal) { 
   if (retVal == 0) {
     // task does not exist
     return false; 
@@ -33,7 +33,7 @@ bool infoIsAvailable(const int& retVal) {
  * This function could be called when multiple aspects of information about 
  * openmp task is needed. 
  */
-bool queryAllTaskInfo(const int& ancestorLevel, 
+bool queryAllTaskInfo(const int ancestorLevel, 
                       int& taskType,
                       int& threadNum,
                       AllTaskInfo& allTaskInfo) {
@@ -52,7 +52,7 @@ bool queryAllTaskInfo(const int& ancestorLevel,
  * Query openmp task information given the task level and specified query type.
  * On success, return the pointer to the information. Otherwise, return nullptr.
  */
-void* queryTaskInfo(const int& ancestorLevel,
+void* queryTaskInfo(const int ancestorLevel,
                     const OmptTaskQueryType& queryType, 
                     int& taskType,
                     int& threadNum) {
@@ -84,7 +84,7 @@ void* queryTaskInfo(const int& ancestorLevel,
  * return nullptr.
  */
 void* queryParallelInfo(
-        const int& ancestorLevel,
+        const int ancestorLevel,
         int& teamSize) {
   ompt_data_t omptParData;
   auto parDataPtr = &omptParData;

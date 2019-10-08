@@ -43,8 +43,12 @@ void checkAccess(void* address,
   }
   AllTaskInfo allTaskInfo;
   int threadNum, taskType;
+
   if (!queryAllTaskInfo(0, taskType, threadNum, allTaskInfo)) {
     // task info is not available
+    return;
+  }
+  if (taskType == ompt_task_initial) {
     return;
   }
   if (!allTaskInfo.taskData.ptr) { // pointer to task data is not set
@@ -64,8 +68,12 @@ void checkAccess(void* address,
   auto curTaskData = static_cast<TaskData*>(allTaskInfo.taskData.ptr);
   auto currentLabel = curTaskData->label;
   auto currentLockSet = curTaskData->lockSet; 
-
-  if (!analyzeDataS
+  
+  auto dataSharingType = analyzeDataSharing(curThreadData, address, 
+                                            allTaskInfo.taskFrame);
+  if (dataSharingType == eUndefined) {
+    
+  }
 }
 
 }

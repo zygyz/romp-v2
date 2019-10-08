@@ -18,22 +18,22 @@ typedef struct AllTaskInfo {
 
 enum OmptTaskQueryType { eTaskData, eTaskFrame, eParallelData };
 
-bool infoIsAvailable(const int& retVal);
+bool infoIsAvailable(const int retVal);
 
 bool queryAllTaskInfo( 
-         const int& ancestorLevel,
+         const int ancestorLevel,
          int& taskType,
          int& threadNum,
          AllTaskInfo& allTaskInfo);
 
 void* queryTaskInfo(
-        const int& ancestorLevel, 
+        const int ancestorLevel, 
         const OmptTaskQueryType& queryType,
         int& taskType,
         int& threadNum); 
 
 void* queryParallelInfo(
-        const int& ancestorLevel,
+        const int ancestorLevel,
         int& teamSize);
 
 void* queryThreadInfo();

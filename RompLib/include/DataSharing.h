@@ -12,7 +12,7 @@ enum DataSharingType {
 
 DataSharingType analyzeDataSharing(const void* threadDataPtr, 
                                    const void* address,
-                                   const ompt_frame_t& currentExitFrame);
+                                   const ompt_frame_t& taskFrame);
 
 
 }
