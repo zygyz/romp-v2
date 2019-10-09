@@ -58,11 +58,11 @@ void checkAccess(void* address,
     return;
   }
   // query data  
-  auto curTaskData = static_cast<TaskData*>(allTaskInfo.taskData.ptr);
   auto dataSharingType = analyzeDataSharing(curThreadData, address, 
                                             allTaskInfo.taskFrame);
-  auto currentLabel = curTaskData->label;
-  auto currentLockSet = curTaskData->lockSet; 
+  auto curTaskData = static_cast<TaskData*>(allTaskInfo.taskData.ptr);
+  auto curLabel = curTaskData->label;
+  auto curLockSet = curTaskData->lockSet; 
 
 }
 
