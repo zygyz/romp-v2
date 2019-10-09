@@ -22,7 +22,7 @@ bool prepareAllInfo(int& taskType,
     // task info is not available
     return false;
   }
-  if (!queryParallelinfo(0, teamSize, curParRegionData)) {
+  if (!queryParallelInfo(0, teamSize, curParRegionData)) {
     return false; // parallel region is not available
   }
   if (!queryThreadInfo(curThreadData)) {

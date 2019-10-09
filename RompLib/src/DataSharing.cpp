@@ -15,33 +15,33 @@ namespace romp {
  * task private data stored in explicit task's runtime data structure.
  */
 DataSharingType analyzeDataSharing(const void* threadDataPtr, 
-                        const void* address,
-                        const ompt_frame_t& taskFrame) {
-  if (taskFrame.exit_frame == ompt_data_none || !(taskFrame.exit_frame.ptr)) {
-    RAW_LOG(INFO, "%s\n", "exit frame is not set");      
+                                   const void* address,
+                                   const ompt_frame_t& taskFrame) {
+  if (!taskFrame.exit_frame.ptr) {
+    // note that exit_frame is a union
+    RAW_LOG(WARNING, "%s\n", "exit frame is not set");      
     return eUndefined;
   }
   const auto curExitFrameAddr = taskFrame.exit_frame.ptr;
-  const auto threadData = static_cast<ThreadData*>(threadDataPtr);
+  const auto threadData = reinterpret_cast<const ThreadData*>(threadDataPtr);
   const auto stackTopAddr = threadData->stackTopAddr;
   const auto stackBaseAddr = threadData->stackBaseAddr;
   if (!stackTopAddr || !stackBaseAddr) {
     RAW_LOG(INFO, "%s\n", "thread stack bound is not completely set");
     return eUndefined;
   }
-  const auto addressValue = static_cast<uint64_t>(address);
-  if (addressValue < static_cast<uint64_t>(stackBaseAddr) || 
-      addressValue > static_cast<uint64_t>(stackTopAddr)) {
+  const auto addressValue = reinterpret_cast<const uint64_t>(address);
+  if (addressValue < reinterpret_cast<const uint64_t>(stackBaseAddr) || 
+      addressValue > reinterpret_cast<const uint64_t>(stackTopAddr)) {
     // Current memory access falls out of the thread stack's 
     // top and bottom boundary. Then the memory access is a 
     // non thread private access.
     return eNonThreadPrivate;
   } 
-  if (addressValue < static_cast<uint64_t>(curExitFrameAddr)) {
-      return eThreadPrivateBelowExit;
-    } else {
-      return eThreadPrivateAboveExit;
-    }
+  if (addressValue < reinterpret_cast<const uint64_t>(curExitFrameAddr)) {
+    return eThreadPrivateBelowExit;
+  } else {
+    return eThreadPrivateAboveExit;
   }
   return eUndefined;
 }

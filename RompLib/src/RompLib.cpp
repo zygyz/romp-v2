@@ -1,13 +1,13 @@
 #include <glog/logging.h>
 #include <glog/raw_logging.h>
 
+#include "CoreUtil.h"
 #include "DataSharing.h"
 #include "Initialize.h"
 #include "Label.h"
 #include "LockSet.h"
 #include "TaskData.h"
 #include "ThreadData.h"
-#include "QueryFuncs.h"
 
 namespace romp {
 
@@ -43,9 +43,10 @@ void checkAccess(void* address,
   }
   AllTaskInfo allTaskInfo;
   int threadNum, taskType, teamSize;
-  void* curThreadData, curParRegionData;
+  void* curThreadData;
+  void* curParRegionData;
   if (!prepareAllInfo(taskType, teamSize, threadNum, 
-                      curParRegionData, curThreadData)) {
+                      curParRegionData, curThreadData, allTaskInfo)) {
     return;
   }
   if (taskType == ompt_task_initial) { 
@@ -58,14 +59,11 @@ void checkAccess(void* address,
   }
   // query data  
   auto curTaskData = static_cast<TaskData*>(allTaskInfo.taskData.ptr);
-
   auto dataSharingType = analyzeDataSharing(curThreadData, address, 
                                             allTaskInfo.taskFrame);
-  if (dataSharingType == eUndefined) {
-    
-  }
   auto currentLabel = curTaskData->label;
   auto currentLockSet = curTaskData->lockSet; 
+
 }
 
 }
