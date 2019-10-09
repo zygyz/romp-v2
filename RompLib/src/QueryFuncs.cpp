@@ -50,19 +50,24 @@ bool queryAllTaskInfo(const int ancestorLevel,
 
 /*
  * Query openmp task information given the task level and specified query type.
- * On success, return the pointer to the information. Otherwise, return nullptr.
+ * If the information is available, set dataPtr to the pointer to actual data, 
+ * then return true. If the information is not available, set dataPtr to 
+ * nullptr and return false. 
  */
-void* queryTaskInfo(const int ancestorLevel,
-                    const OmptTaskQueryType& queryType, 
-                    int& taskType,
-                    int& threadNum) {
+bool queryTaskInfo(const int ancestorLevel,
+                   const OmptTaskQueryType& queryType, 
+                   int& taskType,
+                   int& threadNum,
+                   void*& dataPtr) {
   int retVal = -1;
   ompt_data_t omptTaskData;
+  dataPtr = nullptr;
   auto taskDataPtr = &omptTaskData;
   if (queryType == eTaskData) {
     auto taskDataPtrPtr = &taskDataPtr;
     retVal = omptGetTaskInfo(ancestorLevel, &taskType, taskDataPtrPtr, 
                                   NULL, NULL, &threadNum);
+    dataPtr = taskDataPtr->ptr;
   } else if (queryType == eTaskFrame) {
     //TODO: implement the query task frame procedure
      
@@ -71,42 +76,39 @@ void* queryTaskInfo(const int ancestorLevel,
   } else {
     RAW_LOG(FATAL, "%s\n", "unknown query type");  
   }
-  if (infoIsAvailable(retVal)) {
-    return taskDataPtr->ptr; 
-  } else {
-    return nullptr; 
-  }
+  return infoIsAvailable(retVal);
 }
 
 /*
  * Query openmp runtime information about the parallel region. 
- * On success, return pointer to parallel region data. Otherwise, 
- * return nullptr.
+ * On success, set dataPtr to pointer to parallel region data, and return true. 
+ * Otherwise, set dataPtr to nullptr and return false.
  */
-void* queryParallelInfo(
+bool queryParallelInfo(
         const int ancestorLevel,
-        int& teamSize) {
+        int& teamSize,
+        void*& dataPtr) {
+  dataPtr = nullptr; 
   ompt_data_t omptParData;
   auto parDataPtr = &omptParData;
   auto parDataPtrPtr = &parDataPtr;
   auto retVal = omptGetParallelInfo(ancestorLevel, parDataPtrPtr, &teamSize);
-  if (infoIsAvailable(retVal)) {
-    return parDataPtr->ptr;
-  } else {
-    return nullptr;
-  }
+  dataPtr = parDataPtr->ptr;
+  return infoIsAvailable(retVal);
 }
 
 /*
  * Query openmp runtime information about the thread. 
  * On success, return pointer to thread data. Otherwise, return nullptr;
  */
-void* queryThreadInfo() {
+bool queryThreadInfo(void*& dataPtr) {
+  dataPtr = nullptr;
   auto curThreadData = omptGetThreadData();
   if (!curThreadData) {
-    return nullptr;
+    return false;
   }
-  return curThreadData->ptr;
+  dataPtr = curThreadData->ptr;
+  return true;
 }
 
 }

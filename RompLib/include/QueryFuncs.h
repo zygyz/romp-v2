@@ -26,16 +26,18 @@ bool queryAllTaskInfo(
          int& threadNum,
          AllTaskInfo& allTaskInfo);
 
-void* queryTaskInfo(
+bool queryTaskInfo(
         const int ancestorLevel, 
         const OmptTaskQueryType& queryType,
         int& taskType,
-        int& threadNum); 
+        int& threadNum,
+        void*& dataPtr); 
 
-void* queryParallelInfo(
+bool queryParallelInfo(
         const int ancestorLevel,
-        int& teamSize);
+        int& teamSize,
+        void*& dataPtr);
 
-void* queryThreadInfo();
+bool queryThreadInfo(void*& dataPtr);
 
 }
