@@ -42,38 +42,30 @@ void checkAccess(void* address,
     return;
   }
   AllTaskInfo allTaskInfo;
-  int threadNum, taskType;
-
-  if (!queryAllTaskInfo(0, taskType, threadNum, allTaskInfo)) {
-    // task info is not available
+  int threadNum, taskType, teamSize;
+  void* curThreadData, curParRegionData;
+  if (!prepareAllInfo(taskType, teamSize, threadNum, 
+                      curParRegionData, curThreadData)) {
     return;
   }
-  if (taskType == ompt_task_initial) {
+  if (taskType == ompt_task_initial) { 
+    // don't check data race for initial task
     return;
   }
-  if (!allTaskInfo.taskData.ptr) { // pointer to task data is not set
-    return;
-  }
-  int teamSize;
-  auto parRegionInfo = queryParallelInfo(0, teamSize);
-  if (parRegionInfo == nullptr) {
-    return;
-  }
-  auto curThreadData = queryThreadInfo();
-  if (!curThreadData) {
-    RAW_LOG(INFO, "%s\n", "thread data not set yet"); 
+  if (!allTaskInfo.taskData.ptr) { 
+    // pointer to task data is not set yet, task is not fully initialized
     return;
   }
   // query data  
   auto curTaskData = static_cast<TaskData*>(allTaskInfo.taskData.ptr);
-  auto currentLabel = curTaskData->label;
-  auto currentLockSet = curTaskData->lockSet; 
-  
+
   auto dataSharingType = analyzeDataSharing(curThreadData, address, 
                                             allTaskInfo.taskFrame);
   if (dataSharingType == eUndefined) {
     
   }
+  auto currentLabel = curTaskData->label;
+  auto currentLockSet = curTaskData->lockSet; 
 }
 
 }
