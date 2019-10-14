@@ -1,7 +1,15 @@
 #include "ShadowMemory.h"
 
+
 namespace romp {
 
+template<typename T>
+ShadowMemory<T>::ShadowMemory(uint64_t numL1PageTableBits, 
+                              uint64_t numL2PageTableBits,
+                              Granularity granularity) {
+
+
+}
 
 template<typename T>
 T* ShadowMemory<T>::getAllocatedPageForMemAddr(const uint64_t address) {

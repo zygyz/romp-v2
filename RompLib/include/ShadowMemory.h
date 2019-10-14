@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 
 /*
  * This header file declares ShadowMemory class template for managing shadow 
@@ -28,7 +29,7 @@ public:
 
 private:
   uint64_t _getPageOffset(const uint64_t address);
-  void* _getShadowPage(); 
+  uint64_t _getShadowPage(); 
   void _saveShadowPage(const uint64_t pageBaseAddress);
 
 private:
