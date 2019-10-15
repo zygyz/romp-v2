@@ -36,14 +36,12 @@ public:
 
 private:
   uint64_t _getPageOffset(const uint64_t address);
-  uint64_t _getShadowPage(); 
-  void _saveShadowPage(const uint64_t pageBaseAddress);
   uint64_t _genPageIndexMask(const uint64_t numBits, const uint64_t lowZeros);
   uint64_t _getL1PageIndex(const uint64_t address);
   uint64_t _getL2PageIndex(const uint64_t address);
 
 private:
-  uint64_t*** _pageTable; 
+  void*** _pageTable; 
   uint64_t _numEntriesPerPage;
   uint64_t _shadowPageIndexMask;
   uint64_t _pageOffsetShift;
@@ -52,7 +50,13 @@ private:
   uint64_t _l1PageTableShift;
   uint64_t _l2PageTableShift;
 
-
+private: 
+  static __thread void* _cachedShadowPage;
+  static __thread void** _cachedL1Page;
+  static void* _getShadowPage();
+  static void** _getL1Page();
+  static void _saveShadowPage(void* shadowPage);
+  static void _saveL1Page(void** l1Page);
 };
 
 
@@ -103,11 +107,11 @@ ShadowMemory<T>::ShadowMemory(uint64_t l1PageTableBits,
      
   // For l1PageTableBits = 20, this allocates a chunk of memory of size 
   // 2^20 * 8 = 8 Mb, which is managable.
-  auto tmp = calloc(1, sizeof(uint64_t**) * _numL1PageTableEntries);
+  auto tmp = calloc(1, sizeof(void**) * _numL1PageTableEntries);
   if (tmp == NULL) {
     LOG(FATAL) << "cannot create page table";
   }
-  _pageTable = static_cast<uint64_t***>(tmp); 
+  _pageTable = static_cast<void***>(tmp); 
 }
 
 template<typename T>
@@ -148,8 +152,16 @@ T* ShadowMemory<T>::getAllocatedPageForMemAddr(const uint64_t address) {
 
 template<typename T>
 T* ShadowMemory<T>::getOrCreatePageForMemAddr(const uint64_t address) {
-  //TODO
-  auto l1PageTableIndex = _getL1PageIndex(address);
+  auto l1Index = _getL1PageIndex(address);
+  if (_pageTable[l1Index] == 0) { 
+    // the first level page is not allocated yet.
+    auto freshL1Page = _getL1Page();
+    auto success = __sync_bool_compare_and_swap(&_pageTable[l1Index], 
+                                                0, freshL1Page);
+    if (!success) { // someone has already allocated this slot
+
+    }
+  }
   return nullptr;
 }
 
@@ -170,6 +182,70 @@ uint64_t ShadowMemory<T>::_getPageOffset(const uint64_t address) {
   return 0;
 }
 
+/*
+ * Helper function to get an allocation of l1 page, which is a array of 
+ * pointers to shadow pages. Use thread local storage for a caching.
+ */
+template<typename T>
+void** ShadowMemory<T>::_getL1Page() {
+  void** result = nullptr;
+  if (_cachedL1Page != nullptr) {
+    result = _cachedL1Page;
+    _cachedL1Page = nullptr;
+  } else {
+    // no cached l1 page available, create one
+    auto tmp = calloc(1, sizeof(void*) * _numL2PageTableEntries);
+    if (tmp == NULL) {
+      RAW_LOG(FATAL, "%s\n", "cannot allocate l1 page"); 
+    }
+    result = static_cast<void**>(tmp);
+  }
+  return result;
+}
+
+/*
+ * Helper function to get an allocation of shadow page, which contains 
+ * entries of access history type T. 
+ */
+template<typename T>
+void* ShadowMemory<T>::_getShadowPage() {
+  void* result;
+  if (_cachedShadowPage != nullptr) {
+    result = _cachedShadowPage;
+    _cachedShadowPage = nullptr;
+  } else { 
+    auto tmp = calloc(1, sizeof(T) * _numEntriesPerPage);
+    if (tmp == NULL) {
+      RAW_LOG(FATAL, "%s\n", "cannot allocate shadowpage");
+    }
+    result = static_cast<void*>(tmp);
+  }
+  return result;
+}
+
+/*
+ * It is always expected that when this function is called, the cached pointer
+ * is nullptr.
+ */
+template<typename T>
+void ShadowMemory<T>::_saveL1Page(void** l1Page) {     
+  if (!_cachedL1Page) {
+    RAW_LOG(ERROR, "%s\n", "cached l1 page is not nullptr!");
+    return;
+  }
+  _cachedL1Page = l1Page;  
+}
+
+template<typename T>
+void ShadowMemory<T>::_saveShadowPage(void* shadowPage) {     
+  if (!_cachedShadowPage) {
+    RAW_LOG(ERROR, "%s\n", "cached shadow page is not nullptr!");
+    return;
+  }
+  _cachedL1Page = shadowPage;  
+}
+
+
 /* 
  * Generate the mask value that is composed of `numBits` consequtive bits,
  * while masking lowest `mask` bits as 0.
@@ -178,18 +254,6 @@ template<typename T>
 uint64_t ShadowMemory<T>::_genPageIndexMask(uint64_t numBits, uint64_t lowZeros) {
   return (1 << numBits) - (1 << lowZeros);
 }
-
-template<typename T>
-uint64_t ShadowMemory<T>::_getShadowPage() { 
-  //TODO
-  return 0;
-}
-
-template<typename T>
-void ShadowMemory<T>::_saveShadowPage(const uint64_t  pageBaseAddress) {
-  //TODO
-}
-
 
 }
 
