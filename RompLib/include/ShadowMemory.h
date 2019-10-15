@@ -150,8 +150,7 @@ template<typename T>
 T* ShadowMemory<T>::getOrCreatePageForMemAddr(const uint64_t address) {
   //TODO
   auto l1PageTableIndex = _getL1PageIndex(address);
-
-  return tmp;
+  return nullptr;
 }
 
 template<typename T>
