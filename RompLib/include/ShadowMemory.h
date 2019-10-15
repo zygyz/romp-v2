@@ -72,7 +72,6 @@ ShadowMemory<T>::ShadowMemory(uint64_t l1PageTableBits,
                               uint64_t numMemAddrBits, 
                               Granularity granularity) {
   uint64_t lowZeroMask = 0;
-   _pageOffsetBits = numMemAddrBits - l1PageTableBits - l2PageTableBits;
   switch(granularity) {
     case eByteLevel:
       lowZeroMask = 0;
@@ -92,8 +91,8 @@ ShadowMemory<T>::ShadowMemory(uint64_t l1PageTableBits,
   _numEntriesPerPage = 1 << shadowPageBits;  
   _pageOffsetMask = _genOffsetMask(remainBits, lowZeroMask);
 
-  _numL1PageTableEntries = 1 << _numL1PageTableBits;
-  _numL2PageTableEntries = 1 << _numL2PageTableBits;
+  _numL1PageTableEntries = 1 << l1PageTableBits;
+  _numL2PageTableEntries = 1 << l2PageTableBits;
      
   std::vector<std::vector<void*> > tmp(_numL1PageTableEntries, 
           std::vector<void*>(_numL2PageTableEntries, nullptr));
@@ -103,8 +102,8 @@ ShadowMemory<T>::ShadowMemory(uint64_t l1PageTableBits,
 template<typename T>
 ShadowMemory<T>::~ShadowMemory() {
   // we should explicitly delete the shadow page
-  for (const auto& l1Page :: _pageTable) {
-    for (const auto& l2Page :: l1Page) {
+  for (const auto& l1Page : _pageTable) {
+    for (const auto& l2Page : l1Page) {
       if (!l2Page) {
         delete l2Page;
       } 

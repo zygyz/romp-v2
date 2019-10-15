@@ -64,8 +64,6 @@ void checkAccess(void* address,
   auto curTaskData = static_cast<TaskData*>(allTaskInfo.taskData.ptr);
 // auto curLabel = curTaskData->label;
 // auto curLockSet = curTaskData->lockSet; 
-  ShadowMemory<int> test(0,0,eByteLevel);
-  test.getAllocatedPageForMemAddr(0);
 }
 
 }
