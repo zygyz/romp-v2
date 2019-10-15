@@ -6,6 +6,7 @@
 #include "Initialize.h"
 #include "Label.h"
 #include "LockSet.h"
+#include "ShadowMemory.h"
 #include "TaskData.h"
 #include "ThreadData.h"
 
@@ -61,9 +62,10 @@ void checkAccess(void* address,
   auto dataSharingType = analyzeDataSharing(curThreadData, address, 
                                             allTaskInfo.taskFrame);
   auto curTaskData = static_cast<TaskData*>(allTaskInfo.taskData.ptr);
-  auto curLabel = curTaskData->label;
-  auto curLockSet = curTaskData->lockSet; 
-
+// auto curLabel = curTaskData->label;
+// auto curLockSet = curTaskData->lockSet; 
+  ShadowMemory<int> test(0,0,eByteLevel);
+  test.getAllocatedPageForMemAddr(0);
 }
 
 }

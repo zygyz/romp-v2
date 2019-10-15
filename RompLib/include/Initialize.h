@@ -14,6 +14,7 @@ namespace romp{
 bool gOmptInitialized = false; 
 ompt_get_task_info_t omptGetTaskInfo;
 ompt_get_parallel_info_t omptGetParallelInfo;
+ompt_get_thread_data_t omptGetThreadData;
 /* 
  * Define macro for registering ompt callback functions. 
  */
