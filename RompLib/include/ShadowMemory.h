@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
-#include <vector>
+#include <glog/logging.h>
+#include <glog/raw_logging.h>
 
 /*
  * This header file declares ShadowMemory class template for managing shadow 
@@ -37,15 +38,19 @@ private:
   uint64_t _getPageOffset(const uint64_t address);
   uint64_t _getShadowPage(); 
   void _saveShadowPage(const uint64_t pageBaseAddress);
-  uint64_t _genOffsetMask(const uint64_t numBits, const uint64_t lowZeros);
+  uint64_t _genPageIndexMask(const uint64_t numBits, const uint64_t lowZeros);
+  uint64_t _getL1PageIndex(const uint64_t address);
+  uint64_t _getL2PageIndex(const uint64_t address);
 
 private:
-  std::vector<std::vector<void*> > _pageTable;
+  uint64_t*** _pageTable; 
   uint64_t _numEntriesPerPage;
-  uint64_t _pageOffsetMask;
+  uint64_t _shadowPageIndexMask;
   uint64_t _pageOffsetShift;
   uint64_t _numL1PageTableEntries;
   uint64_t _numL2PageTableEntries;
+  uint64_t _l1PageTableShift;
+  uint64_t _l2PageTableShift;
 
 
 };
@@ -86,29 +91,53 @@ ShadowMemory<T>::ShadowMemory(uint64_t l1PageTableBits,
       lowZeroMask = 0;
       break;
   }
-  auto remainBits = numMemAddrBits - l1PageTableBits - l2PageTableBits;
-  auto shadowPageBits = remainBits - lowZeroMask;
-  _numEntriesPerPage = 1 << shadowPageBits;  
-  _pageOffsetMask = _genOffsetMask(remainBits, lowZeroMask);
+  _l1PageTableShift = numMemAddrBits - l1PageTableBits;  
+  _l2PageTableShift = _l1PageTableShift - l2PageTableBits; 
+
+  _numEntriesPerPage = 1 << (_l2PageTableShift - lowZeroMask);  
+
+  _shadowPageIndexMask = _genPageIndexMask(_l2PageTableShift, lowZeroMask);
 
   _numL1PageTableEntries = 1 << l1PageTableBits;
   _numL2PageTableEntries = 1 << l2PageTableBits;
      
-  std::vector<std::vector<void*> > tmp(_numL1PageTableEntries, 
-          std::vector<void*>(_numL2PageTableEntries, nullptr));
-  _pageTable = std::move(tmp);
+  // For l1PageTableBits = 20, this allocates a chunk of memory of size 
+  // 2^20 * 8 = 8 Mb, which is managable.
+  auto tmp = calloc(1, sizeof(uint64_t**) * _numL1PageTableEntries);
+  if (tmp == NULL) {
+    LOG(FATAL) << "cannot create page table";
+  }
+  _pageTable = static_cast<uint64_t***>(tmp); 
 }
 
 template<typename T>
 ShadowMemory<T>::~ShadowMemory() {
   // we should explicitly delete the shadow page
-  for (const auto& l1Page : _pageTable) {
-    for (const auto& l2Page : l1Page) {
-      if (!l2Page) {
-        delete l2Page;
-      } 
+  for (int i = 0; i < _numL1PageTableEntries; ++i) {
+    if (_pageTable[i] != 0) {
+      for (int j = 0; j < _numL2PageTableEntries; ++j) {
+        if (_pageTable[i][j] != 0) {
+          free(_pageTable[i][j]); //free the leaf shadow page
+        }
+      }
+      free(_pageTable[i]);
     }
   }
+  free(_pageTable);
+}
+
+/* 
+ * Given the memory address, using the high bits to get the index into the 
+ * first level page table.
+ */
+template<typename T>
+uint64_t ShadowMemory<T>::_getL1PageIndex(const uint64_t address) {  
+  return static_cast<uint64_t>(address >> _l1PageTableShift);
+}
+
+template<typename T>
+uint64_t ShadowMemory<T>::_getL2PageIndex(const uint64_t address) {
+  return static_cast<uint64_t>(address >> _l2PageTableShift);
 }
 
 template<typename T>
@@ -120,14 +149,14 @@ T* ShadowMemory<T>::getAllocatedPageForMemAddr(const uint64_t address) {
 template<typename T>
 T* ShadowMemory<T>::getOrCreatePageForMemAddr(const uint64_t address) {
   //TODO
-  T* tmp;
+  auto l1PageTableIndex = _getL1PageIndex(address);
 
   return tmp;
 }
 
 template<typename T>
 uint64_t ShadowMemory<T>::getPageOffset(const uint64_t address) {
-  return (address & _pageOffsetMask) >> _pageOffsetShift;
+  return (address & _shadowPageIndexMask) >> _pageOffsetShift;
 }
 
 
@@ -147,7 +176,7 @@ uint64_t ShadowMemory<T>::_getPageOffset(const uint64_t address) {
  * while masking lowest `mask` bits as 0.
  */
 template<typename T>
-uint64_t ShadowMemory<T>::_genOffsetMask(uint64_t numBits, uint64_t lowZeros) {
+uint64_t ShadowMemory<T>::_genPageIndexMask(uint64_t numBits, uint64_t lowZeros) {
   return (1 << numBits) - (1 << lowZeros);
 }
 
