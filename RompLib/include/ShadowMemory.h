@@ -53,10 +53,10 @@ private:
 private: 
   static __thread void* _cachedShadowPage;
   static __thread void** _cachedL1Page;
-  static void* _getShadowPage();
-  static void** _getL1Page();
-  static void _saveShadowPage(void* shadowPage);
-  static void _saveL1Page(void** l1Page);
+  static void* _getShadowPage(const uint64_t numEntriesPerPage);
+  static void** _getL1Page(const uint64_t numL2PageTableEntries);
+  static void _saveShadowPage(const void* shadowPage);
+  static void _saveL1Page(const void** l1Page);
 };
 
 
@@ -155,14 +155,24 @@ T* ShadowMemory<T>::getOrCreatePageForMemAddr(const uint64_t address) {
   auto l1Index = _getL1PageIndex(address);
   if (_pageTable[l1Index] == 0) { 
     // the first level page is not allocated yet.
-    auto freshL1Page = _getL1Page();
+    auto freshL1Page = _getL1Page(_numL2PageTableEntries);
     auto success = __sync_bool_compare_and_swap(&_pageTable[l1Index], 
                                                 0, freshL1Page);
     if (!success) { // someone has already allocated this slot
-
+      _saveL1Page(freshL1Page);
     }
   }
-  return nullptr;
+  // now get the shadow page
+  auto l2Index = _getL2PageIndex(address);
+  if (_pageTable[l1Index][l2Index] == 0) {
+    auto freshShadowPage = _getShadowPage(_numEntriesPerPage);
+    auto success = __sync_bool_compare_and_swap(&_pageTable[l1Index][l2Index],
+                                             0, freshShadowPage);
+    if (!success) {
+      _saveShadowPage(freshShadowPage);
+    }
+  }
+  return static_cast<T*>(_pageTable[l1Index][l2Index]);
 }
 
 template<typename T>
@@ -187,14 +197,14 @@ uint64_t ShadowMemory<T>::_getPageOffset(const uint64_t address) {
  * pointers to shadow pages. Use thread local storage for a caching.
  */
 template<typename T>
-void** ShadowMemory<T>::_getL1Page() {
+void** ShadowMemory<T>::_getL1Page(uint64_t numL2PageTableEntries) {
   void** result = nullptr;
   if (_cachedL1Page != nullptr) {
     result = _cachedL1Page;
     _cachedL1Page = nullptr;
   } else {
     // no cached l1 page available, create one
-    auto tmp = calloc(1, sizeof(void*) * _numL2PageTableEntries);
+    auto tmp = calloc(1, sizeof(void*) * numL2PageTableEntries);
     if (tmp == NULL) {
       RAW_LOG(FATAL, "%s\n", "cannot allocate l1 page"); 
     }
@@ -208,13 +218,13 @@ void** ShadowMemory<T>::_getL1Page() {
  * entries of access history type T. 
  */
 template<typename T>
-void* ShadowMemory<T>::_getShadowPage() {
+void* ShadowMemory<T>::_getShadowPage(const uint64_t numEntriesPerPage) {
   void* result;
   if (_cachedShadowPage != nullptr) {
     result = _cachedShadowPage;
     _cachedShadowPage = nullptr;
   } else { 
-    auto tmp = calloc(1, sizeof(T) * _numEntriesPerPage);
+    auto tmp = calloc(1, sizeof(T) * numEntriesPerPage);
     if (tmp == NULL) {
       RAW_LOG(FATAL, "%s\n", "cannot allocate shadowpage");
     }
@@ -228,7 +238,7 @@ void* ShadowMemory<T>::_getShadowPage() {
  * is nullptr.
  */
 template<typename T>
-void ShadowMemory<T>::_saveL1Page(void** l1Page) {     
+void ShadowMemory<T>::_saveL1Page(const void** l1Page) {     
   if (!_cachedL1Page) {
     RAW_LOG(ERROR, "%s\n", "cached l1 page is not nullptr!");
     return;
@@ -237,7 +247,7 @@ void ShadowMemory<T>::_saveL1Page(void** l1Page) {
 }
 
 template<typename T>
-void ShadowMemory<T>::_saveShadowPage(void* shadowPage) {     
+void ShadowMemory<T>::_saveShadowPage(const void* shadowPage) {     
   if (!_cachedShadowPage) {
     RAW_LOG(ERROR, "%s\n", "cached shadow page is not nullptr!");
     return;
