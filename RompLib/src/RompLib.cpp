@@ -15,6 +15,8 @@ namespace romp {
 using LabelPtr = std::shared_ptr<Label>;
 using LockSetPtr = std::shared_ptr<LockSet>;
 
+ShadowMemory<int> test(20, 12, 48, eByteLevel);
+
 extern "C" {
 
 /** 
@@ -54,16 +56,12 @@ void checkAccess(void* address,
     // don't check data race for initial task
     return;
   }
-  if (!allTaskInfo.taskData.ptr) { 
-    // pointer to task data is not set yet, task is not fully initialized
-    return;
-  }
   // query data  
   auto dataSharingType = analyzeDataSharing(curThreadData, address, 
-                                            allTaskInfo.taskFrame);
+                                           allTaskInfo.taskFrame);
   auto curTaskData = static_cast<TaskData*>(allTaskInfo.taskData.ptr);
-// auto curLabel = curTaskData->label;
-// auto curLockSet = curTaskData->lockSet; 
+ auto curLabel = curTaskData->label;
+ auto curLockSet = curTaskData->lockSet; 
 }
 
 }

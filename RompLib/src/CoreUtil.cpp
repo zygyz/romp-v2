@@ -29,6 +29,10 @@ bool prepareAllInfo(int& taskType,
     // thread data is not available
     return false;
   }
+  if (!allTaskInfo.taskData.ptr) {
+    // task data info pointer is nullptr
+    return false;
+  }
   return true;
 }
 

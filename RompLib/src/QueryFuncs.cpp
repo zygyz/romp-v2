@@ -93,18 +93,22 @@ bool queryParallelInfo(
   auto parDataPtr = &omptParData;
   auto parDataPtrPtr = &parDataPtr;
   auto retVal = omptGetParallelInfo(ancestorLevel, parDataPtrPtr, &teamSize);
+  if (!infoIsAvailable(retVal) || !(parDataPtr->ptr)) {
+    return false;
+  }
   dataPtr = parDataPtr->ptr;
-  return infoIsAvailable(retVal);
+  return true;
 }
 
 /*
  * Query openmp runtime information about the thread. 
- * On success, return pointer to thread data. Otherwise, return nullptr;
+ * If thread data pointer is not nullptr, return true and pass the pointer
+ * to dataPtr. Otherwise, return false.
  */
 bool queryThreadInfo(void*& dataPtr) {
   dataPtr = nullptr;
   auto curThreadData = omptGetThreadData();
-  if (!curThreadData) {
+  if (!curThreadData || !(curThreadData->ptr)) {
     return false;
   }
   dataPtr = curThreadData->ptr;
