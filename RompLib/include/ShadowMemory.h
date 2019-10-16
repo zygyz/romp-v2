@@ -22,10 +22,10 @@ template<typename T>
 class ShadowMemory {
 
 public:
-  ShadowMemory(uint64_t l1PageTableBits, 
-               uint64_t l2PageTableBits,
-               uint64_t numMemAddrBits,
-               Granularity granularity);
+  ShadowMemory(const uint64_t l1PageTableBits = 20, 
+               const uint64_t l2PageTableBits = 12,
+               const uint64_t numMemAddrBits = 48,
+               Granularity granularity = eByteLevel);
 
   ~ShadowMemory();
 public:
@@ -55,8 +55,8 @@ private:
   static __thread void** _cachedL1Page;
   static void* _getShadowPage(const uint64_t numEntriesPerPage);
   static void** _getL1Page(const uint64_t numL2PageTableEntries);
-  static void _saveShadowPage(const void* shadowPage);
-  static void _saveL1Page(const void** l1Page);
+  static void _saveShadowPage(void* shadowPage);
+  static void _saveL1Page(void** l1Page);
 };
 
 
@@ -76,9 +76,9 @@ private:
  * are associated with one entry.
  */
 template<typename T>
-ShadowMemory<T>::ShadowMemory(uint64_t l1PageTableBits,
-                              uint64_t l2PageTableBits,
-                              uint64_t numMemAddrBits, 
+ShadowMemory<T>::ShadowMemory(const uint64_t l1PageTableBits,
+                              const uint64_t l2PageTableBits,
+                              const uint64_t numMemAddrBits, 
                               Granularity granularity) {
   LOG(INFO) << "ShadowMemory constructor ";
   uint64_t lowZeroMask = 0;
@@ -240,7 +240,7 @@ void* ShadowMemory<T>::_getShadowPage(const uint64_t numEntriesPerPage) {
  * is nullptr.
  */
 template<typename T>
-void ShadowMemory<T>::_saveL1Page(const void** l1Page) {     
+void ShadowMemory<T>::_saveL1Page(void** l1Page) {     
   if (!_cachedL1Page) {
     RAW_LOG(ERROR, "%s\n", "cached l1 page is not nullptr!");
     return;
@@ -249,12 +249,12 @@ void ShadowMemory<T>::_saveL1Page(const void** l1Page) {
 }
 
 template<typename T>
-void ShadowMemory<T>::_saveShadowPage(const void* shadowPage) {     
+void ShadowMemory<T>::_saveShadowPage(void* shadowPage) {     
   if (!_cachedShadowPage) {
     RAW_LOG(ERROR, "%s\n", "cached shadow page is not nullptr!");
     return;
   }
-  _cachedL1Page = shadowPage;  
+  _cachedShadowPage = shadowPage;  
 }
 
 

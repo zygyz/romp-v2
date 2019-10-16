@@ -1,6 +1,7 @@
 #include <glog/logging.h>
 #include <glog/raw_logging.h>
 
+#include "AccessHistory.h"
 #include "CoreUtil.h"
 #include "DataSharing.h"
 #include "Initialize.h"
@@ -15,7 +16,7 @@ namespace romp {
 using LabelPtr = std::shared_ptr<Label>;
 using LockSetPtr = std::shared_ptr<LockSet>;
 
-ShadowMemory<int> test(20, 12, 48, eByteLevel);
+static ShadowMemory<AccessHistory> shadowMemory;
 
 extern "C" {
 
@@ -60,8 +61,9 @@ void checkAccess(void* address,
   auto dataSharingType = analyzeDataSharing(curThreadData, address, 
                                            allTaskInfo.taskFrame);
   auto curTaskData = static_cast<TaskData*>(allTaskInfo.taskData.ptr);
- auto curLabel = curTaskData->label;
- auto curLockSet = curTaskData->lockSet; 
+  auto curLabel = curTaskData->label;
+  auto curLockSet = curTaskData->lockSet; 
+  auto accessHistory = shadowMemory.getOrCreatePageForMemAddr(0);
 }
 
 }
