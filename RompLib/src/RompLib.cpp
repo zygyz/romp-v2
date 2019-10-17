@@ -74,7 +74,7 @@ void checkAccess(void* address,
   
   CheckInfo checkInfo(allTaskInfo, bytesAccessed, instnAddr, taskType, hwLock);
   for (uint64_t i = 0; i < bytesAccessed; ++i) {
-    auto curAddress = static_cast<uint64_t>(address) + i;      
+    auto curAddress = reinterpret_cast<uint64_t>(address) + i;      
     auto accessHistory = shadowMemory.getShadowMemorySlot(curAddress);
     checkDataRace(accessHistory, curLabel, curLockSet, checkInfo);
   }
