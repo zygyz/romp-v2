@@ -23,7 +23,7 @@ static ShadowMemory<AccessHistory> shadowMemory;
  */
 void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel, 
                    const LockSetPtr& curLockSet, const CheckInfo& checkInfo) {
-
+  RAW_LOG(INFO, "%s %x\n", "checkDataRace called access history:", accessHistory);
 }
 
 extern "C" {
@@ -78,7 +78,6 @@ void checkAccess(void* address,
     auto accessHistory = shadowMemory.getShadowMemorySlot(curAddress);
     checkDataRace(accessHistory, curLabel, curLockSet, checkInfo);
   }
-  
 }
 
 }

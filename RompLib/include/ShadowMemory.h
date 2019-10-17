@@ -58,6 +58,13 @@ private:
   static void _saveL1Page(void** l1Page);
 };
 
+template<typename T>
+__thread void* ShadowMemory<T>::_cachedShadowPage;
+
+template<typename T>
+__thread void** ShadowMemory<T>::_cachedL1Page;
+
+
 
 /*
  * numMemAddrBits: number of effective bits in a memory address. For x86-64, 
