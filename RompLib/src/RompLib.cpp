@@ -18,6 +18,14 @@ using LockSetPtr = std::shared_ptr<LockSet>;
 
 static ShadowMemory<AccessHistory> shadowMemory;
 
+/*
+ * Driver function to do data race checking 
+ */
+void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel, 
+                   const LockSetPtr& curLockSet, const CheckInfo& checkInfo) {
+
+}
+
 extern "C" {
 
 /** 
@@ -63,12 +71,12 @@ void checkAccess(void* address,
   auto curTaskData = static_cast<TaskData*>(allTaskInfo.taskData.ptr);
   auto curLabel = curTaskData->label;
   auto curLockSet = curTaskData->lockSet; 
-
+  
+  CheckInfo checkInfo(allTaskInfo, bytesAccessed, instnAddr, taskType, hwLock);
   for (uint64_t i = 0; i < bytesAccessed; ++i) {
     auto curAddress = static_cast<uint64_t>(address) + i;      
     auto accessHistory = shadowMemory.getShadowMemorySlot(curAddress);
-
-    checkDataRace(accessHistory, curLabel, curLockSet, allTaskInfo, 
+    checkDataRace(accessHistory, curLabel, curLockSet, checkInfo);
   }
   
 }

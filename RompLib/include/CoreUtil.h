@@ -16,12 +16,20 @@ namespace romp {
  * Wrap all necessary information for data race checking.
  */
 typedef struct CheckInfo {
+  CheckInfo(const AllTaskInfo& allTaskInfo, 
+            const uint32_t bytesAccessed,
+            const uint64_t instnAddr,
+            const int taskType,
+            const bool hwLock): allTaskInfo(allTaskInfo), 
+                                bytesAccessed(bytesAccessed),
+                                instnAddr(instnAddr),
+                                taskType(taskType),
+                                hwLock(hwLock) {}
   AllTaskInfo allTaskInfo;
   uint32_t bytesAccessed;
   uint64_t instnAddr;
   int taskType;
   bool hwLock; 
-  
 } CheckInfo; 
 
 bool prepareAllInfo(int& taskType, 
