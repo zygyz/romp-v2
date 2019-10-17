@@ -53,6 +53,7 @@ void checkAccess(void* address,
     RAW_LOG(INFO, "%s", "ompt not initialized yet");
     return;
   }
+  RAW_LOG(INFO, "%s", "ompt is initialized");
   AllTaskInfo allTaskInfo;
   int threadNum, taskType, teamSize;
   void* curThreadData;

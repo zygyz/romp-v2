@@ -1,7 +1,7 @@
 #pragma once
 #include <glog/logging.h>
 #include <ompt.h>
-
+#include <iostream>
 #include "Callbacks.h"
 #include "QueryFuncs.h"
 
@@ -34,7 +34,6 @@ do {                                                         \
 int omptInitialize(ompt_function_lookup_t lookup,
                    int initialDeviceNum,
                    ompt_data_t* toolData) {
-  google::InitGoogleLogging("romp");
   LOG(INFO) << "start initializing ompt";
   auto ompt_set_callback = 
       (ompt_set_callback_t)lookup("ompt_set_callback");

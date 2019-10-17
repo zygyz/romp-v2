@@ -1,6 +1,7 @@
 #include "Callbacks.h"
 #include <glog/logging.h>
 #include <glog/raw_logging.h>
+#include <iostream>
 
 namespace romp {   
 
