@@ -48,6 +48,7 @@ private:
   uint64_t _numL2PageTableEntries;
   uint64_t _l1PageTableShift;
   uint64_t _l2PageTableShift;
+  uint64_t _l2IndexMask;
 
 private: 
   static __thread void* _cachedShadowPage;
@@ -108,6 +109,7 @@ ShadowMemory<T>::ShadowMemory(const uint64_t l1PageTableBits,
   }
   _l1PageTableShift = numMemAddrBits - l1PageTableBits;  
   _l2PageTableShift = _l1PageTableShift - l2PageTableBits; 
+  _l2IndexMask = 1 << l2PageTableBits - 1;
 
   _numEntriesPerPage = 1 << (_l2PageTableShift - lowZeroMask);  
 
@@ -151,9 +153,13 @@ uint64_t ShadowMemory<T>::_getL1PageIndex(const uint64_t address) {
   return static_cast<uint64_t>(address >> _l1PageTableShift);
 }
 
+/*
+ * Get the index to the second level page table, using the middle field of 
+ * the address.
+ */
 template<typename T>
 uint64_t ShadowMemory<T>::_getL2PageIndex(const uint64_t address) {
-  return static_cast<uint64_t>(address >> _l2PageTableShift);
+  return static_cast<uint64_t>((address >> _l2PageTableShift) & _l2IndexMask);
 }
 
 /*
