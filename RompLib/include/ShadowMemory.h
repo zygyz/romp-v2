@@ -29,16 +29,15 @@ public:
 
   ~ShadowMemory();
 public:
-  T* getAllocatedPageForMemAddr(const uint64_t address);
-  T* getOrCreatePageForMemAddr(const uint64_t address);   
-  uint64_t getPageOffset(const uint64_t address);
+  T* getShadowMemorySlot(const uint64_t address);
   uint64_t getNumEntriesPerPage();
 
 private:
-  uint64_t _getPageOffset(const uint64_t address);
+  uint64_t _getPageIndex(const uint64_t address);
   uint64_t _genPageIndexMask(const uint64_t numBits, const uint64_t lowZeros);
   uint64_t _getL1PageIndex(const uint64_t address);
   uint64_t _getL2PageIndex(const uint64_t address);
+  T* _getOrCreatePageForMemAddr(const uint64_t address);   
 
 private:
   void*** _pageTable; 
@@ -85,15 +84,19 @@ ShadowMemory<T>::ShadowMemory(const uint64_t l1PageTableBits,
   switch(granularity) {
     case eByteLevel:
       lowZeroMask = 0;
+      _pageOffsetShift = 0;
       break;
     case eWordLevel:
       lowZeroMask = 2;
+      _pageOffsetShift = 2;
       break;
     case eLongWordLevel:
       lowZeroMask = 3;
+      _pageOffsetShift = 3;
       break;
     default:
       lowZeroMask = 0;
+      _pageOffsetShift = 0;
       break;
   }
   _l1PageTableShift = numMemAddrBits - l1PageTableBits;  
@@ -146,14 +149,23 @@ uint64_t ShadowMemory<T>::_getL2PageIndex(const uint64_t address) {
   return static_cast<uint64_t>(address >> _l2PageTableShift);
 }
 
+/*
+ * Given the memory address, return the corresponding slot in shadow memory.
+ */
 template<typename T>
-T* ShadowMemory<T>::getAllocatedPageForMemAddr(const uint64_t address) {
-  T* shadowPage;
-  return shadowPage;
+T* ShadowMemory<T>::getShadowMemorySlot(const uint64_t address) {
+  auto pageBase = _getOrCreatePageForMemAddr(address);   
+  auto pageIndex = _getPageIndex(address); 
+  return static_cast<T*>(pageBase + pageIndex);
 }
 
+
+/* 
+ * Given the memory address, return the shadow page containing the access 
+ * history slot that is associated with the address.
+ */
 template<typename T>
-T* ShadowMemory<T>::getOrCreatePageForMemAddr(const uint64_t address) {
+T* ShadowMemory<T>::_getOrCreatePageForMemAddr(const uint64_t address) {
   auto l1Index = _getL1PageIndex(address);
   if (_pageTable[l1Index] == 0) { 
     // the first level page is not allocated yet.
@@ -177,8 +189,9 @@ T* ShadowMemory<T>::getOrCreatePageForMemAddr(const uint64_t address) {
   return static_cast<T*>(_pageTable[l1Index][l2Index]);
 }
 
+
 template<typename T>
-uint64_t ShadowMemory<T>::getPageOffset(const uint64_t address) {
+uint64_t ShadowMemory<T>::_getPageIndex(const uint64_t address) {
   return (address & _shadowPageIndexMask) >> _pageOffsetShift;
 }
 
@@ -186,12 +199,6 @@ uint64_t ShadowMemory<T>::getPageOffset(const uint64_t address) {
 template<typename T>
 uint64_t ShadowMemory<T>::getNumEntriesPerPage() {
   return _numEntriesPerPage;
-}
-
-template<typename T>
-uint64_t ShadowMemory<T>::_getPageOffset(const uint64_t address) {
-  //TODO 
-  return 0;
 }
 
 /*

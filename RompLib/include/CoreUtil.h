@@ -11,7 +11,18 @@
  */
 
 namespace romp {
- 
+
+/* 
+ * Wrap all necessary information for data race checking.
+ */
+typedef struct CheckInfo {
+  AllTaskInfo allTaskInfo;
+  uint32_t bytesAccessed;
+  uint64_t instnAddr;
+  int taskType;
+  bool hwLock; 
+  
+} CheckInfo; 
 
 bool prepareAllInfo(int& taskType, 
                     int& teamSize, 
@@ -19,6 +30,5 @@ bool prepareAllInfo(int& taskType,
                     void*& curParRegionData,
                     void*& curThreadData,
                     AllTaskInfo& allTaskInfo);
-
 
 }

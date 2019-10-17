@@ -63,7 +63,14 @@ void checkAccess(void* address,
   auto curTaskData = static_cast<TaskData*>(allTaskInfo.taskData.ptr);
   auto curLabel = curTaskData->label;
   auto curLockSet = curTaskData->lockSet; 
-  auto accessHistory = shadowMemory.getOrCreatePageForMemAddr(0);
+
+  for (uint64_t i = 0; i < bytesAccessed; ++i) {
+    auto curAddress = static_cast<uint64_t>(address) + i;      
+    auto accessHistory = shadowMemory.getShadowMemorySlot(curAddress);
+
+    checkDataRace(accessHistory, curLabel, curLockSet, allTaskInfo, 
+  }
+  
 }
 
 }
