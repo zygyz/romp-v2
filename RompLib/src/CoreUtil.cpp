@@ -25,7 +25,7 @@ bool prepareAllInfo(int& taskType,
   if (!queryParallelInfo(0, teamSize, curParRegionData)) {
     return false; // parallel region is not available
   }
-  if (!queryThreadInfo(curThreadData)) {
+  if (!queryOmpThreadInfo(curThreadData)) {
     // thread data is not available
     return false;
   }

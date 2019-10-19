@@ -2,6 +2,7 @@
 
 #include <glog/logging.h>
 #include <glog/raw_logging.h>
+#include <pthread.h>
 
 
 namespace romp {
@@ -105,13 +106,31 @@ bool queryParallelInfo(
  * If thread data pointer is not nullptr, return true and pass the pointer
  * to dataPtr. Otherwise, return false.
  */
-bool queryThreadInfo(void*& dataPtr) {
+bool queryOmpThreadInfo(void*& dataPtr) {
   dataPtr = nullptr;
   auto curThreadData = omptGetThreadData();
   if (!curThreadData || !(curThreadData->ptr)) {
     return false;
   }
   dataPtr = curThreadData->ptr;
+  return true;
+}
+
+/*
+ * Query the stack base address and the stack size of the current thread.
+ * On success, return true. Otherwise, return false and set stackAddr to 
+ * nullptr and staskSize to 0.
+ */
+bool queryThreadStackInfo(void*& stackAddr, size_t& stackSize) {
+  pthread_addr_t attr; 
+  if (pthread_getattr_np(pthread_self(), &attr) != 0) {
+    RAW_LOG(WARNING, "%s", "cannot get pthread attribute");
+    return false;
+  }
+  if (pthread_attr_getstack(&attr, &stackAddr, &stackSize) != 0) {
+    RAW_LOG(WARNING, "%s", "cannot get thread stack info");
+    return false; 
+  } 
   return true;
 }
 

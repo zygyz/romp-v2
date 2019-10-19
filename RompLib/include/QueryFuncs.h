@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 #include <ompt.h>
 
 /*
@@ -38,6 +39,8 @@ bool queryParallelInfo(
         int& teamSize,
         void*& dataPtr);
 
-bool queryThreadInfo(void*& dataPtr);
+bool queryOmpThreadInfo(void*& dataPtr);
 
+bool queryThreadStackInfo(void*& stackAddr, size_t& stackSize);
+        
 }

@@ -1,6 +1,10 @@
 #include "Callbacks.h"
+
 #include <glog/logging.h>
 #include <glog/raw_logging.h>
+
+#include "QueryFuncs.h"
+#include "ThreadData.h"
 
 namespace romp {   
 
@@ -95,7 +99,25 @@ void on_ompt_callback_dependences(
 void on_ompt_callback_thread_begin(
        ompt_thread_t threadType,
        ompt_data_t *threadData) {
-
+  if (!threadData) {
+    return;
+  }
+  auto newThreadData = new ThreadData();
+  if (!newTheadData) {
+    RAW_LOG(FATAL, "%s", "failed to create thread data");
+    return;
+  }
+  threadData->ptr = static_cast<void*>(newThreadData);
+  void* stackAddr = nullptr;
+  uint64_t stackSize = 0;
+  if (!queryThreadStackInfo(stackAddr, stackSize)) {
+    RAW_LOG(WARNING, "%s", "failed to get thread stack info");
+    return;
+  }
+  newThreadData->stackBaseAddr = stackAddr;
+  auto stackTopAddr = static_cast<void*>(static_cast<uint64_t>(stackAddr) +
+                        static_cast<uint64_t>(stackSize));             
+  newThreadData->stackTopAddr = stackTopAddr;    
 }
 
 void on_ompt_callback_thread_end(
