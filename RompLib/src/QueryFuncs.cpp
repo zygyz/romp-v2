@@ -77,7 +77,10 @@ bool queryTaskInfo(const int ancestorLevel,
   } else {
     RAW_LOG(FATAL, "%s\n", "unknown query type");  
   }
-  return infoIsAvailable(retVal);
+  if (!infoIsAvailable(retVal) || !dataPtr) {
+    return false;  
+  }
+  return true;
 }
 
 /*
