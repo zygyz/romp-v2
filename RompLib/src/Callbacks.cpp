@@ -116,8 +116,8 @@ void on_ompt_callback_thread_begin(
   }
   newThreadData->stackBaseAddr = stackAddr;
   auto stackTopAddr = reinterpret_cast<void*>(
-                reinterpret_cast<uint64_t>(stackAddr) +
-                        static_cast<uint64_t>(stackSize));             
+           reinterpret_cast<uint64_t>(stackAddr) +
+           static_cast<uint64_t>(stackSize));             
   newThreadData->stackTopAddr = stackTopAddr;    
 }
 
