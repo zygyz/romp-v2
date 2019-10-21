@@ -103,7 +103,7 @@ void on_ompt_callback_thread_begin(
     return;
   }
   auto newThreadData = new ThreadData();
-  if (!newTheadData) {
+  if (!newThreadData) {
     RAW_LOG(FATAL, "%s", "failed to create thread data");
     return;
   }
