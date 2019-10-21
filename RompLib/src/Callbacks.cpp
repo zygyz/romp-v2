@@ -4,6 +4,7 @@
 #include <glog/raw_logging.h>
 
 #include "QueryFuncs.h"
+#include "TaskData.h"
 #include "ThreadData.h"
 
 namespace romp {   
