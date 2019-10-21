@@ -125,7 +125,7 @@ bool queryOmpThreadInfo(void*& dataPtr) {
  * nullptr and staskSize to 0.
  */
 bool queryThreadStackInfo(void*& stackAddr, size_t& stackSize) {
-  pthread_addr_t attr; 
+  pthread_attr_t attr; 
   if (pthread_getattr_np(pthread_self(), &attr) != 0) {
     RAW_LOG(WARNING, "%s", "cannot get pthread attribute");
     return false;

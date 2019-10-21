@@ -16,6 +16,42 @@ void on_ompt_callback_implicit_task(
        unsigned int index,
        int flags) {
   RAW_LOG(INFO, "%s", "on_ompt_callback_implicit_task called");
+  if (flags == ompt_task_initial) {
+    return;
+  }
+  if (actualParallelism == 1) {
+    return;
+  }
+  int parentTaskType, parentThreadNum;
+  void* parentDataPtr;
+  if (endPoint == ompt_scope_begin) {
+    if (!queryTaskInfo(1, eTaskData, parentTaskType, parentThreadNum,
+             parentDataPtr)) {
+      RAW_LOG(FATAL, "%s", "cannot get parent task info");     
+      return;
+    }   
+    // TODO: create label for this new implicit task 
+    auto newTaskDataPtr = new TaskData();
+    taskData->ptr = static_cast<void*>(newTaskDataPtr);
+  } else {
+    // end of the current implicit task, modify parent task's label
+    // only one worker thread with index 0 is responsible for modifying 
+    // the parent task label
+    auto taskDataPtr = static_cast<TaskData*>(taskData->ptr);
+    if (!taskDataPtr) { 
+      RAW_LOG(FATAL, "%s", "task data pointer is null");
+    }
+    if (index == 0) { 
+      if (!queryTaskInfo(1, eTaskData, parentTaskType, parentThreadNum, 
+                parentDataPtr)) {
+        RAW_LOG(FATAL, "%s", "cannot get parent task info");
+        return;
+      }  
+      // TODO: get the parent task label pointer and modify the label
+    }
+    delete taskDataPtr; 
+    taskData->ptr = nullptr;
+  }
 }
 
 void on_ompt_callback_sync_region(
