@@ -33,7 +33,7 @@ void on_ompt_callback_implicit_task(
     // TODO: create label for this new implicit task 
     auto newTaskDataPtr = new TaskData();
     taskData->ptr = static_cast<void*>(newTaskDataPtr);
-  } else {
+  } else if (endPoint == ompt_scope_end) {
     // end of the current implicit task, modify parent task's label
     // only one worker thread with index 0 is responsible for modifying 
     // the parent task label
@@ -61,7 +61,21 @@ void on_ompt_callback_sync_region(
        ompt_data_t *taskData,
        const void* codePtrRa) {
   RAW_LOG(INFO, "%s", "on_ompt_callback_sync_region called");
-  
+  if (!taskData || !taskData->ptr) {
+    RAW_LOG(FATAL, "%s", "task data pointer is null");  
+    return;
+  }
+  auto taskDataPtr = static_cast<TaskData*>(taskData->ptr);
+  if (kind == ompt_sync_region_barrier && endPoint == ompt_scope_end) {
+    // TODO: modify the current task label
+  } else if (kind == ompt_sync_region_taskwait && endPoint == ompt_scope_end) {
+    // TODO: modify the current task label  
+  } else if (kind == ompt_sync_region_taskgroup && endPoint == ompt_scope_begin) {
+    // TODO: modify the current task label
+  } else if (kind == ompt_sync_region_taskgroup && endPoint == ompt_scope_end) {
+    // TODO: modify the current task label
+  } 
+  return;
 }
 
 void on_ompt_callback_mutex_acquired(
