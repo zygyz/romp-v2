@@ -123,7 +123,14 @@ void on_ompt_callback_thread_begin(
 
 void on_ompt_callback_thread_end(
        ompt_data_t *threadData) {
-
+  if (!threadData) {
+    return;
+  }
+  auto dataPtr = threadData->ptr;
+  if (!dataPtr) {
+    delete static_cast<ThreadData*>(dataPtr);
+  }
+  threadData->ptr = nullptr;
 }
 
 void on_ompt_callback_dispatch(
