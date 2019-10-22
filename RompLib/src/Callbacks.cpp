@@ -106,6 +106,18 @@ void on_ompt_callback_mutex_released(
         ompt_wait_id_t waitId,
         const void *codePtrRa) {
   RAW_LOG(INFO, "%s", "on_ompt_callback_mutex_released called");
+  int taskType, threadNum;
+  void* dataPtr;
+  if (!queryTaskInfo(0, eTaskData, taskType, threadNum, dataPtr)) {
+    RAW_LOG(FATAL, "%s", "task data pointer is null");
+    return;
+  } 
+  auto taskDataPtr = static_cast<TaskData*>(dataPtr);
+  if (kind == ompt_mutex_ordered) {
+    // TODO: modify label for exiting ordered section  
+  } else {
+    // TODO: remove the lock from lockset
+  }
 }
 
 void on_ompt_callback_work(
