@@ -128,7 +128,24 @@ void on_ompt_callback_work(
       uint64_t count,
       const void *codePtrRa) {
   RAW_LOG(INFO, "%s", "on_ompt_callback_work called");
-
+  switch(wsType) {
+    case ompt_work_loop: 
+      break;
+    case ompt_work_sections:
+      break;
+    case ompt_work_single_executor:
+      break;
+    case ompt_work_single_other:
+      break;
+    case ompt_work_workshare:
+      break;
+    case ompt_work_distribute:
+      break;
+    case ompt_work_taskloop:
+      break;
+    default:
+      break;
+  }
 }
 
 void on_ompt_callback_parallel_begin(
