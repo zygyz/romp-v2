@@ -14,6 +14,12 @@ class LockSet;
 typedef struct TaskData {
   std::shared_ptr<Label> label;
   std::shared_ptr<LockSet> lockSet;
+  bool inReduction;
+  TaskData() {
+    label = nullptr;
+    lockSet = nullptr;
+    inReduction = false;
+  }
 } TaskData;
 
 }

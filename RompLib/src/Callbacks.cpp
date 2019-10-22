@@ -252,7 +252,16 @@ void on_ompt_callback_reduction(
        ompt_data_t *parallelData,
        ompt_data_t *taskData,
        const void *codePtrRa) {
-
+  if (!taskData || !taskData->ptr) {
+    RAW_LOG(FATAL, "%s", "task data pointer is null");
+    return;
+  }  
+  auto taksDataPtr = static_cast<TaskData*>(taskData->ptr);
+  if (endPoint == ompt_scope_begin) {
+    taskDataPtr->inReduction = true;
+  } else if (endPoint == ompt_scope_end) {
+    taskDataPtr->inReduction = false;
+  }
 }
 
 inline void handleOmpWorkLoop(ompt_scope_endpoint_t endPoint, 
