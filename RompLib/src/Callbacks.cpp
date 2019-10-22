@@ -94,7 +94,7 @@ void on_ompt_callback_mutex_acquired(
   if (kind == ompt_mutex_ordered) {
     // TODO: modify label for ordered section
   } else {
-    if (taskDataPtr->lockset == nullptr) {
+    if (taskDataPtr->lockSet == nullptr) {
       // TODO: set the lockset
     }
     // TODO add the lock to the lockset
@@ -128,20 +128,31 @@ void on_ompt_callback_work(
       uint64_t count,
       const void *codePtrRa) {
   RAW_LOG(INFO, "%s", "on_ompt_callback_work called");
+  if (!taskData || !taskData->ptr) {
+    RAW_LOG(FATAL, "%s", "task data pointer is null");
+  }
+  auto taskDataPtr = taskData->ptr;
   switch(wsType) {
     case ompt_work_loop: 
+      handleOmpWorkLoop(endPoint, taskDataPtr, count);
       break;
     case ompt_work_sections:
+      handleOmpWorkSections(endPoint, taskDataPtr, count);
       break;
     case ompt_work_single_executor:
+      handleOmpWorkSingleExecutor(endPoint, taskDataPtr);
       break;
     case ompt_work_single_other:
+      handleOmpWorkSingleOther(endPoint, taskDataPtr);
       break;
     case ompt_work_workshare:
+      handleOmpWorkWorkShare(endPoint, taskDataPtr, count);
       break;
     case ompt_work_distribute:
+      handleOmpWorkDistribute(endPoint, taskDataPtr, count);
       break;
     case ompt_work_taskloop:
+      handleOmpWorkTaskLoop(endPoint, taskDataPtr, count);
       break;
     default:
       break;
@@ -241,6 +252,47 @@ void on_ompt_callback_reduction(
        ompt_data_t *parallelData,
        ompt_data_t *taskData,
        const void *codePtrRa) {
+
+}
+
+inline void handleOmpWorkLoop(ompt_scope_endpoint_t endPoint, 
+                             void* taskData, uint64_t count) {
+  auto taskDataPtr = static_cast<TaskData*>(taskData);
+  if (endPoint == ompt_scope_begin) {
+    
+
+  } else if (endPoint == ompt_scope_end) {
+
+  }  
+}
+
+inline void handleOmpWorkSections(ompt_scope_endpoint_t endPoint, 
+                                  void* taskData, uint64_t count) {
+
+}
+
+inline void handleOmpWorkSingleExecutor(ompt_scope_endpoint_t endPoint, 
+                                        void* taskData) {
+
+}
+
+inline void handleOmpWorkSingleOther(ompt_scope_endpoint_t endPoint, 
+                                     void* taskData) {
+
+}
+    
+inline void handleOmpWorkWorkShare(ompt_scope_endpoint_t endPoint, 
+                                   void* taskData, uint64_t count) {
+
+}
+
+inline void handleOmpWorkDistribute(ompt_scope_endpoint_t endPoint, 
+                                    void* taskData, uint64_t count) {
+
+}
+
+inline void handleOmpWorkTaskLoop(ompt_scope_endpoint_t endPoint, 
+                                  void* taskData, uint64_t count) {
 
 }
 
