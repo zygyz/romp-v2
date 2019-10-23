@@ -13,9 +13,9 @@ namespace romp {
 class Label {
 
 public:
-  Label(); 
+  Label() {}
   Label(const Label& label);
-  ~Label(); 
+  ~Label() {} 
   void print() const;
   void appendSegment(std::shared_ptr<Segment> segment);
 

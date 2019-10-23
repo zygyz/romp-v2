@@ -5,10 +5,6 @@
 
 namespace romp {
 
-Label::Label() { 
-  RAW_LOG(INFO, "%s\n", "Label() constructor");
-}
-
 /* 
  * Use a shallow copy so that the new label does not create separate new 
  * segments. If later on some label segment changes, one should erase that 
@@ -17,10 +13,6 @@ Label::Label() {
  */
 Label::Label(const Label& label) {
   _label = label._label; 
-}
-
-Label::~Label() {
-  RAW_LOG(INFO, "%s\n", "Label() destructor");
 }
 
 void Label::print() const {

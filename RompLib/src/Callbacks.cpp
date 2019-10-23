@@ -36,7 +36,6 @@ void on_ompt_callback_implicit_task(
       RAW_LOG(FATAL, "%s", "cannot get parent task info");     
       return;
     }   
-    // TODO: create label for this new implicit task 
     auto parentTaskData = static_cast<TaskData*>(parentDataPtr);   
     auto newTaskLabel = genImpTaskLabel(parentTaskData->label, index, 
             actualParallelism);
@@ -192,7 +191,10 @@ void on_ompt_callback_task_create(
         int hasDependences,
         const void *codePtrRa) {
   if (flags == ompt_task_initial) {
-     //TODO: prepare the task data pointer for initial task  
+    auto taskData = new TaskData();
+    auto label = std::make_shared<Label>();
+    taskData->label = label;    
+    newTaskData->ptr = static_cast<void*>(taskData);
   } else if (flags == ompt_task_explicit) {
     // TODO: prepare the task data pointer for newly created explicit task 
   } else if (flags == ompt_task_target) {
