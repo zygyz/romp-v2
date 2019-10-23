@@ -30,32 +30,33 @@ void on_ompt_callback_implicit_task(
   }
   int parentTaskType, parentThreadNum;
   void* parentDataPtr;
-  if (endPoint == ompt_scope_begin) {
-    if (!queryTaskInfo(1, eTaskData, parentTaskType, parentThreadNum,
+  if (!queryTaskInfo(1, eTaskData, parentTaskType, parentThreadNum,
              parentDataPtr)) {
-      RAW_LOG(FATAL, "%s", "cannot get parent task info");     
-      return;
-    }   
-    auto parentTaskData = static_cast<TaskData*>(parentDataPtr);   
+    RAW_LOG(FATAL, "%s", "cannot get parent task info");     
+    return;
+  }   
+  auto parentTaskData = static_cast<TaskData*>(parentDataPtr);
+  if (endPoint == ompt_scope_begin) {
+    // begin of implcit task, create the label for this new task
     auto newTaskLabel = genImpTaskLabel(parentTaskData->label, index, 
             actualParallelism);
     auto newTaskDataPtr = new TaskData();
     taskData->ptr = static_cast<void*>(newTaskDataPtr);
   } else if (endPoint == ompt_scope_end) {
-    // end of the current implicit task, modify parent task's label
-    // only one worker thread with index 0 is responsible for modifying 
-    // the parent task label
+    /* 
+     * End of the current implicit task, modify parent task's label
+     * only one worker thread with index 0 is responsible for mutating
+     * the parent task label. The mutated label should be created separately
+     * because access history referred to labels by pointer.
+     */
     auto taskDataPtr = static_cast<TaskData*>(taskData->ptr);
     if (!taskDataPtr) { 
       RAW_LOG(FATAL, "%s", "task data pointer is null");
     }
     if (index == 0) { 
-      if (!queryTaskInfo(1, eTaskData, parentTaskType, parentThreadNum, 
-                parentDataPtr)) {
-        RAW_LOG(FATAL, "%s", "cannot get parent task info");
-        return;
-      }  
-      // TODO: get the parent task label pointer and modify the label
+      auto parentLabel = parentTaskData->label; 
+      auto mutatedLabel = mutateParentImpEnd(parentLabel, taskDataPtr->label);
+      parentTaskData->label = mutatedLabel;
     }
     delete taskDataPtr; 
     taskData->ptr = nullptr;

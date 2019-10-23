@@ -25,6 +25,19 @@ void Label::appendSegment(std::shared_ptr<Segment> segment) {
   _label.push_back(segment);
 }
 
+void Label::popSegment() {
+  _label.pop_back();
+}
+
+std::shared_ptr<Segment> Label::getLastKthSegment(int k) {
+  if (k > _label.size()) {
+    RAW_LOG(FATAL, "%s", "index is out of bound");
+    return nullptr;
+  }
+  auto len = _label.size();
+  return _label.at(len - k);
+}
+
 std::shared_ptr<Label> genImpTaskLabel(
                            const std::shared_ptr<Label>& parentLabel,
                            unsigned int index,
@@ -36,6 +49,16 @@ std::shared_ptr<Label> genImpTaskLabel(
           static_cast<uint64_t>(index), 
           static_cast<uint64_t>(actualParallelism));
   newLabel->appendSegment(newSegment);
+  return newLabel;
+}
+
+std::shared_ptr<Label> mutateParentImpEnd(
+        const std::shared_ptr<Label>& parentLabel,
+        const std::shared_ptr<Label>& childLabel) {
+  auto newLabel = std::make_shared<Label>(*parentLabel.get());
+  newLabel->popSegment();       
+  auto childSegment = childLabel->getLastKthSegment(2);
+  newLabel->appendSegment(childSegment);
   return newLabel;
 }
 
