@@ -16,7 +16,7 @@ namespace romp {
 using LabelPtr = std::shared_ptr<Label>;
 using LockSetPtr = std::shared_ptr<LockSet>;
 
-static ShadowMemory<AccessHistory> shadowMemory;
+ShadowMemory<AccessHistory> shadowMemory;
 
 /*
  * Driver function to do data race checking 

@@ -3,12 +3,16 @@
 #include <glog/logging.h>
 #include <glog/raw_logging.h>
 
+#include "AccessHistory.h"
 #include "QueryFuncs.h"
+#include "ShadowMemory.h"
 #include "TaskData.h"
 #include "ThreadData.h"
 
 namespace romp {   
 
+extern ShadowMemory<AccessHistory> shadowMemory;
+   
 void on_ompt_callback_implicit_task(
        ompt_scope_endpoint_t endPoint,
        ompt_data_t* parallelData,
@@ -166,7 +170,6 @@ void on_ompt_callback_parallel_begin(
        unsigned int requestedParallelism,
        int flags,
        const void *codePtrRa) {
-
 }
 
 void on_ompt_callback_parallel_end( 
@@ -184,6 +187,14 @@ void on_ompt_callback_task_create(
         int flags,
         int hasDependences,
         const void *codePtrRa) {
+  if (flags == ompt_task_initial) {
+     //TODO: prepare the task data pointer for initial task  
+  } else if (flags == ompt_task_explicit) {
+    // TODO: prepare the task data pointer for newly created explicit task 
+  } else if (flags == ompt_task_target) {
+    // TODO: prepare the task data pointer for target 
+  }
+
 
 }
 
@@ -191,7 +202,28 @@ void on_ompt_callback_task_schedule(
         ompt_data_t *priorTaskData,
         ompt_task_status_t priorTaskStatus,
         ompt_data_t *nextTaskData) {
-
+  if (!priorTaskStatus || !priorTaskData->ptr) {
+    RAW_LOG(FATAL, "%s", "prior task data pointer is null"); 
+    return;
+  }
+  if (!nextTaskData || !nextTaskData->ptr) {
+    RAW_LOG(INFO, "%s", "next task data pointer is null");
+    return;
+  }
+  if (priorTaskStatus == ompt_task_early_fulfill || 
+          priorTaskStatus == ompt_task_late_fulfill) {
+    RAW_LOG(INFO, "%s", "prior task status is early/late fulfill");
+    return;
+  }
+  void* threadDataPtr = nullptr;
+  if (!queryOmpThreadInfo(threadDataPtr)) {
+    RAW_LOG(FATAL, "%s", "cannot get thread data");
+    return;
+  }
+  auto threadData = static_cast<ThreadData*>(threadDataPtr); 
+  auto priorTaskUpperBound = threadData->activeTaskExitFrame; 
+  auto priorTaskLowerBound = threadData->lowestAccessedAddr;
+  // mark the memory region [lowerbound, upperbound] as recycled  
 }
 
 void on_ompt_callback_dependences(
@@ -256,7 +288,7 @@ void on_ompt_callback_reduction(
     RAW_LOG(FATAL, "%s", "task data pointer is null");
     return;
   }  
-  auto taksDataPtr = static_cast<TaskData*>(taskData->ptr);
+  auto taskDataPtr = static_cast<TaskData*>(taskData->ptr);
   if (endPoint == ompt_scope_begin) {
     taskDataPtr->inReduction = true;
   } else if (endPoint == ompt_scope_end) {
