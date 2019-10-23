@@ -4,6 +4,7 @@
 #include <glog/raw_logging.h>
 
 #include "AccessHistory.h"
+#include "Label.h"
 #include "QueryFuncs.h"
 #include "ShadowMemory.h"
 #include "TaskData.h"

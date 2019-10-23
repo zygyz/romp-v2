@@ -29,13 +29,13 @@ void Label::print() const {
   }
 }
 
-std::shared_ptr<Segment> genImpTaskLabel(
+std::shared_ptr<Label> genImpTaskLabel(
                            const std::shared_ptr<Label>& parentLabel,
                            unsigned int index,
                            unsigned int actualParallelism) {
   // create the new label by copy constructing from parent label
   auto newLabel = std::make_shared<Label>(*parentLabel.get());
-  
   return newLabel;
+}
 
 }

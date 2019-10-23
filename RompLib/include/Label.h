@@ -24,7 +24,7 @@ private:
 
 };
 
-std::shared_ptr<Segment> genImpTaskLabel(
+std::shared_ptr<Label> genImpTaskLabel(
                           const std::shared_ptr<Label>& parentLabel, 
                           unsigned int index,
                           unsigned int actualParallelism);
