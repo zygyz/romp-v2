@@ -40,8 +40,6 @@ void on_ompt_callback_implicit_task(
     auto parentTaskData = static_cast<TaskData*>(parentDataPtr);   
     auto newTaskLabel = genImpTaskLabel(parentTaskData->label, index, 
             actualParallelism);
-
-    //auto newTaskLabel = Label::genImpTaskLabel(parentTaskData->label
     auto newTaskDataPtr = new TaskData();
     taskData->ptr = static_cast<void*>(newTaskDataPtr);
   } else if (endPoint == ompt_scope_end) {

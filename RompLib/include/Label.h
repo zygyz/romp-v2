@@ -17,7 +17,7 @@ public:
   Label(const Label& label);
   ~Label(); 
   void print() const;
-  void appendSegment(std::shared_ptr<Segment>& segment);
+  void appendSegment(std::shared_ptr<Segment> segment);
 
 private:
   std::vector<std::shared_ptr<Segment> > _label;

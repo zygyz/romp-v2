@@ -29,12 +29,21 @@ void Label::print() const {
   }
 }
 
+void Label::appendSegment(std::shared_ptr<Segment> segment) {
+  _label.push_back(segment);
+}
+
 std::shared_ptr<Label> genImpTaskLabel(
                            const std::shared_ptr<Label>& parentLabel,
                            unsigned int index,
                            unsigned int actualParallelism) {
   // create the new label by copy constructing from parent label
   auto newLabel = std::make_shared<Label>(*parentLabel.get());
+  // create a new label segment
+  auto newSegment = std::make_shared<BaseSegment>(eImplicit, 
+          static_cast<uint64_t>(index), 
+          static_cast<uint64_t>(actualParallelism));
+  newLabel->appendSegment(newSegment);
   return newLabel;
 }
 
