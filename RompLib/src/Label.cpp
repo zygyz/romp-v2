@@ -15,10 +15,13 @@ Label::Label(const Label& label) {
   _label = label._label; 
 }
 
-void Label::print() const {
+std::string Label::toString() const {
+  auto result = std::string("");
   for (const auto& segment : _label) {
-    segment->print();
+    result += segment->toString();
+    result += std::string(" | ");
   }
+  return result;
 }
 
 void Label::appendSegment(std::shared_ptr<Segment> segment) {

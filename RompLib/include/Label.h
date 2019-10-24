@@ -16,7 +16,7 @@ public:
   Label() {}
   Label(const Label& label);
   ~Label() {} 
-  void print() const;
+  std::string toString() const;
   void appendSegment(std::shared_ptr<Segment> segment);
   std::shared_ptr<Segment> popSegment();
   std::shared_ptr<Segment> getLastKthSegment(int k);

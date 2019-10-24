@@ -22,10 +22,22 @@ void on_ompt_callback_implicit_task(
        unsigned int index,
        int flags) {
   RAW_LOG(INFO, "%s", "on_ompt_callback_implicit_task called");
-  if (flags == ompt_task_initial) {
+  if (flags == ompt_task_initial || actualParallelism == 1) {
+    // TODO: looks like ompt_task_initial never shows up. Could be 
+    // some bug in runtime libray. If the actualParallelism is 1, it 
+    // should be an initial task.
     return;
   }
-  if (actualParallelism == 1) {
+  auto taskDataPtr = static_cast<TaskData*>(taskData->ptr);
+  if (actualParallelism == 0 && index != 0) {
+    // parallelism is 0 means that it is end of task, index != 0 means
+    // that it is not the master thread, simply release the memory and
+    // return
+    if (!taskDataPtr) {
+      RAW_LOG(FATAL, "%s", "task data pointer is null");
+    }
+    delete taskDataPtr; 
+    taskData->ptr = nullptr;
     return;
   }
   int parentTaskType, parentThreadNum;
@@ -41,6 +53,8 @@ void on_ompt_callback_implicit_task(
     auto newTaskLabel = genImpTaskLabel(parentTaskData->label, index, 
             actualParallelism);
     auto newTaskDataPtr = new TaskData();
+    newTaskDataPtr->label = newTaskLabel;
+    RAW_LOG(INFO, "label is %s", newTaskLabel->toString().c_str());
     taskData->ptr = static_cast<void*>(newTaskDataPtr);
   } else if (endPoint == ompt_scope_end) {
     /* 
@@ -49,15 +63,13 @@ void on_ompt_callback_implicit_task(
      * the parent task label. The mutated label should be created separately
      * because access history referred to labels by pointer.
      */
-    auto taskDataPtr = static_cast<TaskData*>(taskData->ptr);
     if (!taskDataPtr) { 
       RAW_LOG(FATAL, "%s", "task data pointer is null");
     }
-    if (index == 0) { 
-      auto parentLabel = parentTaskData->label; 
-      auto mutatedLabel = mutateParentImpEnd(parentLabel, taskDataPtr->label);
-      parentTaskData->label = mutatedLabel;
-    }
+    auto parentLabel = parentTaskData->label; 
+    RAW_LOG(INFO, "parent label is %s", parentLabel->toString().c_str());
+    auto mutatedLabel = mutateParentImpEnd(parentLabel, taskDataPtr->label);
+    parentTaskData->label = mutatedLabel;
     delete taskDataPtr; 
     taskData->ptr = nullptr;
   }
@@ -195,6 +207,8 @@ void on_ompt_callback_task_create(
   if (flags == ompt_task_initial) {
     auto taskData = new TaskData();
     auto label = std::make_shared<Label>();
+    auto segment = std::make_shared<BaseSegment>(eImplicit, 0, 1);
+    label->appendSegment(segment);
     taskData->label = label;    
     newTaskData->ptr = static_cast<void*>(taskData);
   } else if (flags == ompt_task_explicit) {
@@ -202,8 +216,6 @@ void on_ompt_callback_task_create(
   } else if (flags == ompt_task_target) {
     // TODO: prepare the task data pointer for target 
   }
-
-
 }
 
 void on_ompt_callback_task_schedule(

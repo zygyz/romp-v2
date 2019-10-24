@@ -78,6 +78,12 @@ bool queryTaskInfo(const int ancestorLevel,
     RAW_LOG(FATAL, "%s\n", "unknown query type");  
   }
   if (!infoIsAvailable(retVal) || !dataPtr) {
+    if (!infoIsAvailable(retVal)) {
+      RAW_LOG(WARNING, "%s", "info is not available");
+    }
+    if (!dataPtr) {
+      RAW_LOG(WARNING, "%s", "data pointer is null");
+    }
     return false;  
   }
   return true;
