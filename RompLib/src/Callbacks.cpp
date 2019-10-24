@@ -23,16 +23,22 @@ void on_ompt_callback_implicit_task(
        int flags) {
   RAW_LOG(INFO, "%s", "on_ompt_callback_implicit_task called");
   if (flags == ompt_task_initial || actualParallelism == 1) {
-    // TODO: looks like ompt_task_initial never shows up. Could be 
-    // some bug in runtime libray. If the actualParallelism is 1, it 
-    // should be an initial task.
+    /*
+     * TODO: looks like ompt_task_initial never shows up. Could be 
+     * some bug in runtime libray. If the actualParallelism is 1, it 
+     * should be an initial task.
+     */
     return;
   }
   auto taskDataPtr = static_cast<TaskData*>(taskData->ptr);
   if (actualParallelism == 0 && index != 0) {
-    // parallelism is 0 means that it is end of task, index != 0 means
-    // that it is not the master thread, simply release the memory and
-    // return
+    /* 
+     * Parallelism is 0 means that it is end of task, index != 0 means
+     * that it is not the master thread, simply release the memory and
+     * return. implicit-task-end and initial-task-end events.
+     * We have to do it here before getting parent task because somehow 
+     * the runtime library won't be able to get parent task for this case.
+    */
     if (!taskDataPtr) {
       RAW_LOG(FATAL, "%s", "task data pointer is null");
     }
