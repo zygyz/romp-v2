@@ -18,8 +18,9 @@ public:
   ~Label() {} 
   void print() const;
   void appendSegment(std::shared_ptr<Segment> segment);
-  void popSegment();
+  std::shared_ptr<Segment> popSegment();
   std::shared_ptr<Segment> getLastKthSegment(int k);
+  void setLastKthSegment(int k, std::shared_ptr<Segment> segment);
 private:
   std::vector<std::shared_ptr<Segment> > _label;
 
@@ -34,5 +35,6 @@ std::shared_ptr<Label> mutateParentImpEnd(
         const std::shared_ptr<Label>& parentLabel,
         const std::shared_ptr<Label>& childLabel);
 
+std::shared_ptr<Label> mutateBarrierEnd(const std::shared_ptr<Label>& label);
 
 }

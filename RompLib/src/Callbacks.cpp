@@ -75,8 +75,9 @@ void on_ompt_callback_sync_region(
     return;
   }
   auto taskDataPtr = static_cast<TaskData*>(taskData->ptr);
+  auto label = taskDataPtr->label;
   if (kind == ompt_sync_region_barrier && endPoint == ompt_scope_end) {
-    // TODO: modify the current task label
+    auto mutatedLabel = mutateBarrierEnd(label);
   } else if (kind == ompt_sync_region_taskwait && endPoint == ompt_scope_end) {
     // TODO: modify the current task label  
   } else if (kind == ompt_sync_region_taskgroup && endPoint == ompt_scope_begin) {
