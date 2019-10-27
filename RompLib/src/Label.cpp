@@ -116,10 +116,10 @@ std::shared_ptr<Label> mutateTaskWait(const std::shared_ptr<Label>& label) {
 
 /*
  * Given the label `label`, create a new label which is a mutation for 
- * encountering begin of ordered section. This is done by incrementing
+ * encountering begin/endof ordered section. This is done by incrementing
  * the `phase` counter value by one.
  */
-std::shared_ptr<Label> mutateOrderAcquire(std::shared_ptr<Label>& label) {
+std::shared_ptr<Label> mutateOrder(std::shared_ptr<Label>& label) {
   auto newLabel = std::make_shared<Label>(*label.get());
   auto lastSegment = newLabel->popSegment(); // replace the last segment
   uint64_t phase;

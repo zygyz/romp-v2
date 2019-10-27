@@ -123,8 +123,7 @@ void on_ompt_callback_mutex_acquired(
   auto label = taskDataPtr->label;
   std::shared_ptr<Label> mutatedLabel = nullptr;
   if (kind == ompt_mutex_ordered) {
-    // TODO: modify label for ordered section
-    mutatedLabel = mutateOrderAcquire(label); 
+    mutatedLabel = mutateOrder(label); 
   } else {
     if (taskDataPtr->lockSet == nullptr) {
       // TODO: set the lockset
@@ -146,11 +145,15 @@ void on_ompt_callback_mutex_released(
     return;
   } 
   auto taskDataPtr = static_cast<TaskData*>(dataPtr);
+  auto label = taskDataPtr->label;
+  std::shared_ptr<Label> mutatedLabel = nullptr; 
   if (kind == ompt_mutex_ordered) {
     // TODO: modify label for exiting ordered section  
+    mutatedLabel = mutateOrder(label);
   } else {
     // TODO: remove the lock from lockset
   }
+  taskDataPtr->label = mutatedLabel; 
 }
 
 void on_ompt_callback_work(
