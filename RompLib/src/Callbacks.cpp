@@ -99,7 +99,7 @@ void on_ompt_callback_sync_region(
     taskDataPtr->label = mutatedLabel; 
   } else if (kind == ompt_sync_region_taskwait && endPoint == ompt_scope_end) {
     auto mutatedLabel = mutateTaskWait(label);
-    // TODO: modify the current task label  
+    taskDataPtr->label = mutatedLabel; 
   } else if (kind == ompt_sync_region_taskgroup && endPoint == ompt_scope_begin) {
     // TODO: modify the current task label
   } else if (kind == ompt_sync_region_taskgroup && endPoint == ompt_scope_end) {
@@ -120,14 +120,18 @@ void on_ompt_callback_mutex_acquired(
     return;
   }
   auto taskDataPtr = static_cast<TaskData*>(dataPtr);
+  auto label = taskDataPtr->label;
+  std::shared_ptr<Label> mutatedLabel = nullptr;
   if (kind == ompt_mutex_ordered) {
     // TODO: modify label for ordered section
+    mutatedLabel = mutateOrderAcquire(label); 
   } else {
     if (taskDataPtr->lockSet == nullptr) {
       // TODO: set the lockset
     }
     // TODO add the lock to the lockset
   }
+  taskDataPtr->label = mutatedLabel;
 }
 
 void on_ompt_callback_mutex_released(
