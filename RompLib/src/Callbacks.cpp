@@ -96,7 +96,9 @@ void on_ompt_callback_sync_region(
   auto label = taskDataPtr->label;
   if (kind == ompt_sync_region_barrier && endPoint == ompt_scope_end) {
     auto mutatedLabel = mutateBarrierEnd(label);
+    taskDataPtr->label = mutatedLabel; 
   } else if (kind == ompt_sync_region_taskwait && endPoint == ompt_scope_end) {
+    auto mutatedLabel = mutateTaskWait(label);
     // TODO: modify the current task label  
   } else if (kind == ompt_sync_region_taskgroup && endPoint == ompt_scope_begin) {
     // TODO: modify the current task label

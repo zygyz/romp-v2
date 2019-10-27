@@ -97,4 +97,21 @@ std::shared_ptr<Label> mutateBarrierEnd(const std::shared_ptr<Label>& label) {
   return newLabel; 
 } 
 
+/*
+ * Given the label `label`, create a new label which is a mutation for after 
+ * encountering taskwait clause. This is done by incrementing the taskwait 
+ * field counter in the last label segment
+ */ 
+std::shared_ptr<Label> mutateTaskWait(const std::shared_ptr<Label>& label) {
+  auto newLabel = std::make_shared<Label>(*label.get());
+  auto lastSegment = newLabel->popSegment(); // replace the last segment
+  uint64_t taskwait;
+  lastSegment->getTaskwait(taskwait);
+  taskwait += 1;
+  auto newSegment = lastSegment->clone();
+  newSegment->setTaskwait(taskwait);
+  newLabel->appendSegment(newSegment);
+  return newLabel;
+}
+
 }

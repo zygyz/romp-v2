@@ -37,4 +37,6 @@ std::shared_ptr<Label> mutateParentImpEnd(
 
 std::shared_ptr<Label> mutateBarrierEnd(const std::shared_ptr<Label>& label);
 
+std::shared_ptr<Label> mutateTaskWait(const std::shared_ptr<Label>& label);
+
 }
