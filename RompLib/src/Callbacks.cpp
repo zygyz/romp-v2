@@ -94,6 +94,11 @@ void on_ompt_callback_sync_region(
   }
   auto taskDataPtr = static_cast<TaskData*>(taskData->ptr);
   auto label = taskDataPtr->label;
+  if (endPoint == ompt_scope_begin) {
+
+  } else if (endPoint == ompt_scope_end) {
+
+  }
   if (kind == ompt_sync_region_barrier && endPoint == ompt_scope_end) {
     auto mutatedLabel = mutateBarrierEnd(label);
     taskDataPtr->label = mutatedLabel; 
@@ -190,15 +195,25 @@ inline std::shared_ptr<Label> handleOmpWorkSections(
 inline std::shared_ptr<Label> handleOmpWorkSingleExecutor(
         ompt_scope_endpoint_t endPoint, 
         const std::shared_ptr<Label>& label) {
-  //TODO
-  return nullptr; 
+  std::shared_ptr<Label> mutatedLabel = nullptr;
+  if (endPoint == ompt_scope_begin) {
+    mutatedLabel = mutateSingleExecBeg(label);
+  } else if (endPoint == ompt_scope_end) {
+    mutatedLabel = mutateSingleExecEnd(label);  
+  }
+  return mutatedLabel;
 }
 
 inline std::shared_ptr<Label> handleOmpWorkSingleOther(
         ompt_scope_endpoint_t endPoint, 
         const std::shared_ptr<Label>& label) {
-  //TODO
-  return nullptr;
+  std::shared_ptr<Label> mutatedLabel = nullptr;
+  if (endPoint == ompt_scope_begin) {
+    mutatedLabel = mutateSingleOtherBeg(label);
+  } else if (endPoint == ompt_scope_end) {
+    mutatedLabel = mutateSingleOtherEnd(label);
+  }
+  return mutatedLabel;
 }
     
 inline std::shared_ptr<Label> handleOmpWorkWorkShare(

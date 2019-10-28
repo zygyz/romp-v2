@@ -173,4 +173,29 @@ std::shared_ptr<Label> mutateSectionEnd(const std::shared_ptr<Label>& label) {
   return mutateLoopEnd(label);
 }
 
+/*
+ * Mutate the label upon entering the single contruct and the task is the 
+ * executor. Append a workshare segment to the current label and set the 
+ * single executor bit.
+ */
+std::shared_ptr<Label> mutateSingleExecBeg(const std::shared_ptr<Label>& label) {
+  auto newLabel = std::make_shared<Label>(*label.get()); 
+  auto newSegment = std::make_shared<WorkShareSegment>(); 
+  newSegment->
+  newLabel->appendSegment(newSegment);   
+
+}
+
+std::shared_ptr<Label> mutateSingleExecEnd(const std::shared_ptr<Label>& label) {
+
+}
+
+std::shared_ptr<Label> mutateSingleOtherBeg(const std::shared_ptr<Label>& label) {
+
+}
+
+std::shared_ptr<Label> mutateSingleOtherEnd(const std::shared_ptr<Label>& label) {
+
+}
+
 }
