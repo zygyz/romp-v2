@@ -24,7 +24,7 @@ std::string Label::toString() const {
   return result;
 }
 
-void Label::appendSegment(std::shared_ptr<Segment> segment) {
+void Label::appendSegment(const std::shared_ptr<Segment>& segment) {
   _label.push_back(segment);
 }
 
@@ -46,7 +46,7 @@ std::shared_ptr<Segment> Label::getLastKthSegment(int k) {
   return _label.at(len - k);
 }
 
-void Label::setLastKthSegment(int k, std::shared_ptr<Segment> segment) { 
+void Label::setLastKthSegment(int k, const std::shared_ptr<Segment>& segment) { 
   if (k > _label.size()) {
     RAW_LOG(FATAL, "%s %d", "set value out of bound", k);
     return;
@@ -119,7 +119,7 @@ std::shared_ptr<Label> mutateTaskWait(const std::shared_ptr<Label>& label) {
  * encountering begin/endof ordered section. This is done by incrementing
  * the `phase` counter value by one.
  */
-std::shared_ptr<Label> mutateOrderSection(std::shared_ptr<Label>& label) {
+std::shared_ptr<Label> mutateOrderSection(const std::shared_ptr<Label>& label) {
   auto newLabel = std::make_shared<Label>(*label.get());
   auto lastSegment = newLabel->popSegment(); // replace the last segment
   uint64_t phase;
@@ -135,7 +135,7 @@ std::shared_ptr<Label> mutateOrderSection(std::shared_ptr<Label>& label) {
  * Mutate the label when workshare loop begin. Append a place holder segment
  * to mark the begin of the workshare loop.
  */
-std::shared_ptr<Label> mutateLoopBegin(std::shared_ptr<Label>& label) {
+std::shared_ptr<Label> mutateLoopBegin(const std::shared_ptr<Label>& label) {
   auto newLabel = std::make_shared<Label>(*label.get()); 
   auto newSegment = std::make_shared<WorkShareSegment>(); 
   newSegment->setPlaceHolderFlag(true);
@@ -143,7 +143,34 @@ std::shared_ptr<Label> mutateLoopBegin(std::shared_ptr<Label>& label) {
   return newLabel;
 }
 
-std::shared_ptr<Label> mutateLoopEnd(std::shared_ptr<Label>& label) {
-
+/*
+ * Mutate the label when workshare loop ends. Pop the last segment which should
+ * be a workshare segment. Increment the loop count of the current last 
+ * segment by one (should replace the old one)
+ */
+std::shared_ptr<Label> mutateLoopEnd(const std::shared_ptr<Label>& label) {
+  auto newLabel = std::make_shared<Label>(*label.get()); 
+  newLabel->popSegment();
+  uint64_t loopCount = 0;
+  auto segment = newLabel->popSegment();
+  segment->getLoopCount(loopCount);
+  loopCount += 1;
+  auto newSegment = segment->clone(); 
+  newSegment->setLoopCount(loopCount);
+  newLabel->appendSegment(newSegment);
+  return newLabel;
 }
+
+/*
+ * Sections construct is implemented as a dynamically scheduled workshare loop.
+ * So we treat the sections as a workshared loop 
+ */
+std::shared_ptr<Label> mutateSectionBegin(const std::shared_ptr<Label>& label) { 
+  return mutateLoopBegin(label);
+}
+
+std::shared_ptr<Label> mutateSectionEnd(const std::shared_ptr<Label>& label) {
+  return mutateLoopEnd(label);
+}
+
 }

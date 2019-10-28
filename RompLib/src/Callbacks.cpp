@@ -155,51 +155,74 @@ void on_ompt_callback_mutex_released(
   taskDataPtr->label = mutatedLabel; 
 }
 
-inline void handleOmpWorkLoop(ompt_scope_endpoint_t endPoint, 
-                             void* taskData, uint64_t count) {
-  auto taskDataPtr = static_cast<TaskData*>(taskData);
-  auto label = taskDataPtr->label;
+/*
+ * Create a mutated label upon entering/exiting workshare loop construct
+ */
+inline std::shared_ptr<Label> handleOmpWorkLoop(
+                             ompt_scope_endpoint_t endPoint, 
+                             const std::shared_ptr<Label>& label) {
   std::shared_ptr<Label> mutatedLabel = nullptr;
   if (endPoint == ompt_scope_begin) {
     mutatedLabel = mutateLoopBegin(label);
   } else if (endPoint == ompt_scope_end) {
     mutatedLabel = mutateLoopEnd(label);
   }  
+  return mutatedLabel;
 }
 
-inline void handleOmpWorkSections(ompt_scope_endpoint_t endPoint, 
-                                  void* taskData, uint64_t count) {
-
+/*
+ * Create a mutated label label upon entering/exiting workshare 
+ * section construct
+ */
+inline std::shared_ptr<Label> handleOmpWorkSections(
+        ompt_scope_endpoint_t endPoint, 
+        const std::shared_ptr<Label>& label,
+        uint64_t count) {
+  std::shared_ptr<Label> mutatedLabel = nullptr;
   if (endPoint == ompt_scope_begin) {
-      
+    mutatedLabel = mutateSectionBegin(label);
   } else if (endPoint == ompt_scope_end) {
-
+    mutatedLabel = mutateSectionEnd(label);
   }
+  return mutatedLabel;
 }
 
-inline void handleOmpWorkSingleExecutor(ompt_scope_endpoint_t endPoint, 
-                                        void* taskData) {
-
+inline std::shared_ptr<Label> handleOmpWorkSingleExecutor(
+        ompt_scope_endpoint_t endPoint, 
+        const std::shared_ptr<Label>& label) {
+  //TODO
+  return nullptr; 
 }
 
-inline void handleOmpWorkSingleOther(ompt_scope_endpoint_t endPoint, 
-                                     void* taskData) {
-
+inline std::shared_ptr<Label> handleOmpWorkSingleOther(
+        ompt_scope_endpoint_t endPoint, 
+        const std::shared_ptr<Label>& label) {
+  //TODO
+  return nullptr;
 }
     
-inline void handleOmpWorkWorkShare(ompt_scope_endpoint_t endPoint, 
-                                   void* taskData, uint64_t count) {
-
+inline std::shared_ptr<Label> handleOmpWorkWorkShare(
+        ompt_scope_endpoint_t endPoint, 
+        const std::shared_ptr<Label>& label, 
+        uint64_t count) {
+  //TODO
+  return nullptr;
 }
 
-inline void handleOmpWorkDistribute(ompt_scope_endpoint_t endPoint, 
-                                    void* taskData, uint64_t count) {
-
+inline std::shared_ptr<Label> handleOmpWorkDistribute(
+        ompt_scope_endpoint_t endPoint, 
+        const std::shared_ptr<Label>& label, 
+        uint64_t count) {
+  //TODO
+  return nullptr;
 }
 
-inline void handleOmpWorkTaskLoop(ompt_scope_endpoint_t endPoint, 
-                                  void* taskData, uint64_t count) {
-
+inline std::shared_ptr<Label> handleOmpWorkTaskLoop(
+        ompt_scope_endpoint_t endPoint, 
+        const std::shared_ptr<Label>& label, 
+        uint64_t count) {
+  //TODO
+  return nullptr;
 }
 
 void on_ompt_callback_work(
@@ -213,33 +236,35 @@ void on_ompt_callback_work(
   if (!taskData || !taskData->ptr) {
     RAW_LOG(FATAL, "%s", "task data pointer is null");
   }
-  auto taskDataPtr = taskData->ptr;
-
+  auto taskDataPtr = static_cast<TaskData*>(taskData->ptr);
+  auto label = taskDataPtr->label;
+  std::shared_ptr<Label> mutatedLabel = nullptr;
   switch(wsType) {
     case ompt_work_loop: 
-      handleOmpWorkLoop(endPoint, taskDataPtr, count);
+      mutatedLabel = handleOmpWorkLoop(endPoint, label);
       break;
     case ompt_work_sections:
-      handleOmpWorkSections(endPoint, taskDataPtr, count);
+      mutatedLabel = handleOmpWorkSections(endPoint, label, count);
       break;
     case ompt_work_single_executor:
-      handleOmpWorkSingleExecutor(endPoint, taskDataPtr);
+      mutatedLabel = handleOmpWorkSingleExecutor(endPoint, label);
       break;
     case ompt_work_single_other:
-      handleOmpWorkSingleOther(endPoint, taskDataPtr);
+      mutatedLabel = handleOmpWorkSingleOther(endPoint, label);
       break;
     case ompt_work_workshare:
-      handleOmpWorkWorkShare(endPoint, taskDataPtr, count);
+      mutatedLabel = handleOmpWorkWorkShare(endPoint, label, count);
       break;
     case ompt_work_distribute:
-      handleOmpWorkDistribute(endPoint, taskDataPtr, count);
+      mutatedLabel = handleOmpWorkDistribute(endPoint, label, count);
       break;
     case ompt_work_taskloop:
-      handleOmpWorkTaskLoop(endPoint, taskDataPtr, count);
+      mutatedLabel = handleOmpWorkTaskLoop(endPoint, label, count);
       break;
     default:
       break;
   }
+  taskDataPtr->label = mutatedLabel;
 }
 
 void on_ompt_callback_parallel_begin(
