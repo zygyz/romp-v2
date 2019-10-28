@@ -94,26 +94,4 @@ void on_ompt_callback_reduction(
        ompt_data_t *parallelData,
        ompt_data_t *taskData,
        const void *codePtrRa);
-
-inline void handleOmpWorkLoop(ompt_scope_endpoint_t endPoint, 
-                              void* taskDataPtr, uint64_t count);
-
-inline void handleOmpWorkSections(ompt_scope_endpoint_t endPoint, 
-                              void* taskDataPtr, uint64_t count);
-
-inline void handleOmpWorkSingleExecutor(ompt_scope_endpoint_t endPoint, 
-                              void* taskDataPtr);
-
-inline void handleOmpWorkSingleOther(ompt_scope_endpoint_t endPoint,
-                              void* taskDataPtr);
-
-inline void handleOmpWorkWorkShare(ompt_scope_endpoint_t endPoint,
-                              void* taskDataPtr, uint64_t count);
-
-inline void handleOmpWorkDistribute(ompt_scope_endpoint_t endPoint,
-                              void* taskDataPtr, uint64_t count);
-
-inline void handleOmpWorkTaskLoop(ompt_scope_endpoint_t endPoint, 
-                              void* taskDataPtr, uint64_t count);
-
 }

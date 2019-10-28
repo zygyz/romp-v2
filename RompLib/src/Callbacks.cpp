@@ -123,7 +123,7 @@ void on_ompt_callback_mutex_acquired(
   auto label = taskDataPtr->label;
   std::shared_ptr<Label> mutatedLabel = nullptr;
   if (kind == ompt_mutex_ordered) {
-    mutatedLabel = mutateOrder(label); 
+    mutatedLabel = mutateOrderSection(label); 
   } else {
     if (taskDataPtr->lockSet == nullptr) {
       // TODO: set the lockset
@@ -148,12 +148,58 @@ void on_ompt_callback_mutex_released(
   auto label = taskDataPtr->label;
   std::shared_ptr<Label> mutatedLabel = nullptr; 
   if (kind == ompt_mutex_ordered) {
-    // TODO: modify label for exiting ordered section  
-    mutatedLabel = mutateOrder(label);
+    mutatedLabel = mutateOrderSection(label);
   } else {
     // TODO: remove the lock from lockset
   }
   taskDataPtr->label = mutatedLabel; 
+}
+
+inline void handleOmpWorkLoop(ompt_scope_endpoint_t endPoint, 
+                             void* taskData, uint64_t count) {
+  auto taskDataPtr = static_cast<TaskData*>(taskData);
+  auto label = taskDataPtr->label;
+  std::shared_ptr<Label> mutatedLabel = nullptr;
+  if (endPoint == ompt_scope_begin) {
+    mutatedLabel = mutateLoopBegin(label);
+  } else if (endPoint == ompt_scope_end) {
+    mutatedLabel = mutateLoopEnd(label);
+  }  
+}
+
+inline void handleOmpWorkSections(ompt_scope_endpoint_t endPoint, 
+                                  void* taskData, uint64_t count) {
+
+  if (endPoint == ompt_scope_begin) {
+      
+  } else if (endPoint == ompt_scope_end) {
+
+  }
+}
+
+inline void handleOmpWorkSingleExecutor(ompt_scope_endpoint_t endPoint, 
+                                        void* taskData) {
+
+}
+
+inline void handleOmpWorkSingleOther(ompt_scope_endpoint_t endPoint, 
+                                     void* taskData) {
+
+}
+    
+inline void handleOmpWorkWorkShare(ompt_scope_endpoint_t endPoint, 
+                                   void* taskData, uint64_t count) {
+
+}
+
+inline void handleOmpWorkDistribute(ompt_scope_endpoint_t endPoint, 
+                                    void* taskData, uint64_t count) {
+
+}
+
+inline void handleOmpWorkTaskLoop(ompt_scope_endpoint_t endPoint, 
+                                  void* taskData, uint64_t count) {
+
 }
 
 void on_ompt_callback_work(
@@ -168,6 +214,7 @@ void on_ompt_callback_work(
     RAW_LOG(FATAL, "%s", "task data pointer is null");
   }
   auto taskDataPtr = taskData->ptr;
+
   switch(wsType) {
     case ompt_work_loop: 
       handleOmpWorkLoop(endPoint, taskDataPtr, count);
@@ -331,46 +378,6 @@ void on_ompt_callback_reduction(
   }
 }
 
-inline void handleOmpWorkLoop(ompt_scope_endpoint_t endPoint, 
-                             void* taskData, uint64_t count) {
-  auto taskDataPtr = static_cast<TaskData*>(taskData);
-  if (endPoint == ompt_scope_begin) {
-    
-
-  } else if (endPoint == ompt_scope_end) {
-
-  }  
-}
-
-inline void handleOmpWorkSections(ompt_scope_endpoint_t endPoint, 
-                                  void* taskData, uint64_t count) {
-
-}
-
-inline void handleOmpWorkSingleExecutor(ompt_scope_endpoint_t endPoint, 
-                                        void* taskData) {
-
-}
-
-inline void handleOmpWorkSingleOther(ompt_scope_endpoint_t endPoint, 
-                                     void* taskData) {
-
-}
-    
-inline void handleOmpWorkWorkShare(ompt_scope_endpoint_t endPoint, 
-                                   void* taskData, uint64_t count) {
-
-}
-
-inline void handleOmpWorkDistribute(ompt_scope_endpoint_t endPoint, 
-                                    void* taskData, uint64_t count) {
-
-}
-
-inline void handleOmpWorkTaskLoop(ompt_scope_endpoint_t endPoint, 
-                                  void* taskData, uint64_t count) {
-
-}
 
 }
 

@@ -119,7 +119,7 @@ std::shared_ptr<Label> mutateTaskWait(const std::shared_ptr<Label>& label) {
  * encountering begin/endof ordered section. This is done by incrementing
  * the `phase` counter value by one.
  */
-std::shared_ptr<Label> mutateOrder(std::shared_ptr<Label>& label) {
+std::shared_ptr<Label> mutateOrderSection(std::shared_ptr<Label>& label) {
   auto newLabel = std::make_shared<Label>(*label.get());
   auto lastSegment = newLabel->popSegment(); // replace the last segment
   uint64_t phase;
@@ -131,4 +131,19 @@ std::shared_ptr<Label> mutateOrder(std::shared_ptr<Label>& label) {
   return newLabel;
 }
 
+/*
+ * Mutate the label when workshare loop begin. Append a place holder segment
+ * to mark the begin of the workshare loop.
+ */
+std::shared_ptr<Label> mutateLoopBegin(std::shared_ptr<Label>& label) {
+  auto newLabel = std::make_shared<Label>(*label.get()); 
+  auto newSegment = std::make_shared<WorkShareSegment>(); 
+  newSegment->setPlaceHolderFlag(true);
+  newLabel->appendSegment(newSegment);   
+  return newLabel;
+}
+
+std::shared_ptr<Label> mutateLoopEnd(std::shared_ptr<Label>& label) {
+
+}
 }
