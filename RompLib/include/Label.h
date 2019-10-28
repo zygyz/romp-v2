@@ -43,8 +43,8 @@ std::shared_ptr<Label> mutateLoopEnd(const std::shared_ptr<Label>& label);
 std::shared_ptr<Label> mutateSectionBegin(const std::shared_ptr<Label>& label);
 std::shared_ptr<Label> mutateSectionEnd(const std::shared_ptr<Label>& label);
 std::shared_ptr<Label> mutateSingleExecBeg(const std::shared_ptr<Label>& label);
-std::shared_ptr<Label> mutateSingleExecEnd(const std::shared_ptr<Label>& label);
 std::shared_ptr<Label> mutateSingleOtherBeg(const std::shared_ptr<Label>& label);
+std::shared_ptr<Label> mutateSingleEnd(const std::shared_ptr<Label>& label);
 
 
 

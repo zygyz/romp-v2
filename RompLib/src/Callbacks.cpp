@@ -95,7 +95,7 @@ void on_ompt_callback_sync_region(
   auto taskDataPtr = static_cast<TaskData*>(taskData->ptr);
   auto label = taskDataPtr->label;
   if (endPoint == ompt_scope_begin) {
-
+    
   } else if (endPoint == ompt_scope_end) {
 
   }
@@ -199,7 +199,7 @@ inline std::shared_ptr<Label> handleOmpWorkSingleExecutor(
   if (endPoint == ompt_scope_begin) {
     mutatedLabel = mutateSingleExecBeg(label);
   } else if (endPoint == ompt_scope_end) {
-    mutatedLabel = mutateSingleExecEnd(label);  
+    mutatedLabel = mutateSingleEnd(label);  
   }
   return mutatedLabel;
 }
@@ -211,7 +211,7 @@ inline std::shared_ptr<Label> handleOmpWorkSingleOther(
   if (endPoint == ompt_scope_begin) {
     mutatedLabel = mutateSingleOtherBeg(label);
   } else if (endPoint == ompt_scope_end) {
-    mutatedLabel = mutateSingleOtherEnd(label);
+    mutatedLabel = mutateSingleEnd(label);
   }
   return mutatedLabel;
 }
