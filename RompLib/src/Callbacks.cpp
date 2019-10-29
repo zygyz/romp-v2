@@ -197,7 +197,7 @@ inline std::shared_ptr<Label> handleOmpWorkSingleExecutor(
         const std::shared_ptr<Label>& label) {
   std::shared_ptr<Label> mutatedLabel = nullptr;
   if (endPoint == ompt_scope_begin) {
-    mutatedLabel = mutateSingleExecBeg(label);
+    mutatedLabel = mutateSingleExecBegin(label);
   } else if (endPoint == ompt_scope_end) {
     mutatedLabel = mutateSingleEnd(label);  
   }
@@ -209,7 +209,7 @@ inline std::shared_ptr<Label> handleOmpWorkSingleOther(
         const std::shared_ptr<Label>& label) {
   std::shared_ptr<Label> mutatedLabel = nullptr;
   if (endPoint == ompt_scope_begin) {
-    mutatedLabel = mutateSingleOtherBeg(label);
+    mutatedLabel = mutateSingleOtherBegin(label);
   } else if (endPoint == ompt_scope_end) {
     mutatedLabel = mutateSingleEnd(label);
   }
@@ -220,7 +220,7 @@ inline std::shared_ptr<Label> handleOmpWorkWorkShare(
         ompt_scope_endpoint_t endPoint, 
         const std::shared_ptr<Label>& label, 
         uint64_t count) {
-  //TODO
+  LOG(FATAL, "%s", "c++ openmp does not support workshare construct");
   return nullptr;
 }
 
@@ -228,10 +228,16 @@ inline std::shared_ptr<Label> handleOmpWorkDistribute(
         ompt_scope_endpoint_t endPoint, 
         const std::shared_ptr<Label>& label, 
         uint64_t count) {
-  //TODO
+  //TODO: This is assoicated with target and team construct
+  LOG(FATAL, "%s", "not implemented yet");
   return nullptr;
 }
 
+/*
+ * Taskloop is another worksharing construct that is like the worksharing
+ * for-loop. The difference is that taskloop construct creates explicit 
+ * tasks to execute the logical iterations in the loops.  
+ */
 inline std::shared_ptr<Label> handleOmpWorkTaskLoop(
         ompt_scope_endpoint_t endPoint, 
         const std::shared_ptr<Label>& label, 

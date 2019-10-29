@@ -35,17 +35,16 @@ std::shared_ptr<Label> mutateParentImpEnd(
         const std::shared_ptr<Label>& parentLabel,
         const std::shared_ptr<Label>& childLabel);
 
-std::shared_ptr<Label> mutateBarrierEnd(const std::shared_ptr<Label>& label);
-std::shared_ptr<Label> mutateTaskWait(const std::shared_ptr<Label>& label);
-std::shared_ptr<Label> mutateOrderSection(const std::shared_ptr<Label>& label);
-std::shared_ptr<Label> mutateLoopBegin(const std::shared_ptr<Label>& label);
-std::shared_ptr<Label> mutateLoopEnd(const std::shared_ptr<Label>& label);
-std::shared_ptr<Label> mutateSectionBegin(const std::shared_ptr<Label>& label);
-std::shared_ptr<Label> mutateSectionEnd(const std::shared_ptr<Label>& label);
-std::shared_ptr<Label> mutateSingleExecBeg(const std::shared_ptr<Label>& label);
-std::shared_ptr<Label> mutateSingleOtherBeg(const std::shared_ptr<Label>& label);
-std::shared_ptr<Label> mutateSingleEnd(const std::shared_ptr<Label>& label);
-
+std::shared_ptr<Label> mutateBarrierEnd(const std::shared_ptr<Label>& l);
+std::shared_ptr<Label> mutateTaskWait(const std::shared_ptr<Label>& l);
+std::shared_ptr<Label> mutateOrderSection(const std::shared_ptr<Label>& l);
+std::shared_ptr<Label> mutateLoopBegin(const std::shared_ptr<Label>& l);
+std::shared_ptr<Label> mutateLoopEnd(const std::shared_ptr<Label>& l);
+std::shared_ptr<Label> mutateSectionBegin(const std::shared_ptr<Label>& l);
+std::shared_ptr<Label> mutateSectionEnd(const std::shared_ptr<Label>& l);
+std::shared_ptr<Label> mutateSingleExecBegin(const std::shared_ptr<Label>& l);
+std::shared_ptr<Label> mutateSingleOtherBegin(const std::shared_ptr<Label>& l);
+std::shared_ptr<Label> mutateSingleEnd(const std::shared_ptr<Label>& l);
 
 
 }
