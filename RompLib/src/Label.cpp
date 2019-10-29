@@ -214,5 +214,21 @@ std::shared_ptr<Label> mutateSingleOtherBegin(
   return newLabel;
 }
 
+/*
+ * Mutate the label upon entering the taskloop construct. If nogroup is not 
+ * specified, an implicit taskgroup is generated. If nogroup is specified,
+ * no implicit taskgroup is generated. This callback happens before any actual
+ * execution of logical iteration and creation of explicit tasks
+ */
+std::shared_ptr<Label> mutateTaskLoopBegin(
+        const std::shared_ptr<Label>& label) {
+}
+
+std::shared_ptr<Label> mutateTaskLoopEnd( 
+        const std::shared_ptr<Label>& label) {
+
+}
+   
+
 
 }

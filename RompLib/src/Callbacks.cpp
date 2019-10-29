@@ -5,6 +5,7 @@
 
 #include "AccessHistory.h"
 #include "Label.h"
+#include "ParRegionData.h"
 #include "QueryFuncs.h"
 #include "ShadowMemory.h"
 #include "TaskData.h"
@@ -60,7 +61,6 @@ void on_ompt_callback_implicit_task(
             actualParallelism);
     auto newTaskDataPtr = new TaskData();
     newTaskDataPtr->label = newTaskLabel;
-    RAW_LOG(INFO, "label is %s", newTaskLabel->toString().c_str());
     taskData->ptr = static_cast<void*>(newTaskDataPtr);
   } else if (endPoint == ompt_scope_end) {
     /* 
@@ -73,7 +73,6 @@ void on_ompt_callback_implicit_task(
       RAW_LOG(FATAL, "%s", "task data pointer is null");
     }
     auto parentLabel = parentTaskData->label; 
-    RAW_LOG(INFO, "parent label is %s", parentLabel->toString().c_str());
     auto mutatedLabel = mutateParentImpEnd(parentLabel, taskDataPtr->label);
     parentTaskData->label = mutatedLabel;
     delete taskDataPtr; 
@@ -220,7 +219,7 @@ inline std::shared_ptr<Label> handleOmpWorkWorkShare(
         ompt_scope_endpoint_t endPoint, 
         const std::shared_ptr<Label>& label, 
         uint64_t count) {
-  LOG(FATAL, "%s", "c++ openmp does not support workshare construct");
+  RAW_LOG(FATAL, "%s", "c++ openmp does not support workshare construct");
   return nullptr;
 }
 
@@ -229,7 +228,7 @@ inline std::shared_ptr<Label> handleOmpWorkDistribute(
         const std::shared_ptr<Label>& label, 
         uint64_t count) {
   //TODO: This is assoicated with target and team construct
-  LOG(FATAL, "%s", "not implemented yet");
+  RAW_LOG(FATAL, "%s", "not implemented yet");
   return nullptr;
 }
 
@@ -242,7 +241,17 @@ inline std::shared_ptr<Label> handleOmpWorkTaskLoop(
         ompt_scope_endpoint_t endPoint, 
         const std::shared_ptr<Label>& label, 
         uint64_t count) {
-  //TODO
+  // TODO: determine label mutation rule for taskloop begin
+  RAW_LOG(INFO, "task loop %lu", count);
+  /*
+  std::shared_ptr<Label> mutatedLabel = nullptr;
+  if (endPoint == ompt_scope_begin) {
+    mutatedLabel = mutateTaskLoopBegin(label);
+  } else if (endPoint == ompt_scope_end) {
+    mutatedLabel = mutateTaskLoopEnd(label);
+  }
+  return mutatedLabel;
+  */
   return nullptr;
 }
 
@@ -295,6 +304,8 @@ void on_ompt_callback_parallel_begin(
        unsigned int requestedParallelism,
        int flags,
        const void *codePtrRa) {
+  auto parRegionData = new ParRegionData(requestedParallelism, flags);
+  parallelData->ptr = static_cast<void*>(parRegionData);  
 }
 
 void on_ompt_callback_parallel_end( 

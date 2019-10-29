@@ -45,6 +45,7 @@ std::shared_ptr<Label> mutateSectionEnd(const std::shared_ptr<Label>& l);
 std::shared_ptr<Label> mutateSingleExecBegin(const std::shared_ptr<Label>& l);
 std::shared_ptr<Label> mutateSingleOtherBegin(const std::shared_ptr<Label>& l);
 std::shared_ptr<Label> mutateSingleEnd(const std::shared_ptr<Label>& l);
-
+std::shared_ptr<Label> mutateTaskLoopBegin(const std::shared_ptr<Label>& l);
+std::shared_ptr<Label> mutateTaskLoopEnd(const std::shared_ptr<Label>& l);
 
 }
