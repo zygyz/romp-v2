@@ -9,6 +9,7 @@ For a release version of romp, we encourage installation with spack.
 
 2. Architecture:  x86_64
 
+3. Compiler: gcc 4.8.5 (recommended, later version e.g., 9.2.0 generates abi error) 
 ### Prerequisites
 Checkout my version of spack, which contains some modification to package.py 
 for llvm-openmp 
