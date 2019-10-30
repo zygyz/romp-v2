@@ -103,9 +103,9 @@ bool queryParallelInfo(
   auto parDataPtr = &omptParData;
   auto parDataPtrPtr = &parDataPtr;
   auto retVal = omptGetParallelInfo(ancestorLevel, parDataPtrPtr, &teamSize);
-  if (!infoIsAvailable(retVal) || !(parDataPtr->ptr)) {
+  if (!infoIsAvailable(retVal)) {
     return false;
-  }
+  }   
   dataPtr = parDataPtr->ptr;
   return true;
 }

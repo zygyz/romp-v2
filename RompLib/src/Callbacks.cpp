@@ -95,22 +95,24 @@ void on_ompt_callback_sync_region(
   }
   auto taskDataPtr = static_cast<TaskData*>(taskData->ptr);
   auto label = taskDataPtr->label;
-  if (endPoint == ompt_scope_begin) {
-    
+  std::shared_ptr<Label> mutatedLabel = nullptr;
+  if (endPoint == ompt_scope_begin && kind == ompt_sync_region_taskgroup) {
+    // TODO
   } else if (endPoint == ompt_scope_end) {
-
+    switch(kind) {
+      case ompt_sync_region_taskwait:
+        mutatedLabel = mutateTaskWait(label);
+        taskDataPtr->label = mutatedLabel; 
+        break;
+      case ompt_sync_region_barrier:
+        mutatedLabel = mutateBarrierEnd(label);
+        taskDataPtr->label = mutatedLabel; 
+        break;
+      case ompt_sync_region_taskgroup:
+        // TODO
+        break;
+    }
   }
-  if (kind == ompt_sync_region_barrier && endPoint == ompt_scope_end) {
-    auto mutatedLabel = mutateBarrierEnd(label);
-    taskDataPtr->label = mutatedLabel; 
-  } else if (kind == ompt_sync_region_taskwait && endPoint == ompt_scope_end) {
-    auto mutatedLabel = mutateTaskWait(label);
-    taskDataPtr->label = mutatedLabel; 
-  } else if (kind == ompt_sync_region_taskgroup && endPoint == ompt_scope_begin) {
-    // TODO: modify the current task label
-  } else if (kind == ompt_sync_region_taskgroup && endPoint == ompt_scope_end) {
-    // TODO: modify the current task label
-  } 
   return;
 }
 

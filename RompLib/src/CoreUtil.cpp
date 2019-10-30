@@ -19,11 +19,11 @@ bool prepareAllInfo(int& taskType,
                     void*& curThreadData,
                     AllTaskInfo& allTaskInfo) {
   if (!queryParallelInfo(0, teamSize, curParRegionData)) {
-    RAW_LOG(INFO, "parallel region is not setup yet");
+    RAW_DLOG(INFO, "parallel region is not setup yet");
     return false;
   }
   if (!queryAllTaskInfo(0, taskType, threadNum, allTaskInfo)) {
-    RAW_LOG(INFO, "task data info is not available");
+    RAW_DLOG(INFO, "task data info is not available");
     // it is necessary to have parallel region set up 
     return false;
   }
