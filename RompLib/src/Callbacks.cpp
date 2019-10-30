@@ -22,7 +22,9 @@ void on_ompt_callback_implicit_task(
        unsigned int actualParallelism,
        unsigned int index,
        int flags) {
-  RAW_LOG(INFO, "%s", "on_ompt_callback_implicit_task called");
+  RAW_LOG(INFO, "on_ompt_callback_implicit_task called:%u p:%lx t:%lx %u %u",
+          endPoint, parallelData, taskData, actualParallelism, index);
+
   if (flags == ompt_task_initial || actualParallelism == 1) {
     /*
      * TODO: looks like ompt_task_initial never shows up. Could be 
@@ -304,8 +306,12 @@ void on_ompt_callback_parallel_begin(
        unsigned int requestedParallelism,
        int flags,
        const void *codePtrRa) {
+  RAW_LOG(INFO, "parallel begin et:%lx p:%lx %lu %d", encounteringTaskData, 
+           parallelData, requestedParallelism, flags);
+  
   auto parRegionData = new ParRegionData(requestedParallelism, flags);
-  parallelData->ptr = static_cast<void*>(parRegionData);  
+//  parallelData->ptr = static_cast<void*>(parRegionData);  
+//  parallelData->ptr = reinterpret_cast<void*>(1);
 }
 
 void on_ompt_callback_parallel_end( 
@@ -313,7 +319,10 @@ void on_ompt_callback_parallel_end(
        ompt_data_t *encounteringTaskData,
        int flags,
        const void *codePtrRa) {
-
+  RAW_LOG(INFO, "parallel end et:%lx p:%lx %d", encounteringTaskData, 
+           parallelData, flags);
+//  auto parRegionData = parallelData->ptr;
+//  delete static_cast<ParRegionData*>(parRegionData);
 }  
 
 void on_ompt_callback_task_create(
@@ -325,6 +334,7 @@ void on_ompt_callback_task_create(
         const void *codePtrRa) {
   if (flags == ompt_task_initial) {
     auto taskData = new TaskData();
+    RAW_LOG(INFO, "generating initial task: %lx", taskData);
     auto label = std::make_shared<Label>();
     auto segment = std::make_shared<BaseSegment>(eImplicit, 0, 1);
     label->appendSegment(segment);

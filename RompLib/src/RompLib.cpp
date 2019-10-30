@@ -56,11 +56,13 @@ void checkAccess(void* address,
     return;
   }
   AllTaskInfo allTaskInfo;
-  int threadNum, taskType, teamSize;
-  void* curThreadData;
-  void* curParRegionData;
-  if (!prepareAllInfo(taskType, teamSize, threadNum, 
-                      curParRegionData, curThreadData, allTaskInfo)) {
+  int threadNum = -1;
+  int taskType = -1;
+  int teamSize = -1;
+  void* curThreadData = nullptr;
+  void* curParRegionData = nullptr;
+  if (!prepareAllInfo(taskType, teamSize, threadNum, curParRegionData, 
+              curThreadData, allTaskInfo)) {
     return;
   }
   if (taskType == ompt_task_initial) { 
@@ -70,7 +72,12 @@ void checkAccess(void* address,
   // query data  
   auto dataSharingType = analyzeDataSharing(curThreadData, address, 
                                            allTaskInfo.taskFrame);
+  if (!allTaskInfo.taskData.ptr) {
+    RAW_LOG(ERROR, "pointer to current task data is null");
+    return;
+  }
   auto curTaskData = static_cast<TaskData*>(allTaskInfo.taskData.ptr);
+  RAW_LOG(INFO, "current task ptr: %lx", allTaskInfo.taskData.ptr);
   auto curLabel = curTaskData->label;
   auto curLockSet = curTaskData->lockSet; 
   

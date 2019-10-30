@@ -17,9 +17,13 @@ namespace romp {
 DataSharingType analyzeDataSharing(const void* threadDataPtr, 
                                    const void* address,
                                    const ompt_frame_t& taskFrame) {
+  if (!threadDataPtr) {
+    RAW_LOG(ERROR, "thread data pointer is null");
+    return eUndefined;
+  }
   if (!taskFrame.exit_frame.ptr) {
     // note that exit_frame is a union
-    RAW_LOG(WARNING, "%s\n", "exit frame is not set");      
+    RAW_LOG(WARNING, "exit frame is not set");      
     return eUndefined;
   }
   const auto curExitFrameAddr = taskFrame.exit_frame.ptr;
