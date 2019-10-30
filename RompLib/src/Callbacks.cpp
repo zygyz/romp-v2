@@ -312,8 +312,7 @@ void on_ompt_callback_parallel_begin(
            parallelData, requestedParallelism, flags);
   
   auto parRegionData = new ParRegionData(requestedParallelism, flags);
-//  parallelData->ptr = static_cast<void*>(parRegionData);  
-//  parallelData->ptr = reinterpret_cast<void*>(1);
+  parallelData->ptr = static_cast<void*>(parRegionData);  
 }
 
 void on_ompt_callback_parallel_end( 
@@ -323,8 +322,8 @@ void on_ompt_callback_parallel_end(
        const void *codePtrRa) {
   RAW_LOG(INFO, "parallel end et:%lx p:%lx %d", encounteringTaskData, 
            parallelData, flags);
-//  auto parRegionData = parallelData->ptr;
-//  delete static_cast<ParRegionData*>(parRegionData);
+  auto parRegionData = parallelData->ptr;
+  delete static_cast<ParRegionData*>(parRegionData);
 }  
 
 void on_ompt_callback_task_create(

@@ -51,20 +51,19 @@ private:
   uint64_t _l2IndexMask;
 
 private: 
-  static __thread void* _cachedShadowPage;
-  static __thread void** _cachedL1Page;
-  static void* _getShadowPage(const uint64_t numEntriesPerPage);
-  static void** _getL1Page(const uint64_t numL2PageTableEntries);
-  static void _saveShadowPage(void* shadowPage);
-  static void _saveL1Page(void** l1Page);
+  static thread_local void* _cachedShadowPage;
+  static thread_local void** _cachedL1Page;
+  void* _getShadowPage(const uint64_t numEntriesPerPage);
+  void** _getL1Page(const uint64_t numL2PageTableEntries);
+  void _saveShadowPage(void* shadowPage);
+  void _saveL1Page(void** l1Page);
 };
 
 template<typename T>
-__thread void* ShadowMemory<T>::_cachedShadowPage;
+thread_local void* ShadowMemory<T>::_cachedShadowPage = nullptr;
 
 template<typename T>
-__thread void** ShadowMemory<T>::_cachedL1Page;
-
+thread_local void** ShadowMemory<T>::_cachedL1Page = nullptr;
 
 
 /*
@@ -186,6 +185,7 @@ T* ShadowMemory<T>::_getOrCreatePageForMemAddr(const uint64_t address) {
     auto success = __sync_bool_compare_and_swap(&_pageTable[l1Index], 
                                                 0, freshL1Page);
     if (!success) { // someone has already allocated this slot
+      RAW_DLOG(INFO, "saving l1 page to cache");
       _saveL1Page(freshL1Page);
     }
   }
@@ -261,8 +261,8 @@ void* ShadowMemory<T>::_getShadowPage(const uint64_t numEntriesPerPage) {
  */
 template<typename T>
 void ShadowMemory<T>::_saveL1Page(void** l1Page) {     
-  if (!_cachedL1Page) {
-    RAW_LOG(ERROR, "%s\n", "cached l1 page is not nullptr!");
+  if (_cachedL1Page) {
+    RAW_LOG(ERROR, "%s %lx\n", "cached l1 page is not nullptr:", _cachedL1Page);
     return;
   }
   _cachedL1Page = l1Page;  
@@ -270,7 +270,7 @@ void ShadowMemory<T>::_saveL1Page(void** l1Page) {
 
 template<typename T>
 void ShadowMemory<T>::_saveShadowPage(void* shadowPage) {     
-  if (!_cachedShadowPage) {
+  if (_cachedShadowPage) {
     RAW_LOG(ERROR, "%s\n", "cached shadow page is not nullptr!");
     return;
   }
