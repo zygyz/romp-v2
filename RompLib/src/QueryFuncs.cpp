@@ -17,14 +17,14 @@ bool infoIsAvailable(const int retVal) {
   } else if (retVal == 1) {
     // task exists at the specified ancestor level but the information 
     // is not available 
-    RAW_LOG(WARNING, "%s\n",  "task exists but info is not available");
+    RAW_LOG(WARNING, "task exists but info is not available");
     return false;
   } else if (retVal == 2) {
     // task exists at the specified ancestor level and the information
     // is available
     return true;
   } else {
-    RAW_LOG(FATAL, "%s\n", "unknown return value");
+    RAW_LOG(FATAL, "unknown return value");
     return false;
   }
 }
@@ -75,14 +75,14 @@ bool queryTaskInfo(const int ancestorLevel,
   } else if (queryType == eParallelData) {
     //TODO: implement the query parallel data procedure
   } else {
-    RAW_LOG(FATAL, "%s\n", "unknown query type");  
+    RAW_LOG(FATAL, "unknown query type");  
   }
   if (!infoIsAvailable(retVal) || !dataPtr) {
     if (!infoIsAvailable(retVal)) {
-      RAW_LOG(WARNING, "%s", "info is not available");
+      RAW_LOG(WARNING, "info is not available");
     }
     if (!dataPtr) {
-      RAW_LOG(WARNING, "%s", "data pointer is null");
+      RAW_LOG(WARNING, "data pointer is null");
     }
     return false;  
   }
@@ -133,11 +133,11 @@ bool queryOmpThreadInfo(void*& dataPtr) {
 bool queryThreadStackInfo(void*& stackAddr, size_t& stackSize) {
   pthread_attr_t attr; 
   if (pthread_getattr_np(pthread_self(), &attr) != 0) {
-    RAW_LOG(WARNING, "%s", "cannot get pthread attribute");
+    RAW_LOG(WARNING, "cannot get pthread attribute");
     return false;
   }
   if (pthread_attr_getstack(&attr, &stackAddr, &stackSize) != 0) {
-    RAW_LOG(WARNING, "%s", "cannot get thread stack info");
+    RAW_LOG(WARNING, "cannot get thread stack info");
     return false; 
   } 
   return true;

@@ -6,11 +6,11 @@
 namespace romp {
 
 LockSet::LockSet() {
-  RAW_LOG(INFO, "%s\n", "LockSet() constructor");
+  RAW_LOG(INFO, "LockSet() constructor");
 }
 
 LockSet::~LockSet() {
-  RAW_LOG(INFO, "%s\n", "LockSet() destructor");
+  RAW_LOG(INFO, "LockSet() destructor");
 }
 
 

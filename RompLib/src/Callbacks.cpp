@@ -43,7 +43,7 @@ void on_ompt_callback_implicit_task(
      * the runtime library won't be able to get parent task for this case.
     */
     if (!taskDataPtr) {
-      RAW_LOG(FATAL, "%s", "task data pointer is null");
+      RAW_LOG(FATAL, "task data pointer is null");
     }
     delete taskDataPtr; 
     taskData->ptr = nullptr;
@@ -53,7 +53,7 @@ void on_ompt_callback_implicit_task(
   void* parentDataPtr;
   if (!queryTaskInfo(1, eTaskData, parentTaskType, parentThreadNum,
              parentDataPtr)) {
-    RAW_LOG(FATAL, "%s", "cannot get parent task info");     
+    RAW_LOG(FATAL, "cannot get parent task info");     
     return;
   }   
   auto parentTaskData = static_cast<TaskData*>(parentDataPtr);
@@ -75,7 +75,7 @@ void on_ompt_callback_implicit_task(
      * At this point, only one implicit task should reach here.
      */
     if (!taskDataPtr) { 
-      RAW_LOG(FATAL, "%s", "task data pointer is null");
+      RAW_LOG(FATAL, "task data pointer is null");
     }
     auto parentLabel = parentTaskData->label; 
     auto mutatedLabel = mutateParentImpEnd(
@@ -92,9 +92,9 @@ void on_ompt_callback_sync_region(
        ompt_data_t *parallelData,
        ompt_data_t *taskData,
        const void* codePtrRa) {
-  RAW_LOG(INFO, "%s", "on_ompt_callback_sync_region called");
+  RAW_LOG(INFO,  "on_ompt_callback_sync_region called");
   if (!taskData || !taskData->ptr) {
-    RAW_LOG(FATAL, "%s", "task data pointer is null");  
+    RAW_LOG(FATAL, "task data pointer is null");  
     return;
   }
   auto taskDataPtr = static_cast<TaskData*>(taskData->ptr);
@@ -125,11 +125,11 @@ void on_ompt_callback_mutex_acquired(
         ompt_mutex_t kind,
         ompt_wait_id_t waitId,
         const void *codePtrRa) {
-  RAW_LOG(INFO, "%s", "on_ompt_callback_mutex_acquired called");
+  RAW_LOG(INFO, "on_ompt_callback_mutex_acquired called");
   int taskType, threadNum;
   void* dataPtr;
   if (!queryTaskInfo(0, eTaskData, taskType, threadNum, dataPtr)) {
-    RAW_LOG(FATAL, "%s", "task data pointer is null");
+    RAW_LOG(FATAL, "task data pointer is null");
     return;
   }
   auto taskDataPtr = static_cast<TaskData*>(dataPtr);
@@ -150,11 +150,11 @@ void on_ompt_callback_mutex_released(
         ompt_mutex_t kind,
         ompt_wait_id_t waitId,
         const void *codePtrRa) {
-  RAW_LOG(INFO, "%s", "on_ompt_callback_mutex_released called");
+  RAW_LOG(INFO, "on_ompt_callback_mutex_released called");
   int taskType, threadNum;
   void* dataPtr;
   if (!queryTaskInfo(0, eTaskData, taskType, threadNum, dataPtr)) {
-    RAW_LOG(FATAL, "%s", "task data pointer is null");
+    RAW_LOG(FATAL, "task data pointer is null");
     return;
   } 
   auto taskDataPtr = static_cast<TaskData*>(dataPtr);
@@ -232,7 +232,7 @@ inline std::shared_ptr<Label> handleOmpWorkWorkShare(
         ompt_scope_endpoint_t endPoint, 
         const std::shared_ptr<Label>& label, 
         uint64_t count) {
-  RAW_LOG(FATAL, "%s", "c++ openmp does not support workshare construct");
+  RAW_LOG(FATAL, "c++ openmp does not support workshare construct");
   return nullptr;
 }
 
@@ -241,7 +241,7 @@ inline std::shared_ptr<Label> handleOmpWorkDistribute(
         const std::shared_ptr<Label>& label, 
         uint64_t count) {
   //TODO: This is assoicated with target and team construct
-  RAW_LOG(FATAL, "%s", "not implemented yet");
+  RAW_LOG(FATAL, "not implemented yet");
   return nullptr;
 }
 
@@ -275,9 +275,9 @@ void on_ompt_callback_work(
       ompt_data_t *taskData,
       uint64_t count,
       const void *codePtrRa) {
-  RAW_LOG(INFO, "%s", "on_ompt_callback_work called");
+  RAW_LOG(INFO, "on_ompt_callback_work called");
   if (!taskData || !taskData->ptr) {
-    RAW_LOG(FATAL, "%s", "task data pointer is null");
+    RAW_LOG(FATAL, "task data pointer is null");
   }
   auto taskDataPtr = static_cast<TaskData*>(taskData->ptr);
   auto label = taskDataPtr->label;
@@ -368,27 +368,28 @@ void on_ompt_callback_task_schedule(
         ompt_task_status_t priorTaskStatus,
         ompt_data_t *nextTaskData) {
   if (!priorTaskStatus || !priorTaskData->ptr) {
-    RAW_LOG(FATAL, "%s", "prior task data pointer is null"); 
+    RAW_LOG(FATAL, "prior task data pointer is null"); 
     return;
   }
   if (!nextTaskData || !nextTaskData->ptr) {
-    RAW_LOG(INFO, "%s", "next task data pointer is null");
+    RAW_LOG(INFO, "next task data pointer is null");
     return;
   }
   if (priorTaskStatus == ompt_task_early_fulfill || 
           priorTaskStatus == ompt_task_late_fulfill) {
-    RAW_LOG(INFO, "%s", "prior task status is early/late fulfill");
+    RAW_LOG(INFO, "prior task status is early/late fulfill");
     return;
   }
   void* threadDataPtr = nullptr;
   if (!queryOmpThreadInfo(threadDataPtr)) {
-    RAW_LOG(FATAL, "%s", "cannot get thread data");
+    RAW_LOG(FATAL, "cannot get thread data");
     return;
   }
   auto threadData = static_cast<ThreadData*>(threadDataPtr); 
   auto priorTaskUpperBound = threadData->activeTaskExitFrame; 
   auto priorTaskLowerBound = threadData->lowestAccessedAddr;
   // mark the memory region [lowerbound, upperbound] as recycled  
+  // TODO
 }
 
 void on_ompt_callback_dependences(
@@ -402,18 +403,19 @@ void on_ompt_callback_thread_begin(
        ompt_thread_t threadType,
        ompt_data_t *threadData) {
   if (!threadData) {
+    RAW_LOG(WARNING, "thread data is null");
     return;
   }
   auto newThreadData = new ThreadData();
   if (!newThreadData) {
-    RAW_LOG(FATAL, "%s", "failed to create thread data");
+    RAW_LOG(FATAL, "failed to create thread data");
     return;
   }
   threadData->ptr = static_cast<void*>(newThreadData);
   void* stackAddr = nullptr;
   uint64_t stackSize = 0;
   if (!queryThreadStackInfo(stackAddr, stackSize)) {
-    RAW_LOG(WARNING, "%s", "failed to get thread stack info");
+    RAW_LOG(WARNING, "failed to get thread stack info");
     return;
   }
   newThreadData->stackBaseAddr = stackAddr;
@@ -440,7 +442,7 @@ void on_ompt_callback_dispatch(
        ompt_data_t *taskData,
        ompt_dispatch_t kind,
        ompt_data_t instance) {
-
+  f
 }
 
 void on_ompt_callback_reduction(
@@ -450,7 +452,7 @@ void on_ompt_callback_reduction(
        ompt_data_t *taskData,
        const void *codePtrRa) {
   if (!taskData || !taskData->ptr) {
-    RAW_LOG(FATAL, "%s", "task data pointer is null");
+    RAW_LOG(FATAL, "task data pointer is null");
     return;
   }  
   auto taskDataPtr = static_cast<TaskData*>(taskData->ptr);

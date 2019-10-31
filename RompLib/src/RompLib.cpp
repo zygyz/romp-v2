@@ -52,7 +52,7 @@ void checkAccess(void* address,
                  hwLock, isWrite);
                  */
   if (!gOmptInitialized) {
-    RAW_LOG(INFO, "%s", "ompt not initialized yet");
+    RAW_LOG(INFO, "ompt not initialized yet");
     return;
   }
   AllTaskInfo allTaskInfo;

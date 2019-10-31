@@ -31,7 +31,7 @@ DataSharingType analyzeDataSharing(const void* threadDataPtr,
   const auto stackTopAddr = threadData->stackTopAddr;
   const auto stackBaseAddr = threadData->stackBaseAddr;
   if (!stackTopAddr || !stackBaseAddr) {
-    RAW_LOG(INFO, "%s\n", "thread stack bound is not completely set");
+    RAW_LOG(INFO, "thread stack bound is not completely set");
     return eUndefined;
   }
   const auto addressValue = reinterpret_cast<const uint64_t>(address);

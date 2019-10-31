@@ -30,7 +30,7 @@ void Label::appendSegment(const std::shared_ptr<Segment>& segment) {
 
 std::shared_ptr<Segment> Label::popSegment() {
   if (_label.empty()) {
-    RAW_LOG(FATAL, "%s", "label is empty");
+    RAW_LOG(FATAL, "label is empty");
   }
   auto lastSegment = _label.back();
   _label.pop_back();
@@ -39,7 +39,7 @@ std::shared_ptr<Segment> Label::popSegment() {
 
 std::shared_ptr<Segment> Label::getLastKthSegment(int k) {
   if (k > _label.size()) {
-    RAW_LOG(FATAL, "%s", "index is out of bound");
+    RAW_LOG(FATAL, "index is out of bound");
     return nullptr;
   }
   auto len = _label.size();
