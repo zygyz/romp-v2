@@ -80,7 +80,10 @@ std::shared_ptr<Label> genInitTaskLabel() {
  * Given the parent task label, generate the label for the explicit task.
  */
 std::shared_ptr<Label> genExpTaskLabel(Label* parentLabel) {
-
+  auto newLabel = std::make_shared<Label>(*parentLabel);
+  auto segment = std::make_shared<BaseSegment>(eExplicit, 0, 1); 
+  newLabel->appendSegment(segment);
+  return newLabel;
 }
 
 std::shared_ptr<Label> mutateParentImpEnd(
