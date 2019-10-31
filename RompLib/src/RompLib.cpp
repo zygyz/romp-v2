@@ -77,8 +77,7 @@ void checkAccess(void* address,
     return;
   }
   auto curTaskData = static_cast<TaskData*>(allTaskInfo.taskData.ptr);
-  RAW_LOG(INFO, "current task ptr: %lx", allTaskInfo.taskData.ptr);
-  // use reference to avoid unnecesary mod to ref counter in shared_ptr
+  // use reference to avoid unnecessary mod to ref counter in shared_ptr
   auto& curLabel = curTaskData->label; 
   auto& curLockSet = curTaskData->lockSet; 
   

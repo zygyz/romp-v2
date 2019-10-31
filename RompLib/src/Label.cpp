@@ -52,15 +52,15 @@ void Label::setLastKthSegment(int k, const std::shared_ptr<Segment>& segment) {
     return;
   }
   auto len = _label.size();
-  _label[len - k] = segment;
+  _label[len - k] = std::move(segment);
 }
 
 std::shared_ptr<Label> genImpTaskLabel(
-                           const std::shared_ptr<Label>& parentLabel,
+                           Label* parentLabel,
                            unsigned int index,
                            unsigned int actualParallelism) {
   // create the new label by copy constructing from parent label
-  auto newLabel = std::make_shared<Label>(*parentLabel.get());
+  auto newLabel = std::make_shared<Label>(*parentLabel);
   // create a new label segment
   auto newSegment = std::make_shared<BaseSegment>(eImplicit, 
           static_cast<uint64_t>(index), 
@@ -69,10 +69,24 @@ std::shared_ptr<Label> genImpTaskLabel(
   return newLabel;
 }
 
+std::shared_ptr<Label> genInitTaskLabel() {
+  auto label = std::make_shared<Label>();
+  auto segment = std::make_shared<BaseSegment>(eImplicit, 0, 1);
+  label->appendSegment(segment);
+  return label;
+}
+
+/*
+ * Given the parent task label, generate the label for the explicit task.
+ */
+std::shared_ptr<Label> genExpTaskLabel(Label* parentLabel) {
+
+}
+
 std::shared_ptr<Label> mutateParentImpEnd(
-        const std::shared_ptr<Label>& parentLabel,
-        const std::shared_ptr<Label>& childLabel) {
-  auto newLabel = std::make_shared<Label>(*parentLabel.get());
+        Label* parentLabel,
+        Label* childLabel) {
+  auto newLabel = std::make_shared<Label>(*parentLabel);
   newLabel->popSegment();       
   auto childSegment = childLabel->getLastKthSegment(2);
   newLabel->appendSegment(childSegment);
@@ -84,8 +98,8 @@ std::shared_ptr<Label> mutateParentImpEnd(
  * the barrier. This mutation is done by adding span to the offset field of 
  * the second last segment of the label.
  */
-std::shared_ptr<Label> mutateBarrierEnd(const std::shared_ptr<Label>& label) {
-  auto newLabel = std::make_shared<Label>(*label.get());
+std::shared_ptr<Label> mutateBarrierEnd(Label* label) {
+  auto newLabel = std::make_shared<Label>(*label);
   auto segment = newLabel->getLastKthSegment(2); //get the second last segment
   uint64_t offset, span; 
   segment->getOffsetSpan(offset, span); //get the offset and span value
@@ -102,8 +116,8 @@ std::shared_ptr<Label> mutateBarrierEnd(const std::shared_ptr<Label>& label) {
  * encountering taskwait clause. This is done by incrementing the taskwait 
  * field counter in the last label segment
  */ 
-std::shared_ptr<Label> mutateTaskWait(const std::shared_ptr<Label>& label) {
-  auto newLabel = std::make_shared<Label>(*label.get());
+std::shared_ptr<Label> mutateTaskWait(Label* label) {
+  auto newLabel = std::make_shared<Label>(*label);
   auto lastSegment = newLabel->popSegment(); // replace the last segment
   uint64_t taskwait;
   lastSegment->getTaskwait(taskwait);
@@ -119,8 +133,8 @@ std::shared_ptr<Label> mutateTaskWait(const std::shared_ptr<Label>& label) {
  * encountering begin/endof ordered section. This is done by incrementing
  * the `phase` counter value by one.
  */
-std::shared_ptr<Label> mutateOrderSection(const std::shared_ptr<Label>& label) {
-  auto newLabel = std::make_shared<Label>(*label.get());
+std::shared_ptr<Label> mutateOrderSection(Label* label) {
+  auto newLabel = std::make_shared<Label>(*label);
   auto lastSegment = newLabel->popSegment(); // replace the last segment
   uint64_t phase;
   lastSegment->getPhase(phase);
@@ -135,8 +149,8 @@ std::shared_ptr<Label> mutateOrderSection(const std::shared_ptr<Label>& label) {
  * Mutate the label when workshare loop begin. Append a place holder segment
  * to mark the begin of the workshare loop.
  */
-std::shared_ptr<Label> mutateLoopBegin(const std::shared_ptr<Label>& label) {
-  auto newLabel = std::make_shared<Label>(*label.get()); 
+std::shared_ptr<Label> mutateLoopBegin(Label* label) {
+  auto newLabel = std::make_shared<Label>(*label); 
   auto newSegment = std::make_shared<WorkShareSegment>(); 
   newSegment->setPlaceHolderFlag(true);
   newLabel->appendSegment(newSegment);   
@@ -148,8 +162,8 @@ std::shared_ptr<Label> mutateLoopBegin(const std::shared_ptr<Label>& label) {
  * be a workshare segment. Increment the loop count of the current last 
  * segment by one (should replace the old one)
  */
-std::shared_ptr<Label> mutateLoopEnd(const std::shared_ptr<Label>& label) {
-  auto newLabel = std::make_shared<Label>(*label.get()); 
+std::shared_ptr<Label> mutateLoopEnd(Label* label) {
+  auto newLabel = std::make_shared<Label>(*label); 
   newLabel->popSegment();
   uint64_t loopCount = 0;
   auto segment = newLabel->popSegment();
@@ -165,11 +179,11 @@ std::shared_ptr<Label> mutateLoopEnd(const std::shared_ptr<Label>& label) {
  * Sections construct is implemented as a dynamically scheduled workshare loop.
  * So we treat the sections as a workshared loop 
  */
-std::shared_ptr<Label> mutateSectionBegin(const std::shared_ptr<Label>& label) { 
+std::shared_ptr<Label> mutateSectionBegin(Label* label) { 
   return mutateLoopBegin(label);
 }
 
-std::shared_ptr<Label> mutateSectionEnd(const std::shared_ptr<Label>& label) {
+std::shared_ptr<Label> mutateSectionEnd(Label* label) {
   return mutateLoopEnd(label);
 }
 
@@ -178,9 +192,8 @@ std::shared_ptr<Label> mutateSectionEnd(const std::shared_ptr<Label>& label) {
  * executor. Append a workshare segment to the current label and set the 
  * single executor bit.
  */
-std::shared_ptr<Label> mutateSingleExecBegin(
-        const std::shared_ptr<Label>& label) {
-  auto newLabel = std::make_shared<Label>(*label.get()); 
+std::shared_ptr<Label> mutateSingleExecBegin(Label* label) {
+  auto newLabel = std::make_shared<Label>(*label); 
   auto newSegment = std::make_shared<WorkShareSegment>(); 
   newSegment->setSingleFlag(true);
   newLabel->appendSegment(newSegment);   
@@ -191,9 +204,8 @@ std::shared_ptr<Label> mutateSingleExecBegin(
  * Mutate the label upon exiting the single construct and the task is the 
  * executor. Pop the workshare segment.
  */
-std::shared_ptr<Label> mutateSingleEnd(
-        const std::shared_ptr<Label>& label) {
-  auto newLabel = std::make_shared<Label>(*label.get());
+std::shared_ptr<Label> mutateSingleEnd(Label* label) {
+  auto newLabel = std::make_shared<Label>(*label);
   newLabel->popSegment();
   return newLabel;
 }
@@ -205,9 +217,8 @@ std::shared_ptr<Label> mutateSingleEnd(
  * executor to finish. Here we append a workshare segment and mark the single
  * other bit.
  */
-std::shared_ptr<Label> mutateSingleOtherBegin(
-        const std::shared_ptr<Label>& label) {
-  auto newLabel = std::make_shared<Label>(*label.get()); 
+std::shared_ptr<Label> mutateSingleOtherBegin(Label* label) {
+  auto newLabel = std::make_shared<Label>(*label); 
   auto newSegment = std::make_shared<WorkShareSegment>(); 
   newSegment->setSingleFlag(false);
   newLabel->appendSegment(newSegment);   
@@ -220,13 +231,12 @@ std::shared_ptr<Label> mutateSingleOtherBegin(
  * no implicit taskgroup is generated. This callback happens before any actual
  * execution of logical iteration and creation of explicit tasks
  */
-std::shared_ptr<Label> mutateTaskLoopBegin(
-        const std::shared_ptr<Label>& label) {
+std::shared_ptr<Label> mutateTaskLoopBegin(Label* label) {
+  return nullptr;
 }
 
-std::shared_ptr<Label> mutateTaskLoopEnd( 
-        const std::shared_ptr<Label>& label) {
-
+std::shared_ptr<Label> mutateTaskLoopEnd(Label* label) {
+  return nullptr;
 }
    
 

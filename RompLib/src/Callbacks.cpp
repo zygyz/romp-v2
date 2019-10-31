@@ -59,7 +59,7 @@ void on_ompt_callback_implicit_task(
   auto parentTaskData = static_cast<TaskData*>(parentDataPtr);
   if (endPoint == ompt_scope_begin) {
     // begin of implcit task, create the label for this new task
-    auto newTaskLabel = genImpTaskLabel(parentTaskData->label, index, 
+    auto newTaskLabel = genImpTaskLabel((parentTaskData->label).get(), index, 
             actualParallelism); 
     // return value optimization should avoid the ref count mod
     auto newTaskDataPtr = new TaskData();
@@ -72,12 +72,14 @@ void on_ompt_callback_implicit_task(
      * only one worker thread with index 0 is responsible for mutating
      * the parent task label. The mutated label should be created separately
      * because access history referred to labels by pointer.
+     * At this point, only one implicit task should reach here.
      */
     if (!taskDataPtr) { 
       RAW_LOG(FATAL, "%s", "task data pointer is null");
     }
     auto parentLabel = parentTaskData->label; 
-    auto mutatedLabel = mutateParentImpEnd(parentLabel, taskDataPtr->label);
+    auto mutatedLabel = mutateParentImpEnd(
+            parentLabel.get(), (taskDataPtr->label).get());
     parentTaskData->label = std::move(mutatedLabel);
     delete taskDataPtr; 
     taskData->ptr = nullptr;
@@ -99,15 +101,16 @@ void on_ompt_callback_sync_region(
   auto label = taskDataPtr->label;  // never std::move here!
   std::shared_ptr<Label> mutatedLabel = nullptr;
   if (endPoint == ompt_scope_begin && kind == ompt_sync_region_taskgroup) {
-    // TODO
+    // TODO: start of taskgroup construct 
   } else if (endPoint == ompt_scope_end) {
+    auto labelPtr = label.get();
     switch(kind) {
       case ompt_sync_region_taskwait:
-        mutatedLabel = mutateTaskWait(label);
+        mutatedLabel = mutateTaskWait(labelPtr);
         taskDataPtr->label = std::move(mutatedLabel);
         break;
       case ompt_sync_region_barrier:
-        mutatedLabel = mutateBarrierEnd(label);
+        mutatedLabel = mutateBarrierEnd(labelPtr);
         taskDataPtr->label = std::move(mutatedLabel);
         break;
       case ompt_sync_region_taskgroup:
@@ -133,7 +136,7 @@ void on_ompt_callback_mutex_acquired(
   auto label = taskDataPtr->label;
   std::shared_ptr<Label> mutatedLabel = nullptr;
   if (kind == ompt_mutex_ordered) {
-    mutatedLabel = mutateOrderSection(label); 
+    mutatedLabel = mutateOrderSection(label.get()); 
   } else {
     if (taskDataPtr->lockSet == nullptr) {
       // TODO: set the lockset
@@ -158,7 +161,7 @@ void on_ompt_callback_mutex_released(
   auto label = taskDataPtr->label;
   std::shared_ptr<Label> mutatedLabel = nullptr; 
   if (kind == ompt_mutex_ordered) {
-    mutatedLabel = mutateOrderSection(label);
+    mutatedLabel = mutateOrderSection(label.get());
   } else {
     // TODO: remove the lock from lockset
   }
@@ -172,10 +175,11 @@ inline std::shared_ptr<Label> handleOmpWorkLoop(
                              ompt_scope_endpoint_t endPoint, 
                              const std::shared_ptr<Label>& label) {
   std::shared_ptr<Label> mutatedLabel = nullptr;
+  auto labelPtr = label.get();
   if (endPoint == ompt_scope_begin) {
-    mutatedLabel = mutateLoopBegin(label);
+    mutatedLabel = mutateLoopBegin(labelPtr);
   } else if (endPoint == ompt_scope_end) {
-    mutatedLabel = mutateLoopEnd(label);
+    mutatedLabel = mutateLoopEnd(labelPtr);
   }  
   return mutatedLabel;
 }
@@ -189,10 +193,11 @@ inline std::shared_ptr<Label> handleOmpWorkSections(
         const std::shared_ptr<Label>& label,
         uint64_t count) {
   std::shared_ptr<Label> mutatedLabel = nullptr;
+  auto labelPtr = label.get();
   if (endPoint == ompt_scope_begin) {
-    mutatedLabel = mutateSectionBegin(label);
+    mutatedLabel = mutateSectionBegin(labelPtr);
   } else if (endPoint == ompt_scope_end) {
-    mutatedLabel = mutateSectionEnd(label);
+    mutatedLabel = mutateSectionEnd(labelPtr);
   }
   return mutatedLabel;
 }
@@ -201,10 +206,11 @@ inline std::shared_ptr<Label> handleOmpWorkSingleExecutor(
         ompt_scope_endpoint_t endPoint, 
         const std::shared_ptr<Label>& label) {
   std::shared_ptr<Label> mutatedLabel = nullptr;
+  auto labelPtr = label.get();
   if (endPoint == ompt_scope_begin) {
-    mutatedLabel = mutateSingleExecBegin(label);
+    mutatedLabel = mutateSingleExecBegin(labelPtr);
   } else if (endPoint == ompt_scope_end) {
-    mutatedLabel = mutateSingleEnd(label);  
+    mutatedLabel = mutateSingleEnd(labelPtr);  
   }
   return mutatedLabel;
 }
@@ -213,10 +219,11 @@ inline std::shared_ptr<Label> handleOmpWorkSingleOther(
         ompt_scope_endpoint_t endPoint, 
         const std::shared_ptr<Label>& label) {
   std::shared_ptr<Label> mutatedLabel = nullptr;
+  auto labelPtr = label.get();
   if (endPoint == ompt_scope_begin) {
-    mutatedLabel = mutateSingleOtherBegin(label);
+    mutatedLabel = mutateSingleOtherBegin(labelPtr);
   } else if (endPoint == ompt_scope_end) {
-    mutatedLabel = mutateSingleEnd(label);
+    mutatedLabel = mutateSingleEnd(labelPtr);
   }
   return mutatedLabel;
 }
@@ -334,19 +341,26 @@ void on_ompt_callback_task_create(
         int flags,
         int hasDependences,
         const void *codePtrRa) {
+  auto taskData = new TaskData();
   if (flags == ompt_task_initial) {
-    auto taskData = new TaskData();
     RAW_LOG(INFO, "generating initial task: %lx", taskData);
-    auto label = std::make_shared<Label>();
-    auto segment = std::make_shared<BaseSegment>(eImplicit, 0, 1);
-    label->appendSegment(segment);
-    taskData->label = std::move(label);
-    newTaskData->ptr = static_cast<void*>(taskData);
+    auto newTaskLabel = genInitTaskLabel();
+    taskData->label = std::move(newTaskLabel);
   } else if (flags == ompt_task_explicit) {
-    // TODO: prepare the task data pointer for newly created explicit task 
+    // create label for explicit task
+    auto parentTaskData = static_cast<TaskData*>(encounteringTaskData->ptr);
+    if (!parentTaskData || !parentTaskData->label) {
+      RAW_LOG(FATAL, "cannot get parent task label");
+      return;
+    }
+    auto parentLabel = (parentTaskData->label).get();
+    auto newTaskLabel = genExpTaskLabel(parentLabel);
+    taskData->label = std::move(newTaskLabel);
   } else if (flags == ompt_task_target) {
     // TODO: prepare the task data pointer for target 
+    RAW_LOG(FATAL, "ompt_task_target not implemented yet");
   }
+  newTaskData->ptr = static_cast<void*>(taskData);
 }
 
 void on_ompt_callback_task_schedule(
