@@ -23,7 +23,7 @@ ShadowMemory<AccessHistory> shadowMemory;
  */
 void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel, 
                    const LockSetPtr& curLockSet, const CheckInfo& checkInfo) {
-  RAW_LOG(INFO, "%s %x\n", "checkDataRace called access history:", accessHistory);
+  //RAW_DLOG(INFO, "%s %x\n", "checkDataRace called access history:", accessHistory);
 }
 
 extern "C" {
@@ -73,7 +73,7 @@ void checkAccess(void* address,
   auto dataSharingType = analyzeDataSharing(curThreadData, address, 
                                            allTaskInfo.taskFrame);
   if (!allTaskInfo.taskData.ptr) {
-    RAW_LOG(ERROR, "pointer to current task data is null");
+    RAW_LOG(WARNING, "pointer to current task data is null");
     return;
   }
   auto curTaskData = static_cast<TaskData*>(allTaskInfo.taskData.ptr);

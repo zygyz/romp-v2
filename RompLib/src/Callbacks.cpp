@@ -22,14 +22,14 @@ void on_ompt_callback_implicit_task(
        unsigned int actualParallelism,
        unsigned int index,
        int flags) {
-  RAW_LOG(INFO, "on_ompt_callback_implicit_task called:%u p:%lx t:%lx %u %u",
-          endPoint, parallelData, taskData, actualParallelism, index);
+  RAW_LOG(INFO, "on_ompt_callback_implicit_task called:%u p:%lx t:%lx %u %u %d",
+          endPoint, parallelData, taskData, actualParallelism, index, flags);
 
   if (flags == ompt_task_initial || actualParallelism == 1) {
     /*
      * TODO: looks like ompt_task_initial never shows up. Could be 
      * some bug in runtime libray. If the actualParallelism is 1, it 
-     * should be an initial task.
+     * should be an initial task according to spec.
      */
     return;
   }
@@ -60,9 +60,11 @@ void on_ompt_callback_implicit_task(
   if (endPoint == ompt_scope_begin) {
     // begin of implcit task, create the label for this new task
     auto newTaskLabel = genImpTaskLabel(parentTaskData->label, index, 
-            actualParallelism);
+            actualParallelism); 
+    // return value optimization should avoid the ref count mod
     auto newTaskDataPtr = new TaskData();
-    newTaskDataPtr->label = newTaskLabel;
+    // cast to rvalue and avoid atomic ref count modification
+    newTaskDataPtr->label = std::move(newTaskLabel); 
     taskData->ptr = static_cast<void*>(newTaskDataPtr);
   } else if (endPoint == ompt_scope_end) {
     /* 
@@ -76,7 +78,7 @@ void on_ompt_callback_implicit_task(
     }
     auto parentLabel = parentTaskData->label; 
     auto mutatedLabel = mutateParentImpEnd(parentLabel, taskDataPtr->label);
-    parentTaskData->label = mutatedLabel;
+    parentTaskData->label = std::move(mutatedLabel);
     delete taskDataPtr; 
     taskData->ptr = nullptr;
   }
@@ -94,7 +96,7 @@ void on_ompt_callback_sync_region(
     return;
   }
   auto taskDataPtr = static_cast<TaskData*>(taskData->ptr);
-  auto label = taskDataPtr->label;
+  auto label = taskDataPtr->label;  // never std::move here!
   std::shared_ptr<Label> mutatedLabel = nullptr;
   if (endPoint == ompt_scope_begin && kind == ompt_sync_region_taskgroup) {
     // TODO
@@ -102,11 +104,11 @@ void on_ompt_callback_sync_region(
     switch(kind) {
       case ompt_sync_region_taskwait:
         mutatedLabel = mutateTaskWait(label);
-        taskDataPtr->label = mutatedLabel; 
+        taskDataPtr->label = std::move(mutatedLabel);
         break;
       case ompt_sync_region_barrier:
         mutatedLabel = mutateBarrierEnd(label);
-        taskDataPtr->label = mutatedLabel; 
+        taskDataPtr->label = std::move(mutatedLabel);
         break;
       case ompt_sync_region_taskgroup:
         // TODO
@@ -138,7 +140,7 @@ void on_ompt_callback_mutex_acquired(
     }
     // TODO add the lock to the lockset
   }
-  taskDataPtr->label = mutatedLabel;
+  taskDataPtr->label = std::move(mutatedLabel);
 }
 
 void on_ompt_callback_mutex_released(
@@ -160,7 +162,7 @@ void on_ompt_callback_mutex_released(
   } else {
     // TODO: remove the lock from lockset
   }
-  taskDataPtr->label = mutatedLabel; 
+  taskDataPtr->label = std::move(mutatedLabel);
 }
 
 /*
@@ -298,7 +300,7 @@ void on_ompt_callback_work(
     default:
       break;
   }
-  taskDataPtr->label = mutatedLabel;
+  taskDataPtr->label = std::move(mutatedLabel);
 }
 
 void on_ompt_callback_parallel_begin(
@@ -308,9 +310,8 @@ void on_ompt_callback_parallel_begin(
        unsigned int requestedParallelism,
        int flags,
        const void *codePtrRa) {
-  RAW_LOG(INFO, "parallel begin et:%lx p:%lx %lu %d", encounteringTaskData, 
+  RAW_DLOG(INFO, "parallel begin et:%lx p:%lx %u %d", encounteringTaskData, 
            parallelData, requestedParallelism, flags);
-  
   auto parRegionData = new ParRegionData(requestedParallelism, flags);
   parallelData->ptr = static_cast<void*>(parRegionData);  
 }
@@ -339,7 +340,7 @@ void on_ompt_callback_task_create(
     auto label = std::make_shared<Label>();
     auto segment = std::make_shared<BaseSegment>(eImplicit, 0, 1);
     label->appendSegment(segment);
-    taskData->label = label;    
+    taskData->label = std::move(label);
     newTaskData->ptr = static_cast<void*>(taskData);
   } else if (flags == ompt_task_explicit) {
     // TODO: prepare the task data pointer for newly created explicit task 
