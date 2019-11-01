@@ -442,7 +442,20 @@ void on_ompt_callback_dispatch(
        ompt_data_t *taskData,
        ompt_dispatch_t kind,
        ompt_data_t instance) {
-  f
+  if (!taskData || !taskData->ptr) {
+    RAW_LOG(FATAL, "cannot get task data info");
+    return;
+  }
+  auto taskDataPtr = static_cast<TaskData*>(taskData->ptr);
+  auto parentLabel = (taskDataPtr->label).get();
+  std::shared_ptr<Label> mutatedLabel = nullptr;
+  if (kind == ompt_dispatch_iteration) {
+    RAW_LOG(INFO, "on dispatch iter, parent label: %s", parentLabel->toString().c_str());
+    mutatedLabel = mutateIterDispatch(parentLabel, instance.value);
+  } else if (kind == ompt_dispatch_section) {
+    mutatedLabel = mutateSectionDispatch(parentLabel, instance.ptr);
+  }
+  taskDataPtr->label = std::move(mutatedLabel);
 }
 
 void on_ompt_callback_reduction(
@@ -465,7 +478,3 @@ void on_ompt_callback_reduction(
 
 
 }
-
-
-
-

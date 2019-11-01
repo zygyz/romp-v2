@@ -49,5 +49,7 @@ std::shared_ptr<Label> mutateSingleOtherBegin(Label* label);
 std::shared_ptr<Label> mutateSingleEnd(Label* parentLabel);
 std::shared_ptr<Label> mutateTaskLoopBegin(Label* label);
 std::shared_ptr<Label> mutateTaskLoopEnd(Label* label);
+std::shared_ptr<Label> mutateIterDispatch(Label* label, uint64_t id);
+std::shared_ptr<Label> mutateSectionDispatch(Label* label, void* id);
 
 }

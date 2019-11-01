@@ -235,13 +235,33 @@ std::shared_ptr<Label> mutateSingleOtherBegin(Label* label) {
  * execution of logical iteration and creation of explicit tasks
  */
 std::shared_ptr<Label> mutateTaskLoopBegin(Label* label) {
+  //TODO 
   return nullptr;
 }
 
 std::shared_ptr<Label> mutateTaskLoopEnd(Label* label) {
+  //TODO
   return nullptr;
 }
-   
 
+/*
+ * Create a label for dispatched workshare loop iteration. This is done by 
+ * first pop off the last segment of the label, which should be a workshare
+ * segment (if it is the first one encountered, the workshare segment is a 
+ * place holder). Then append new workshare segment to the end of the label.
+ */
+std::shared_ptr<Label> mutateIterDispatch(Label* label, uint64_t id) {
+  auto newLabel = std::make_shared<Label>(*label); 
+  auto segment = newLabel->popSegment();
+  RAW_DCHECK(segment->getType() == eWorkShare, "not a workshare segment");
+  auto newSegment = std::make_shared<WorkShareSegment>(id); 
+  newLabel->appendSegment(newSegment);   
+  return newLabel;
+}
+
+std::shared_ptr<Label> mutateSectionDispatch(Label* label, void* id) {
+  //TODO
+  return nullptr;
+}
 
 }
