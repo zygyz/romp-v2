@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "AccessRecord.h"
+#include "Record.h"
 
 namespace romp {
 
