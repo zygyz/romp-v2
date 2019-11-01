@@ -450,7 +450,8 @@ void on_ompt_callback_dispatch(
   auto parentLabel = (taskDataPtr->label).get();
   std::shared_ptr<Label> mutatedLabel = nullptr;
   if (kind == ompt_dispatch_iteration) {
-    RAW_LOG(INFO, "on dispatch iter, parent label: %s", parentLabel->toString().c_str());
+    RAW_DLOG(INFO, "on dispatch iter, parent label: %s", 
+            parentLabel->toString().c_str());
     mutatedLabel = mutateIterDispatch(parentLabel, instance.value);
   } else if (kind == ompt_dispatch_section) {
     mutatedLabel = mutateSectionDispatch(parentLabel, instance.ptr);
