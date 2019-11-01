@@ -18,4 +18,15 @@ bool Record::isWrite() const {
   return (_state & 0x1) == 0x1;
 }
 
+/*
+ * toString() is mainly for debugging 
+ */
+std::string Record::toString() const {
+  std::string result = "";
+  auto labelStr = _label? _label->toString() : std::string("[empty label]");
+  result += std::string("Label:") + labelStr;
+  result += isWrite()? std::string("@write") : std::string("@read");
+  return result;
+}
+
 }
