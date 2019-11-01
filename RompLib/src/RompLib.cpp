@@ -24,6 +24,8 @@ ShadowMemory<AccessHistory> shadowMemory;
 void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel, 
                    const LockSetPtr& curLockSet, const CheckInfo& checkInfo) {
   //RAW_DLOG(INFO, "%s %x\n", "checkDataRace called access history:", accessHistory);
+  //TODO implement check data race protocol
+   
 }
 
 extern "C" {
