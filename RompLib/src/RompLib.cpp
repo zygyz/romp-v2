@@ -21,11 +21,11 @@ ShadowMemory<AccessHistory> shadowMemory;
 /*
  * Driver function to do data race checking 
  */
-void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel, 
-                   const LockSetPtr& curLockSet, const CheckInfo& checkInfo) {
+void checkDataRace(AccessHistory* accessHistory, Label* curLabel, 
+                   LockSet* curLockSet, const CheckInfo& checkInfo) {
   RAW_DLOG(INFO, "%s %x\n", "checkDataRace called access history:", accessHistory);
   std::unique_lock<std::mutex> guard(accessHistory->getMutex());
-  
+  auto     
 }
 
 extern "C" {
@@ -79,10 +79,9 @@ void checkAccess(void* address,
     return;
   }
   auto curTaskData = static_cast<TaskData*>(allTaskInfo.taskData->ptr);
-  // use reference to avoid unnecessary mod to ref counter in shared_ptr
   RAW_DLOG(INFO, "cur label: %s", curTaskData->label->toString().c_str());
-  auto& curLabel = curTaskData->label; 
-  auto& curLockSet = curTaskData->lockSet; 
+  auto curLabel = curTaskData->label.get();
+  auto curLockSet = curTaskData->lockSet.get();
   
   CheckInfo checkInfo(allTaskInfo, bytesAccessed, instnAddr, 
           taskType, isWrite, hwLock);
