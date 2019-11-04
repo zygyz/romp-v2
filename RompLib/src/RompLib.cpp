@@ -23,9 +23,9 @@ ShadowMemory<AccessHistory> shadowMemory;
  */
 void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel, 
                    const LockSetPtr& curLockSet, const CheckInfo& checkInfo) {
-  //RAW_DLOG(INFO, "%s %x\n", "checkDataRace called access history:", accessHistory);
-  //TODO implement check data race protocol
-   
+  RAW_DLOG(INFO, "%s %x\n", "checkDataRace called access history:", accessHistory);
+  std::unique_lock<std::mutex> guard(accessHistory->getMutex());
+  
 }
 
 extern "C" {
@@ -44,10 +44,10 @@ ompt_start_tool_result_t* ompt_start_tool(
 }
 
 void checkAccess(void* address,
-            uint32_t bytesAccessed,
-            uint64_t instnAddr,
-            bool hwLock,
-            bool isWrite) {
+                 uint32_t bytesAccessed,
+                 void* instnAddr,
+                 bool hwLock,
+                 bool isWrite) {
   /*
   RAW_LOG(INFO, "address:%lx bytesAccessed:%u instnAddr: %lx hwLock: %u,"
                 "isWrite: %u", address, bytesAccessed, instnAddr, 
@@ -83,7 +83,8 @@ void checkAccess(void* address,
   auto& curLabel = curTaskData->label; 
   auto& curLockSet = curTaskData->lockSet; 
   
-  CheckInfo checkInfo(allTaskInfo, bytesAccessed, instnAddr, taskType, hwLock);
+  CheckInfo checkInfo(allTaskInfo, bytesAccessed, instnAddr, 
+          taskType, isWrite, hwLock);
   for (uint64_t i = 0; i < bytesAccessed; ++i) {
     auto curAddress = reinterpret_cast<uint64_t>(address) + i;      
     auto accessHistory = shadowMemory.getShadowMemorySlot(curAddress);

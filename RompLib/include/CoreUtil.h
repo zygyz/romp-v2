@@ -1,4 +1,5 @@
 #pragma once
+#include <utility>
 #include "QueryFuncs.h"
 /*
  * This header files defines a set of functions used in romp that are not 
@@ -16,19 +17,22 @@ namespace romp {
  * Wrap all necessary information for data race checking.
  */
 typedef struct CheckInfo {
-  CheckInfo(const AllTaskInfo& allTaskInfo, 
-            const uint32_t bytesAccessed,
-            const uint64_t instnAddr,
-            const int taskType,
-            const bool hwLock): allTaskInfo(allTaskInfo), 
-                                bytesAccessed(bytesAccessed),
-                                instnAddr(instnAddr),
-                                taskType(taskType),
-                                hwLock(hwLock) {}
+  CheckInfo(AllTaskInfo& allTaskInfo, 
+            uint32_t bytesAccessed,
+            void* instnAddr,
+            int taskType,
+            bool isWrite,
+            bool hwLock): allTaskInfo(std::move(allTaskInfo)), 
+                          bytesAccessed(bytesAccessed),
+                          instnAddr(instnAddr),
+                          taskType(taskType),
+                          isWrite(isWrite),
+                          hwLock(hwLock) {}
   AllTaskInfo allTaskInfo;
   uint32_t bytesAccessed;
-  uint64_t instnAddr;
+  void* instnAddr;
   int taskType;
+  bool isWrite;
   bool hwLock; 
 } CheckInfo; 
 
@@ -38,5 +42,7 @@ bool prepareAllInfo(int& taskType,
                     void*& curParRegionData,
                     void*& curThreadData,
                     AllTaskInfo& allTaskInfo);
+
+void reportDataRace(void* instnAddrPrev, void* instnAddrCur, void* address);
 
 }

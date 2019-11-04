@@ -19,7 +19,7 @@ bool Record::isWrite() const {
 }
 
 /*
- * toString() is mainly for debugging 
+ * toString() is mainly for debugging
  */
 std::string Record::toString() const {
   std::string result = "";

@@ -31,4 +31,10 @@ bool prepareAllInfo(int& taskType,
   return true;
 }
 
+void reportDataRace(void* instnAddrPrev, void* instnAddrCur, void* address) {
+  //TODO: add source line information
+  RAW_LOG(INFO, "data race found: 0x%lx 0x%lx @ 0x%lx", instnAddrPrev, 
+          instnAddrCur, address);
+}
+
 }
