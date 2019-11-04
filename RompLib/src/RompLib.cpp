@@ -25,7 +25,13 @@ void checkDataRace(AccessHistory* accessHistory, Label* curLabel,
                    LockSet* curLockSet, const CheckInfo& checkInfo) {
   RAW_DLOG(INFO, "%s %x\n", "checkDataRace called access history:", accessHistory);
   std::unique_lock<std::mutex> guard(accessHistory->getMutex());
-  auto     
+  auto records = accessHistory->getRecords();
+  if (records->empty()) {
+    // no access record 
+  } else {
+    // check previous access records
+
+  }
 }
 
 extern "C" {

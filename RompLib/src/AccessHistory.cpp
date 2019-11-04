@@ -5,16 +5,32 @@
 
 namespace romp {
 
-void AccessHistory::setState(uint8_t state) {
-  this->state = state;
+void AccessHistory::_initRecords() {
+  _records.reset(new std::vector<Record>());
 }
 
 std::mutex& AccessHistory::getMutex() {
   return _mutex;
 }
 
+/*
+ * If records pointer has not been initialized, initialize the record first.
+ * Then return the raw pointer to the records vector.
+ * We assume the access history is under mutual exclusion.
+ */
 std::vector<Record>* AccessHistory::getRecords() {
+  if (!_records.get()) {
+    _initRecords();
+  }
   return _records.get();
+}
+
+void AccessHistory::setFlag(AccessHistoryFlag flag) {
+  _state |= flag;
+}
+
+bool AccessHistory::dataRaceFound() const {
+  return (_state & eDataRaceFound) != 0;
 }
 
 }
