@@ -74,12 +74,13 @@ void checkAccess(void* address,
   // query data  
   auto dataSharingType = analyzeDataSharing(curThreadData, address, 
                                            allTaskInfo.taskFrame);
-  if (!allTaskInfo.taskData.ptr) {
+  if (!allTaskInfo.taskData->ptr) {
     RAW_LOG(WARNING, "pointer to current task data is null");
     return;
   }
-  auto curTaskData = static_cast<TaskData*>(allTaskInfo.taskData.ptr);
+  auto curTaskData = static_cast<TaskData*>(allTaskInfo.taskData->ptr);
   // use reference to avoid unnecessary mod to ref counter in shared_ptr
+  RAW_DLOG(INFO, "cur label: %s", curTaskData->label->toString().c_str());
   auto& curLabel = curTaskData->label; 
   auto& curLockSet = curTaskData->lockSet; 
   

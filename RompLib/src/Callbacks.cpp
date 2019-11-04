@@ -63,6 +63,7 @@ void on_ompt_callback_implicit_task(
             actualParallelism); 
     // return value optimization should avoid the ref count mod
     auto newTaskDataPtr = new TaskData();
+    RAW_DLOG(INFO, "created task data ptr: 0x%lx", newTaskDataPtr);
     // cast to rvalue and avoid atomic ref count modification
     newTaskDataPtr->label = std::move(newTaskLabel); 
     taskData->ptr = static_cast<void*>(newTaskDataPtr);

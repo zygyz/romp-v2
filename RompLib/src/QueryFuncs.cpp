@@ -38,14 +38,9 @@ bool queryAllTaskInfo(const int ancestorLevel,
                       int& taskType,
                       int& threadNum,
                       AllTaskInfo& allTaskInfo) {
-  auto taskDataPtr = &(allTaskInfo.taskData);
-  auto taskDataPtrPtr = &taskDataPtr;
-  auto taskFramePtr = &(allTaskInfo.taskFrame);
-  auto taskFramePtrPtr = &taskFramePtr;
-  auto parDataPtr = &(allTaskInfo.parallelData);
-  auto parDataPtrPtr = &parDataPtr; 
-  auto retVal = omptGetTaskInfo(ancestorLevel, &taskType, taskDataPtrPtr,
-                                taskFramePtrPtr, parDataPtrPtr, &threadNum);
+  auto retVal = omptGetTaskInfo(ancestorLevel, &taskType, 
+          &allTaskInfo.taskData, &allTaskInfo.taskFrame, 
+          &allTaskInfo.parallelData, &threadNum);
   return infoIsAvailable(retVal);
 }
 

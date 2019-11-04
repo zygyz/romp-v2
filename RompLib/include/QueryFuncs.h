@@ -12,9 +12,9 @@ extern ompt_get_parallel_info_t omptGetParallelInfo;
 extern ompt_get_thread_data_t omptGetThreadData;
 
 typedef struct AllTaskInfo {
-  ompt_data_t taskData;
-  ompt_frame_t taskFrame;
-  ompt_data_t parallelData;
+  ompt_data_t* taskData;
+  ompt_frame_t* taskFrame;
+  ompt_data_t* parallelData;
 } AllTaskInfo;
 
 enum OmptTaskQueryType { eTaskData, eTaskFrame, eParallelData };
