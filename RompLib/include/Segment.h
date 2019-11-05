@@ -27,6 +27,7 @@ public:
   virtual void getPhase(uint64_t& phase) const = 0;
   virtual void setLoopCount(uint64_t loopCount) = 0;
   virtual void getLoopCount(uint64_t& loopCount) const = 0;  
+  virtual bool operator==(const Segment& rhs) const = 0;
   virtual ~Segment() = default;
 };
 
@@ -36,8 +37,8 @@ public:
  */
 class BaseSegment : public Segment {
 public:
-  BaseSegment(): value(0) {}
-  BaseSegment(const BaseSegment& segment): value(segment.value) {}
+  BaseSegment(): _value(0) {}
+  BaseSegment(const BaseSegment& segment): _value(segment._value) {}
   BaseSegment(SegmentType type, uint64_t offset, uint64_t span);
   std::string toString() const override;
   void setType(SegmentType type) override;
@@ -51,8 +52,10 @@ public:
   void getPhase(uint64_t& phase) const override;
   void setLoopCount(uint64_t loopCount) override;
   void getLoopCount(uint64_t& loopCount) const override;
+  bool operator==(const Segment& rhs) const override; 
+  uint64_t getValue() const;
 protected:
-  uint64_t value;
+  uint64_t _value;
 };
 
 /*
@@ -61,13 +64,13 @@ protected:
  */
 class WorkShareSegment: public BaseSegment {
 public:
-  WorkShareSegment() : workShareId(0) { setType(eWorkShare); }
-  WorkShareSegment(uint64_t id, bool isSection): workShareId(id) { 
+  WorkShareSegment() : _workShareId(0) { setType(eWorkShare); }
+  WorkShareSegment(uint64_t id, bool isSection): _workShareId(id) { 
     setType(eWorkShare); 
     setWorkShareType(isSection);
   } 
   WorkShareSegment(const WorkShareSegment& segment): BaseSegment(segment), 
-     workShareId(segment.workShareId) { }                       
+     _workShareId(segment._workShareId) { }                       
   void setPlaceHolderFlag(bool toggle);
   bool isPlaceHolder() const;
   void setWorkShareType(bool isSection);
@@ -77,8 +80,9 @@ public:
   bool isSingleOther() const;
   std::string toString() const override;
   std::shared_ptr<Segment> clone() const override;
+  bool operator==(const Segment& rhs) const override;
 private: 
-  uint64_t workShareId; 
+  uint64_t _workShareId; 
 };
 
 

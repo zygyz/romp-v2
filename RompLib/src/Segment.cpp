@@ -39,13 +39,13 @@ namespace romp {
  * [2]: mark if current workshare semgent is section, bit set: yes. 
  *      otherwise, sgment is iteration
  *
- * For workshare segment, we use the extra workShareId to store information
+ * For workshare segment, we use the extra _workShareId to store information
  * [0,31]: work share id
  * [62,63]: single construct flag bits 
  */
 std::string BaseSegment::toString() const {
   std::stringstream stream;
-  stream << std::hex << value;
+  stream << std::hex << _value;
   auto result = "[" + stream.str() + "]";
   return result;
 }
@@ -55,7 +55,7 @@ BaseSegment::BaseSegment(SegmentType type, uint64_t offset,
   if (span >= (1 << OFFSET_SPAN_WIDTH)) {
     RAW_LOG(FATAL, "%s %lu", "span is overflowing", span);
   }
-  value = 0;
+  _value = 0;
   setType(type);
   setOffsetSpan(offset, span);
 }
@@ -64,17 +64,24 @@ std::shared_ptr<Segment> BaseSegment::clone() const {
   return std::make_shared<BaseSegment>(*this);
 }
 
+uint64_t BaseSegment::getValue() const {
+  return _value;
+}
+
 void BaseSegment::setOffsetSpan(uint64_t offset, uint64_t span) {
-  value &= ~(OFFSET_MASK | SPAN_MASK);  // clear the offset, span field
-  value |= (offset << OFFSET_SHIFT) & OFFSET_MASK; 
-  value |= (span << SPAN_SHIFT) & SPAN_MASK; 
+  _value &= ~(OFFSET_MASK | SPAN_MASK);  // clear the offset, span field
+  _value |= (offset << OFFSET_SHIFT) & OFFSET_MASK; 
+  _value |= (span << SPAN_SHIFT) & SPAN_MASK; 
 }
 
 void BaseSegment::getOffsetSpan(uint64_t& offset, uint64_t& span) const {
-  offset = (value & OFFSET_MASK) >> OFFSET_SHIFT;
-  span = (value & SPAN_MASK) >> SPAN_SHIFT;
+  offset = (_value & OFFSET_MASK) >> OFFSET_SHIFT;
+  span = (_value & SPAN_MASK) >> SPAN_SHIFT;
 }
 
+bool BaseSegment::operator==(const Segment& segment) const {
+  return _value == dynamic_cast<const BaseSegment&>(segment)._value;
+}
 /*
  * Taskwait field is four bits. So if taskwait is more than 16, it overflows.
  */
@@ -82,44 +89,45 @@ void BaseSegment::setTaskwait(uint64_t taskwait) {
   if (taskwait > 16) {
     RAW_LOG(FATAL, "taskwait count is overflowing %lu", taskwait);
   }
-  value &= ~TASKWAIT_MASK; // clear the taskwait field
-  value |= (taskwait << TASKWAIT_SHIFT) & TASKWAIT_MASK;
+  _value &= ~TASKWAIT_MASK; // clear the taskwait field
+  _value |= (taskwait << TASKWAIT_SHIFT) & TASKWAIT_MASK;
 }
 
 void BaseSegment::getTaskwait(uint64_t& taskwait) const {
-  taskwait = (value & TASKWAIT_MASK) >> TASKWAIT_SHIFT;
+  taskwait = (_value & TASKWAIT_MASK) >> TASKWAIT_SHIFT;
 }
 
 void BaseSegment::setPhase(uint64_t phase) {
   if (phase > 16) {
     RAW_LOG(FATAL, "phase count is overflowing %lu", phase);
   }
-  value &= ~PHASE_MASK;
-  value |= (phase << PHASE_SHIFT) & PHASE_MASK;
+  _value &= ~PHASE_MASK;
+  _value |= (phase << PHASE_SHIFT) & PHASE_MASK;
+
 }
 
 void BaseSegment::getPhase(uint64_t& phase) const {
-  phase = (value & PHASE_MASK) >> PHASE_SHIFT;
+  phase = (_value & PHASE_MASK) >> PHASE_SHIFT;
 }
 
 void BaseSegment::setLoopCount(uint64_t loopCount) {
   if (loopCount > 16) {
     RAW_LOG(FATAL, "loop count is overflowing %lu", loopCount);
   }    
-  value &= ~LOOP_CNT_MASK;
-  value |= (loopCount << LOOP_CNT_SHIFT) & LOOP_CNT_MASK;
+  _value &= ~LOOP_CNT_MASK;
+  _value |= (loopCount << LOOP_CNT_SHIFT) & LOOP_CNT_MASK;
 }
 
 void BaseSegment::getLoopCount(uint64_t& loopCount) const {
-  loopCount = (value & LOOP_CNT_MASK) >> LOOP_CNT_SHIFT;
+  loopCount = (_value & LOOP_CNT_MASK) >> LOOP_CNT_SHIFT;
 }
 
 void BaseSegment::setType(SegmentType type) {
-  value |= static_cast<uint64_t>(type);
+  _value |= static_cast<uint64_t>(type);
 }
 
 SegmentType BaseSegment::getType() const {
-  auto mask = value & SEG_TYPE_MASK;
+  auto mask = _value & SEG_TYPE_MASK;
   switch(mask) {
     case 0x1:
       return eImplicit;
@@ -133,9 +141,9 @@ SegmentType BaseSegment::getType() const {
 
 std::string WorkShareSegment::toString() const {
   std::stringstream stream;
-  stream << std::hex << value;
+  stream << std::hex << _value;
   auto result = "[" + stream.str() + "," + 
-      std::to_string(workShareId) + "]";
+      std::to_string(_workShareId) + "]";
   return result;
 }
 
@@ -149,45 +157,54 @@ std::shared_ptr<Segment> WorkShareSegment::clone() const {
  */
 void WorkShareSegment::setPlaceHolderFlag(bool toggle) {
   if (toggle) {
-    value |= (1 << WS_PLACE_HOLDER_POS);
+    _value |= (1 << WS_PLACE_HOLDER_POS);
   } else {
-    value &= WS_PLACE_HOLDER_MASK;
+    _value &= WS_PLACE_HOLDER_MASK;
   }
 }
 
+bool WorkShareSegment::operator==(const Segment& segment) const {
+  if (_value == dynamic_cast<const BaseSegment&>(segment).getValue()) {
+    // we know `segment` is also a workshare segment
+    return _workShareId == 
+        dynamic_cast<const WorkShareSegment&>(segment)._workShareId;
+  } 
+  return false;
+}
+
 bool WorkShareSegment::isPlaceHolder() const {
-  return ((value & WS_PLACE_HOLDER_MASK) >> WS_PLACE_HOLDER_POS) == 1;
+  return ((_value & WS_PLACE_HOLDER_MASK) >> WS_PLACE_HOLDER_POS) == 1;
 }
 
 bool WorkShareSegment::isSingleExecutor() const {
-  return ((workShareId & SINGLE_MASK) >> SINGLE_EXEC_SHIFT) == 1;
+  return ((_workShareId & SINGLE_MASK) >> SINGLE_EXEC_SHIFT) == 1;
 }
 
 bool WorkShareSegment::isSingleOther() const {
-  return ((workShareId & SINGLE_MASK) >> SINGLE_OTHER_SHIFT) == 1;
+  return ((_workShareId & SINGLE_MASK) >> SINGLE_OTHER_SHIFT) == 1;
 }
 
 void WorkShareSegment::setSingleFlag(bool isExecutor) {
-  workShareId &= ~SINGLE_MASK;
+  _workShareId &= ~SINGLE_MASK;
   uint64_t b = 1;
   if (isExecutor) {
     // toggle the higher bit to 1
-    workShareId |= (b << SINGLE_EXEC_SHIFT);
+    _workShareId |= (b << SINGLE_EXEC_SHIFT);
   } else {
     // single other, toggle the lower bit to 1
-    workShareId |= (b << SINGLE_OTHER_SHIFT);
+    _workShareId |= (b << SINGLE_OTHER_SHIFT);
   }
 }
 
 void WorkShareSegment::setWorkShareType(bool isSection) {
-  value &= ~WORKSHARE_TYPE_MASK; // clear the bit first
+  _value &= ~WORKSHARE_TYPE_MASK; // clear the bit first
   if (isSection) {
-    value |= WORKSHARE_TYPE_MASK;  // set the bit
+    _value |= WORKSHARE_TYPE_MASK;  // set the bit
   } 
 }
 
 bool WorkShareSegment::isSection() const {
-  return (value & WORKSHARE_TYPE_MASK) != 0;
+  return (_value & WORKSHARE_TYPE_MASK) != 0;
 }
 
 

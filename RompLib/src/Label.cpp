@@ -55,7 +55,21 @@ void Label::setLastKthSegment(int k, const std::shared_ptr<Segment>& segment) {
   _label[len - k] = std::move(segment);
 }
 
+/*
+ * Given two labels 'left' and 'right', compare corresponding label segments, 
+ * find the first position of label segment where two segments differ. Return
+ * the index of the position. If 'left' is the prefix of 'right', reutrn -1.
+ * If 'right' is the prefix of 'left', return -2. 
+ */
 int compareLabels(Label* left, Label* right) {
+  auto& leftLabel = left->_label;
+  auto& rightLabel = right->_label;  
+  auto len = std::min(leftLabel.size(), rightLabel.size());
+  for (int i = 0; i < len; ++i) {
+    
+  }
+  
+    
   return 0;
 }
 
