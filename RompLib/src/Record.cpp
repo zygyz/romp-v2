@@ -29,4 +29,19 @@ std::string Record::toString() const {
   return result;
 }
 
+Label* Record::getLabel() const {
+  return _label? _label.get() : nullptr;
+}
+
+LockSet* Record::getLockSet() const {
+  return _lockSet? _lockSet.get() : nullptr;
+}
+
+void* Record::getInstnAddr() const {
+  return _instnAddr;
+}
+
+void* Record::getTaskPtr() const {
+  return _taskPtr;
+}
 }

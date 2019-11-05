@@ -1,5 +1,7 @@
 #pragma once
 #include <utility>
+
+#include "DataSharing.h"
 #include "QueryFuncs.h"
 /*
  * This header files defines a set of functions used in romp that are not 
@@ -20,20 +22,27 @@ typedef struct CheckInfo {
   CheckInfo(AllTaskInfo& allTaskInfo, 
             uint32_t bytesAccessed,
             void* instnAddr,
+            void* taskPtr,
             int taskType,
             bool isWrite,
-            bool hwLock): allTaskInfo(std::move(allTaskInfo)), 
+            bool hwLock,
+            DataSharingType dataSharingType): 
+                          allTaskInfo(std::move(allTaskInfo)), 
                           bytesAccessed(bytesAccessed),
                           instnAddr(instnAddr),
+                          taskPtr(taskPtr),
                           taskType(taskType),
                           isWrite(isWrite),
-                          hwLock(hwLock) {}
+                          hwLock(hwLock),
+                          dataSharingType(dataSharingType){}
   AllTaskInfo allTaskInfo;
   uint32_t bytesAccessed;
   void* instnAddr;
+  void* taskPtr;
   int taskType;
   bool isWrite;
   bool hwLock; 
+  DataSharingType dataSharingType;
 } CheckInfo; 
 
 bool prepareAllInfo(int& taskType, 

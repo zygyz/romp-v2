@@ -2,6 +2,7 @@
 #include <glog/raw_logging.h>
 
 #include "AccessHistory.h"
+#include "Core.h"
 #include "CoreUtil.h"
 #include "DataSharing.h"
 #include "Initialize.h"
@@ -21,16 +22,32 @@ ShadowMemory<AccessHistory> shadowMemory;
 /*
  * Driver function to do data race checking 
  */
-void checkDataRace(AccessHistory* accessHistory, Label* curLabel, 
-                   LockSet* curLockSet, const CheckInfo& checkInfo) {
-  RAW_DLOG(INFO, "%s %x\n", "checkDataRace called access history:", accessHistory);
+void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel, 
+                   const LockSetPtr& curLockSet, const CheckInfo& checkInfo) {
   std::unique_lock<std::mutex> guard(accessHistory->getMutex());
+  if (accessHistory->dataRaceFound()) {
+    // data race has already been found on this memory location, romp only 
+    // reports one data race on any memory location in one run. Once the data 
+    // race is reported, romp clears the access history with respect to this
+    // memory location and mark this memory location as found. Future access 
+    // to this memory location does not go through data race checking.
+    // TODO: implement the logic described above.
+    return;
+  }
   auto records = accessHistory->getRecords();
+  auto curRecord = Record(checkInfo.isWrite, curLabel, curLockSet, 
+          checkInfo.taskPtr, checkInfo.instnAddr);
   if (records->empty()) {
-    // no access record 
+    // no access record, add current access to the record
+    RAW_DLOG(INFO, "records list is empty, add record");
+    records->push_back(curRecord);
   } else {
-    // check previous access records
-
+    // check previous access records with current access
+    for (const auto& histRecord : *records) {
+      RAW_DLOG(INFO, "hist record: %s", histRecord.toString().c_str());
+      auto analyzeResult = analyzeRaceCondition(histRecord, curRecord);
+      
+    }
   }
 }
 
@@ -86,11 +103,12 @@ void checkAccess(void* address,
   }
   auto curTaskData = static_cast<TaskData*>(allTaskInfo.taskData->ptr);
   RAW_DLOG(INFO, "cur label: %s", curTaskData->label->toString().c_str());
-  auto curLabel = curTaskData->label.get();
-  auto curLockSet = curTaskData->lockSet.get();
+  auto& curLabel = curTaskData->label;
+  auto& curLockSet = curTaskData->lockSet;
   
   CheckInfo checkInfo(allTaskInfo, bytesAccessed, instnAddr, 
-          taskType, isWrite, hwLock);
+          static_cast<void*>(curTaskData), taskType, isWrite, hwLock, 
+          dataSharingType);
   for (uint64_t i = 0; i < bytesAccessed; ++i) {
     auto curAddress = reinterpret_cast<uint64_t>(address) + i;      
     auto accessHistory = shadowMemory.getShadowMemorySlot(curAddress);

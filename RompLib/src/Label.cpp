@@ -55,6 +55,10 @@ void Label::setLastKthSegment(int k, const std::shared_ptr<Segment>& segment) {
   _label[len - k] = std::move(segment);
 }
 
+int compareLabels(Label* left, Label* right) {
+  return 0;
+}
+
 std::shared_ptr<Label> genImpTaskLabel(
                            Label* parentLabel,
                            unsigned int index,

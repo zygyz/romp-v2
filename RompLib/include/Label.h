@@ -21,10 +21,13 @@ public:
   std::shared_ptr<Segment> popSegment();
   std::shared_ptr<Segment> getLastKthSegment(int k);
   void setLastKthSegment(int k, const std::shared_ptr<Segment>& segment);
+  friend int compareLabels(Label* left, Label* right);
 private:
   std::vector<std::shared_ptr<Segment> > _label;
 
 };
+
+int compareLabels(Label* left, Label* right);
 
 std::shared_ptr<Label> genImpTaskLabel(
                           Label* parentLabel, 
