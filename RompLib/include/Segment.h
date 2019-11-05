@@ -28,6 +28,7 @@ public:
   virtual void setLoopCount(uint64_t loopCount) = 0;
   virtual void getLoopCount(uint64_t& loopCount) const = 0;  
   virtual bool operator==(const Segment& rhs) const = 0;
+  virtual bool operator!=(const Segment& rhs) const = 0;
   virtual ~Segment() = default;
 };
 
@@ -53,6 +54,7 @@ public:
   void setLoopCount(uint64_t loopCount) override;
   void getLoopCount(uint64_t& loopCount) const override;
   bool operator==(const Segment& rhs) const override; 
+  bool operator!=(const Segment& rhs) const override;
   uint64_t getValue() const;
 protected:
   uint64_t _value;
@@ -81,6 +83,7 @@ public:
   std::string toString() const override;
   std::shared_ptr<Segment> clone() const override;
   bool operator==(const Segment& rhs) const override;
+  bool operator!=(const Segment& rhs) const override;
 private: 
   uint64_t _workShareId; 
 };

@@ -66,7 +66,6 @@ int compareLabels(Label* left, Label* right) {
   auto& rightLabel = right->_label;  
   auto len = std::min(leftLabel.size(), rightLabel.size());
   for (int i = 0; i < len; ++i) {
-    
   }
   
     

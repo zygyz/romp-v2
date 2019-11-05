@@ -82,6 +82,10 @@ void BaseSegment::getOffsetSpan(uint64_t& offset, uint64_t& span) const {
 bool BaseSegment::operator==(const Segment& segment) const {
   return _value == dynamic_cast<const BaseSegment&>(segment)._value;
 }
+
+bool BaseSegment::operator!=(const Segment& segment) const {
+  return !(*this == segment);
+}
 /*
  * Taskwait field is four bits. So if taskwait is more than 16, it overflows.
  */
@@ -170,6 +174,10 @@ bool WorkShareSegment::operator==(const Segment& segment) const {
         dynamic_cast<const WorkShareSegment&>(segment)._workShareId;
   } 
   return false;
+}
+
+bool WorkShareSegment::operator!=(const Segment& segment) const {
+  return !(*this == segment);
 }
 
 bool WorkShareSegment::isPlaceHolder() const {
