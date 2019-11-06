@@ -55,21 +55,43 @@ void Label::setLastKthSegment(int k, const std::shared_ptr<Segment>& segment) {
   _label[len - k] = std::move(segment);
 }
 
+Segment* Label::getKthSegment(int k) {
+  if (k > _label.size()) {
+    RAW_LOG(FATAL, "index %d out of bound", k);
+  }
+  return _label.at(k).get();
+}
+
+int Label::getLabelLength() const {
+  return _label.size();
+}
+
 /*
  * Given two labels 'left' and 'right', compare corresponding label segments, 
  * find the first position of label segment where two segments differ. Return
- * the index of the position. If 'left' is the prefix of 'right', reutrn -1.
- * If 'right' is the prefix of 'left', return -2. 
+ * the index of the position. If 'left' is the prefix of 'right', reutrn -1 
+ * (eLeftIsPrefix) If 'right' is the prefix of 'left',return -2 (eRightIsPrefix)
+ * If the labels are the same, return -3 (eSame)
  */
 int compareLabels(Label* left, Label* right) {
   auto& leftLabel = left->_label;
   auto& rightLabel = right->_label;  
-  auto len = std::min(leftLabel.size(), rightLabel.size());
+  auto lenLeftLabel = leftLabel.size();
+  auto lenRightLabel = rightLabel.size();
+  auto len = std::min(lenLeftLabel, lenRightLabel);
   for (int i = 0; i < len; ++i) {
+    if (*leftLabel.at(i) != *rightLabel.at(i)) {
+      return i;
+    }
   }
-  
-    
-  return 0;
+  // reach the end, one label is the prefix of another label
+  if (lenLeftLabel == lenRightLabel) {
+    return static_cast<int>(eSameLabel);
+  }
+  if (len == lenLeftLabel) {
+    return static_cast<int>(eLeftIsPrefix);
+  }
+  return static_cast<int>(eRightIsPrefix);
 }
 
 std::shared_ptr<Label> genImpTaskLabel(

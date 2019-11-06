@@ -5,6 +5,11 @@
 
 namespace romp {
 
+enum LabelCompare {
+  eSameLabel = -3,
+  eLeftIsPrefix = -1,
+  eRightIsPrefix = -2, 
+};
 /*
  * Label class implements the high level representation of task label.
  * A task label consists of a series of label segments. Each label segment is 
@@ -21,7 +26,9 @@ public:
   std::shared_ptr<Segment> popSegment();
   std::shared_ptr<Segment> getLastKthSegment(int k);
   void setLastKthSegment(int k, const std::shared_ptr<Segment>& segment);
+  Segment* getKthSegment(int k);
   friend int compareLabels(Label* left, Label* right);
+  int getLabelLength() const;
 private:
   std::vector<std::shared_ptr<Segment> > _label;
 
