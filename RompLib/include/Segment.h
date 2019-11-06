@@ -80,6 +80,7 @@ public:
   void setSingleFlag(bool isExecutor);
   bool isSingleExecutor() const;
   bool isSingleOther() const;
+  uint64_t getWorkShareId() const;
   std::string toString() const override;
   std::shared_ptr<Segment> clone() const override;
   bool operator==(const Segment& rhs) const override;

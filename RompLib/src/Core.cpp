@@ -75,18 +75,88 @@ bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex) {
  * two tasks associated with the two labels are descendant tasks of two sibling
  * implicit tasks.
  * Return true if T(histLabel) -> T(curLabel)
- * Return false otherwise
+ * Return false if T(histLabel) || T(curLabel)
+ * Issue fatal warning if T(curLabel) -> T(histLabel)
  */
 bool analyzeDiffSegImpImp(Label* histLabel, Label* curLabel, int diffIndex) { 
-  auto histLabelLength = histLabel->getLabelLength();
-  auto curLabelLength = curLabel->getLabelLength();
-  if (histLabelLength == curLabelLength && 
-          diffIndex == (histLabelLength - 1)) {
-    // T(histLabel) and T(curLabel) are leaf tasks.
+  auto lenHistLabel = histLabel->getLabelLength();
+  auto lenCurLabel = curLabel->getLabelLength();
+  if (diffIndex == (lenHistLabel - 1) || diffIndex == (lenCurLabel - 1)) {
+    // if any one if T(histLabel) and T(curLabel) is leaf implicit task, 
+    // we are sure there is not order
     return false;
   }
+  // now diffIndex + 1 must not be out of boundary
+  auto histNextSeg = histLabel->getKthSegment(diffIndex + 1);  
+  auto curNextSeg = curLabel->getKthSegment(diffIndex + 1);
+  auto histNextSegType = histNextSeg->getType();
+  auto curNextSegType = curNextSeg->getType();
+  /* Task dependency applies to sibling tasks, which are child tasks in a 
+   * task region. We already know that T(histLabel) and T(curLabel) can
+   * not be sibling tasks.
+   */
+  if (histNextSegType == eWorkShare && curNextSegType == eWorkShare) {
+    // in this case, it is possible to be ordered with ordered section
+    if (static_cast<WorkShareSegment*>(histNextSeg)->isSection() || 
+            static_cast<WorkShareSegment*>(curNextSeg)->isSection()) {
+      // section construct does not have ordered section 
+      return false;
+    } 
+    uint64_t histSegLoopCount, curSegLoopCount, histPhase, curPhase;
+    auto histSeg = histLabel->getKthSegment(diffIndex);
+    auto curSeg = curLabel->getKthSegment(diffIndex);
+    histSeg->getLoopCount(histSegLoopCount);
+    curSeg->getLoopCount(curSegLoopCount);
+    if (histSegLoopCount == curSegLoopCount) {
+      return analyzeOrderedSection(histLabel, curLabel, diffIndex + 1);
+    } 
+    return false;
+  }
+  return false;
+}
+
+/*
+ * This function analyzes if Task(histLabel) is ordered with ordered section 
+ * with Task(curLabel) 
+ */
+bool analyzeOrderedSection(Label* histLabel, Label* curLabel, int startIndex) {
+  auto histBaseSeg  = histLabel->getKthSegment(startIndex);
+  auto curBaseSeg = curLabel->getKthSegment(startIndex);
+  auto histSegment = static_cast<WorkShareSegment*>(histBaseSeg);
+  auto curSegment = static_cast<WorkShareSegment*>(curBaseSeg);
+  if (histSegment->isPlaceHolder() || curSegment->isPlaceHolder()) {
+    // have not entered the workshare construct yet.
+    return false;
+  } 
+  auto histWorkShareId = histSegment->getWorkShareId();
+  auto curWorkShareId = curSegment->getWorkShareId(); 
+  if (histWorkShareId >= curWorkShareId) {
+    RAW_LOG(FATAL, "not expecting hist iter id >= cur iter id");
+  }
+  uint64_t histPhase, curPhase;
+  histBaseSeg->getPhase(histPhase);
+  curBaseSeg->getPhase(curPhase);
+  auto histExitRank = computeExitRank(histPhase);
+  auto curEnterRank = computeEnterRank(curPhase);
+  if (histExitRank < curEnterRank && 
+      inFinishScope(histLabel, startIndex) &&
+      inFinishScope(curLabel, startIndex)) {
+    return true; 
+  }
+  return false;
+}
+
+uint64_t computeExitRank(uint64_t phase) {
+  return phase - (phase % 2); 
+}
+
+uint64_t computeEnterRank(uint64_t phase) {
+  return phase + (phase % 2);
+}
+
+bool inFinishScope(Label* label, int startIndex) {
+  //TODO: implement the check of finish scope
   return true;
 }
-  
 
 }

@@ -192,6 +192,10 @@ bool WorkShareSegment::isSingleOther() const {
   return ((_workShareId & SINGLE_MASK) >> SINGLE_OTHER_SHIFT) == 1;
 }
 
+uint64_t WorkShareSegment::getWorkShareId() const {
+  return _workShareId;
+}
+
 void WorkShareSegment::setSingleFlag(bool isExecutor) {
   _workShareId &= ~SINGLE_MASK;
   uint64_t b = 1;
