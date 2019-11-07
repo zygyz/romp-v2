@@ -4,6 +4,18 @@
 #include <glog/raw_logging.h>
 
 namespace romp {
+/*
+ * Note: comments for functions contain some notation about task and its 
+ * label. We describe the notation in this comment here to clarify and to ease
+ * the description in each comment.
+ * T(L, index): the task represented by the task label, L', which contains 
+ * prefix of label segments in label `L` up to index: L' = L[0:index]
+ *
+ * T(L): the task represented by the task label `L`
+ *
+ * Descendant tasks: all tasks spawned in the current task's execution context
+ *
+ */
 
 /*
  * This function is a driver function that analyzes race condition between two
@@ -63,9 +75,19 @@ bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex) {
 
   } else { // left span == right span and span > 1, implicit task
     if (histOffset != curOffset) { 
-      // two different implicit tasks in the same parallel region
-      return analyzeDiffSegImpImp(histLabel, curLabel, diffIndex);
-    }  
+      auto span = histSpan;
+      if (histOffset % span == curOffset % span) {
+        // same implicit task, but one has encountered at least one 
+        // barrier sync
+        return analyzeImpTaskSync(histLabel, curLabel, diffIndex);
+      } else {
+        // sibling implicit tasks
+        return analyzeSiblingImpTask(histLabel, curLabel, diffIndex);
+      }
+    } else { 
+      // same implicit task, but have diferent segment representation
+      return analyzeSameImpTask(histLabel, curLabel, diffIndex); 
+    }
   }
 }
 
@@ -78,7 +100,7 @@ bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex) {
  * Return false if T(histLabel) || T(curLabel)
  * Issue fatal warning if T(curLabel) -> T(histLabel)
  */
-bool analyzeDiffSegImpImp(Label* histLabel, Label* curLabel, int diffIndex) { 
+bool analyzeSiblingImpTask(Label* histLabel, Label* curLabel, int diffIndex) { 
   auto lenHistLabel = histLabel->getLabelLength();
   auto lenCurLabel = curLabel->getLabelLength();
   if (diffIndex == (lenHistLabel - 1) || diffIndex == (lenCurLabel - 1)) {
@@ -144,6 +166,44 @@ bool analyzeOrderedSection(Label* histLabel, Label* curLabel, int startIndex) {
     return true; 
   }
   return false;
+}
+
+/*
+ *
+ * This function analyzes happens-before relation when first pair of different 
+ * segments are implicit segment, where offset are the same. This means the 
+ * two tasks associated with the two labels are descendant tasks of the same 
+ * implicit task T(diffIndex). For descendant tasks, we require thatshould not have encountered a barrier before descendant tasks end
+ * Return true if T(histLabel) -> T(curLabel)
+ * Return false if T(histLabel) || T(curLabel)
+ * Issue fatal warning if T(curLabel) -> T(histLabel)
+ */
+bool analyzeSameImpTask(Label* histLabel, Label* curLabel, int diffIndex) {
+  auto lenHistLabel = histLabel->getLabelLength(); 
+  auto lenCurLabel = curLabel->getLabelLength();
+  if (lenHistLabel == lenCurLabel) {
+    if (diffIndex == (lenHistLabel - 1)) {
+      // T(histLabel) and T(curLabel) are the same implicit task (they are
+      // leaf taskss)  but at different stages. In this case, it is only
+      // possible to have T(histLabel) happens before T(curLabel)
+      return true;
+    } else { 
+      // T(histLabel)  and T(curLabel) are descendant tasks of the same 
+      // implicit task, since the
+       
+    }
+  } else {
+   
+  }
+}
+
+/*
+ * This function is called when the first different pair of segments 
+ * represent the same implicit task but at different stages. One task has 
+ * encountered at least one barrier synchronization
+ */
+bool analyzeImpTaskSync(Label* histLabel, Label* curLabel, int diffIndex) {
+ 
 }
 
 uint64_t computeExitRank(uint64_t phase) {
