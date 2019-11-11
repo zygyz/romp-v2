@@ -31,7 +31,7 @@ bool analyzeRaceCondition(const Record& histRecord, const Record& curRecord) {
 }
 
 /*
- * This function analyze the happens-before relationship between two memory
+ * This function analyzes the happens-before relationship between two memory
  * accesses based on their associated task labels. The idea is that task label
  * encodes nodes relationship in openmp task graph. If there exists a directed
  * path from node A to node B, node A `happens-before` node B. Otherwise, node
@@ -77,10 +77,8 @@ bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex) {
     if (histOffset != curOffset) { 
       auto span = histSpan;
       if (histOffset % span == curOffset % span) {
-        if (histOffset > curOffset) {
-          RAW_LOG(FATAL, "not expecting history access joined 
-                  before current access");
-        }
+        RAW_CHECK(histOffset < curOffset, "not expecting history access joined \
+                before current access");
         /* 
          * Any possible descendent tasks of T(histLabel, diffIndex) 
          * should have joined with T(histLabel, diffIndex). And they 
@@ -181,8 +179,8 @@ bool analyzeOrderedSection(Label* histLabel, Label* curLabel, int startIndex) {
  * This function analyzes happens-before relation when first pair of different 
  * segments are implicit segment, where offset are the same. This means that 
  * T(histLabel, diffIndex) and T(curLabel, diffIndex) are the same implicit 
- * task, denote it at T'. T(histLabel), T(curLabel) are descendent tasks of 
- * T', while T(histLabel) and T(curLabel) are not joined by T'. 
+ * task, denote it as T'. T(histLabel), T(curLabel) are descendent tasks of 
+ * T'.
  *
  * Return true if T(histLabel) -> T(curLabel)
  * Return false if T(histLabel) || T(curLabel)
@@ -198,14 +196,64 @@ bool analyzeSameImpTask(Label* histLabel, Label* curLabel, int diffIndex) {
       // possible to have T(histLabel) happens before T(curLabel)
       return true;
     } else { 
-      // T(histLabel)  and T(curLabel) are descendant tasks of the same 
-      // implicit task, since the
-       
+     /*
+      * T(histLabel) and T(curLabel) are descendent tasks of
+      * T(histLabel, diffIndex) and T(curLabel, diffIndex) respectively
+      * We assert that T(histLabel, diffIndex + 1) and 
+      * T(curLabel, diffIndex + 1) are not sibling implicit task. Because
+      * otherwise histLabel[diffIndex] and curLabel[diffIndex] should be the 
+      * same.
+      */
+      auto histNextSeg = histLabel->getKthSegment(diffIndex + 1);
+      auto curNextSeg = curLabel->getKthSegment(diffIndex + 1);
+      auto histNextType = histNextSeg->getType();
+      auto curNextType = curNextSeg->getType();
+      RAW_CHECK(!(histNextType == eImplicit && curNextType == eImplicit),
+              "not expecting next level tasks are sibling implicit tasks");
+      // invoke different checking depending on next segment's type 
+      auto checkCase = buildCheckCase(histNextType, curNextType);
+      return dispatchAnalysis(checkCase, histLabel, curLabel, diffIndex);
     }
-  } else {
-   
+  } else { 
+     
   }
 }
+
+bool analyzeNextImpExp(Label* histLabel, Label* curLabel, int diffIndex) {
+  // TODO
+  return true;
+}
+
+
+bool analzyeNextImpWork(Label* histLabel, Label* curLabel, int diffIndex) {
+  return true;
+}
+
+bool analyzeNextExpImp(Label* histLabel, Label* curLabel, int diffIndex) {
+  return true;
+}
+
+bool analyzeNextExpExp(Label* histLabel, Label* curLabel, int diffIndex) {
+  return true;
+}
+
+bool analyzeNextExpWork(Label* histLabel, Label* curLabel, int diffIndex) {
+  return true;
+}
+
+bool analyzeNextWorkImp(Label* histLabel, Label* curLabel, int diffIndex) {
+  return true;
+}
+
+bool analyzeNextWorkExp(Label* histLabel, Label* curLabel, int diffIndex) {
+  return true;
+}
+
+bool analyzeNextWorkWork(Label* histLabel, Label* curLabel, int diffIndex) {
+  return true;
+}
+
+
 
 uint64_t computeExitRank(uint64_t phase) {
   return phase - (phase % 2); 
@@ -219,5 +267,44 @@ bool inFinishScope(Label* label, int startIndex) {
   //TODO: implement the check of finish scope
   return true;
 }
+
+/*
+ * Build the check case. Avoid conditional instructions. Concatenate 
+ * bit level representation of two segment type to form a case code and 
+ * directly  
+ */
+inline CheckCase buildCheckCase(SegmentType histType, SegmentType curType) {
+  return static_cast<CheckCase>(histType | (curType << CASE_SHIFT));
+}
+
+/*
+ * Helper function to dispatch different checking procedures based 
+ * on the type of label segments of hist[diffIndex+1], cur[diffIndex+1]
+ */
+bool dispatchAnalysis(CheckCase checkCase, Label* hist, Label* cur, 
+        int diffIndex) {
+  switch(checkCase) {
+    case eImpImp:
+      RAW_LOG(FATAL, "not expected case: imp-imp");
+    case eImpExp:
+      return analyzeNextImpExp(hist, cur, diffIndex);
+    case eImpWork:
+      return analzyeNextImpWork(hist, cur, diffIndex);
+    case eExpImp:
+      return analyzeNextExpImp(hist, cur, diffIndex);
+    case eExpExp:
+      return analyzeNextExpExp(hist, cur, diffIndex);
+    case eExpWork:
+      return analyzeNextExpWork(hist, cur, diffIndex);
+    case eWorkImp:
+      return analyzeNextWorkImp(hist, cur, diffIndex);
+    case eWorkExp:
+      return analyzeNextWorkExp(hist, cur, diffIndex);
+    case eWorkWork:
+      return analyzeNextWorkWork(hist, cur, diffIndex);
+  }
+  return false;
+}
+
 
 }
