@@ -11,6 +11,7 @@
 #define PHASE_MASK           0x000000000f000000
 #define WS_PLACE_HOLDER_MASK 0xfffffffffffffffb
 #define LOOP_CNT_MASK        0x0000000000f00000
+#define TASK_CREATE_MASK     0x00000000000fffe0
 #define SINGLE_MASK          0xc000000000000000
 #define WORKSHARE_TYPE_MASK  0x0000000000000004
 
@@ -21,6 +22,7 @@
 #define TASKWAIT_SHIFT 28
 #define PHASE_SHIFT 24
 #define LOOP_CNT_SHIFT 20
+#define TASK_CREATE_SHIFT 5 // can handle spawn <= 2^15 exp tasks
 #define WS_PLACE_HOLDER_POS 2  // least significant bit index is 0
 #define SINGLE_EXEC_SHIFT 63
 #define SINGLE_OTHER_SHIFT 62
@@ -33,9 +35,10 @@ namespace romp {
  * [0,1]: segment type 
  * [48, 63]: offset 
  * [32, 47]: span 
- * [43, 46]: taskwait count
- * [39, 42]: phase count
- * [35, 38]: loop count
+ * [28, 31]: taskwait count
+ * [24, 27]: phase count
+ * [20, 23]: loop count
+ * [5, 19]: task create count
  * [2]: mark if current workshare semgent is section, bit set: yes. 
  *      otherwise, sgment is iteration
  *
@@ -52,9 +55,7 @@ std::string BaseSegment::toString() const {
 
 BaseSegment::BaseSegment(SegmentType type, uint64_t offset, 
         uint64_t span) {
-  if (span >= (1 << OFFSET_SPAN_WIDTH)) {
-    RAW_LOG(FATAL, "%s %lu", "span is overflowing", span);
-  }
+  RAW_CHECK(span < (1 << OFFSET_SPAN_WIDTH), "span is overflowing");
   _value = 0;
   setType(type);
   setOffsetSpan(offset, span);
@@ -90,9 +91,7 @@ bool BaseSegment::operator!=(const Segment& segment) const {
  * Taskwait field is four bits. So if taskwait is more than 16, it overflows.
  */
 void BaseSegment::setTaskwait(uint64_t taskwait) {
-  if (taskwait > 16) {
-    RAW_LOG(FATAL, "taskwait count is overflowing %lu", taskwait);
-  }
+  RAW_CHECK(taskwait < 16, "taskwait count is overflowing");
   _value &= ~TASKWAIT_MASK; // clear the taskwait field
   _value |= (taskwait << TASKWAIT_SHIFT) & TASKWAIT_MASK;
 }
@@ -101,10 +100,18 @@ void BaseSegment::getTaskwait(uint64_t& taskwait) const {
   taskwait = (_value & TASKWAIT_MASK) >> TASKWAIT_SHIFT;
 }
 
+void BaseSegment::setTaskcreate(uint64_t taskcreate) { 
+  RAW_CHECK(taskcreate < (1 << 15), "taskcreate count is overflowing");
+  _value &= ~TASK_CREATE_MASK;
+  _value |= (taskcreate << TASK_CREATE_SHIFT) & TASK_CREATE_MASK;
+}
+
+void BaseSegment::getTaskcreate(uint64_t& taskcreate) const {
+  taskcreate = (_value & TASK_CREATE_MASK) >> TASK_CREATE_SHIFT;
+}
+
 void BaseSegment::setPhase(uint64_t phase) {
-  if (phase > 16) {
-    RAW_LOG(FATAL, "phase count is overflowing %lu", phase);
-  }
+  RAW_CHECK(phase < 16, "phase count is overflowing");
   _value &= ~PHASE_MASK;
   _value |= (phase << PHASE_SHIFT) & PHASE_MASK;
 
@@ -115,9 +122,7 @@ void BaseSegment::getPhase(uint64_t& phase) const {
 }
 
 void BaseSegment::setLoopCount(uint64_t loopCount) {
-  if (loopCount > 16) {
-    RAW_LOG(FATAL, "loop count is overflowing %lu", loopCount);
-  }    
+  RAW_CHECK(loopCount < 16, "loop count is overflowing");
   _value &= ~LOOP_CNT_MASK;
   _value |= (loopCount << LOOP_CNT_SHIFT) & LOOP_CNT_MASK;
 }

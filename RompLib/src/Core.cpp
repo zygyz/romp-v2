@@ -219,8 +219,21 @@ bool analyzeSameImpTask(Label* histLabel, Label* curLabel, int diffIndex) {
   }
 }
 
+/* 
+ * This function analyzes case when T(histLabel, diffIndex) and 
+ * T(curLabel, diffIndex) are the same implicit task, T'. T(histLabel) and 
+ * T(curLabel) are descendent tasks of T'. T(histLabel, diffIndex+1) is 
+ * implicit task, T(curLabel, diffIndex + 1) is explicit task. 
+ * In this case, we assume that task create count at histLabel[diffIndex] 
+ * is smaller than task create count at curLabel[diffIndex]. And 
+ * T(histLabel) must happens before T(curLabel) because the sub parallel
+ * region associated with implicit task T(histLabel, diffIndex + 1) syncs
+ * all descendent tasks inside the parallel region.
+ */
 bool analyzeNextImpExp(Label* histLabel, Label* curLabel, int diffIndex) {
-  // TODO
+  auto histSeg = histLabel->getKthSegment(diffIndex);
+  auto curSeg = curLabel->getKthSegment(diffIndex);
+
   return true;
 }
 
