@@ -233,7 +233,11 @@ bool analyzeSameImpTask(Label* histLabel, Label* curLabel, int diffIndex) {
 bool analyzeNextImpExp(Label* histLabel, Label* curLabel, int diffIndex) {
   auto histSeg = histLabel->getKthSegment(diffIndex);
   auto curSeg = curLabel->getKthSegment(diffIndex);
-
+  uint64_t histTaskcreate, curTaskcreate;
+  histSeg->getTaskcreate(histTaskcreate);
+  curSeg->getTaskcreate(curTaskcreate);
+  RAW_CHECK(histTaskcreate < curTaskcreate, "unexpecting hist task create \
+          count < cur task create count");
   return true;
 }
 
