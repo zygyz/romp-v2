@@ -9,6 +9,7 @@ namespace romp {
  * segments.
  */
 #define CASE_SHIFT 2
+#define DBEUG_CORE
 
 enum CheckCase {
   eImpImp = eImplicit | (eImplicit << CASE_SHIFT),

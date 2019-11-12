@@ -233,6 +233,8 @@ bool analyzeSameImpTask(Label* histLabel, Label* curLabel, int diffIndex) {
  * histLabel[diffIndex] and curLabel[diffIndex] should have been different.
  */
 bool analyzeNextImpExp(Label* histLabel, Label* curLabel, int diffIndex) {
+  //TODO: this check may be eliminated in production
+#ifdef DEBUG_CORE
   auto histSeg = histLabel->getKthSegment(diffIndex);
   auto curSeg = curLabel->getKthSegment(diffIndex);
   uint64_t histTaskcreate, curTaskcreate;
@@ -240,6 +242,7 @@ bool analyzeNextImpExp(Label* histLabel, Label* curLabel, int diffIndex) {
   curSeg->getTaskcreate(curTaskcreate);
   RAW_CHECK(histTaskcreate > curTaskcreate, "unexpecting hist task create \
          count <= cur task create count");
+#endif
   return false;
 }
 
@@ -247,12 +250,33 @@ bool analyzeNextImpExp(Label* histLabel, Label* curLabel, int diffIndex) {
  * This function analyzes case when T(histLabel, diffIndex) and 
  * T(curLabel, diffIndex) are the same implicit task, T'. T(histLabel) and
  * T(curLabel) are descendent tasks of T'. T(histLabel, diffIndex+1) is
- * implicit task, T(curLabel, diffIndex+1) is workshare task. 
+ * implicit task, T(curLabel, diffIndex+1) is workshare task. The workshare
+ * task must be created first (If the implicit task is created first, it has
+ * to be joined before creating the workshare task, then the offset field in 
+ * histLabel[diffIndex] and curLabel[diffIndex] would be different) and does 
+ * not encounter the implicit barrier because of the nowait clause (If there 
+ * is no nowait clause, the implicit barrier would have made the offset field 
+ * in histLabel[diffIndex], curLabel[diffIndex] different). 
  */
 bool analzyeNextImpWork(Label* histLabel, Label* curLabel, int diffIndex) {
-  return true;
+#ifdef DEBUG_CORE
+  auto histSeg = histLabel->getKthSegment(diffIndex);
+  auto curSeg = curLabel->getKthSegment(diffIndex);
+  uint64_t histLoopCnt, curLoopCnt;
+  histSeg->getLoopCount(histLoopCnt);
+  curSeg->getLoopCount(curLoopCnt);
+  RAW_CHECK(histLoopCnt > curLoopCnt, "unexpecting hist loop count <= cur loop\
+          count");
+#endif
+  return false;
 }
 
+/*
+ * This function analyes case when T(histLabel, diffIndex) and 
+ * T(curLabel, diffIndex) are the same implicit task, T'. T(histLabel) and 
+ * T(curLabel) are descendent tasks of T'. T(histLabel, diffIndex+1) is
+ * explicit task, T(curLabel, diffIndex+1) is implicit task. 
+ */
 bool analyzeNextExpImp(Label* histLabel, Label* curLabel, int diffIndex) {
   return true;
 }
