@@ -20,15 +20,20 @@ public:
   virtual SegmentType getType() const = 0;
   virtual std::shared_ptr<Segment> clone() const = 0;  
   virtual void setOffsetSpan(uint64_t offset, uint64_t span) = 0;
-  virtual void getOffsetSpan(uint64_t& offset, uint64_t& span) const = 0;
   virtual void setTaskwait(uint64_t taskwait) = 0;
-  virtual void getTaskwait(uint64_t& taskwait) const = 0;
   virtual void setTaskcreate(uint64_t taskcreate) = 0; 
-  virtual void getTaskcreate(uint64_t& taskcreate) const = 0;
   virtual void setPhase(uint64_t phase) = 0;
-  virtual void getPhase(uint64_t& phase) const = 0;
   virtual void setLoopCount(uint64_t loopCount) = 0;
-  virtual void getLoopCount(uint64_t& loopCount) const = 0;  
+  virtual void setTaskGroupId(uint32_t taskGroupId) = 0;
+  virtual void setTaskGroupLevel(uint32_t taskGroupLevel) = 0;
+  virtual void getOffsetSpan(uint64_t& offset, uint64_t& span) const = 0;
+  virtual uint64_t getTaskwait() const = 0;
+  virtual uint64_t getTaskcreate() const = 0;
+  virtual uint64_t getPhase() const = 0;
+  virtual uint64_t getLoopCount() const = 0;  
+  virtual uint32_t getTaskGroupId() const = 0;
+  virtual uint32_t getTaskGroupLevel() const = 0;
+
   virtual bool operator==(const Segment& rhs) const = 0;
   virtual bool operator!=(const Segment& rhs) const = 0;
   virtual ~Segment() = default;
@@ -48,20 +53,25 @@ public:
   SegmentType getType() const override;
   std::shared_ptr<Segment> clone() const override;
   void setOffsetSpan(uint64_t offset, uint64_t span) override;
-  void getOffsetSpan(uint64_t& offset, uint64_t& span) const override;
   void setTaskwait(uint64_t taskwait) override;
-  void getTaskwait(uint64_t& taskwait) const override;
   void setTaskcreate(uint64_t taskcreate) override;
-  void getTaskcreate(uint64_t& taskcreate) const override;
   void setPhase(uint64_t phase) override;
-  void getPhase(uint64_t& phase) const override;
   void setLoopCount(uint64_t loopCount) override;
-  void getLoopCount(uint64_t& loopCount) const override;
+  void setTaskGroupId(uint32_t taskGroupId) override;
+  void setTaskGroupLevel(uint32_t taskGroupLevel) override;
+  void getOffsetSpan(uint64_t& offset, uint64_t& span) const override;
+  uint64_t getTaskwait() const override;
+  uint64_t getTaskcreate() const override;
+  uint64_t getPhase() const override;
+  uint64_t getLoopCount() const override;
+  uint32_t getTaskGroupId() const override;
+  uint32_t getTaskGroupLevel() const override;
   bool operator==(const Segment& rhs) const override; 
   bool operator!=(const Segment& rhs) const override;
   uint64_t getValue() const;
 protected:
   uint64_t _value;
+  uint64_t _taskGroup;
 };
 
 /*

@@ -131,11 +131,10 @@ bool analyzeSiblingImpTask(Label* histLabel, Label* curLabel, int diffIndex) {
       // section construct does not have ordered section 
       return false;
     } 
-    uint64_t histSegLoopCount, curSegLoopCount, histPhase, curPhase;
     auto histSeg = histLabel->getKthSegment(diffIndex);
     auto curSeg = curLabel->getKthSegment(diffIndex);
-    histSeg->getLoopCount(histSegLoopCount);
-    curSeg->getLoopCount(curSegLoopCount);
+    auto histSegLoopCount = histSeg->getLoopCount();
+    auto curSegLoopCount = curSeg->getLoopCount();
     if (histSegLoopCount == curSegLoopCount) {
       return analyzeOrderedSection(histLabel, curLabel, diffIndex + 1);
     } 
@@ -146,7 +145,8 @@ bool analyzeSiblingImpTask(Label* histLabel, Label* curLabel, int diffIndex) {
 
 /*
  * This function analyzes if Task(histLabel) is ordered with ordered section 
- * with Task(curLabel) 
+ * with Task(curLabel). T(histLabel, startIndex) and T(curLabel, startIndex) 
+ * are workshare task.
  */
 bool analyzeOrderedSection(Label* histLabel, Label* curLabel, int startIndex) {
   auto histBaseSeg  = histLabel->getKthSegment(startIndex);
@@ -159,12 +159,10 @@ bool analyzeOrderedSection(Label* histLabel, Label* curLabel, int startIndex) {
   } 
   auto histWorkShareId = histSegment->getWorkShareId();
   auto curWorkShareId = curSegment->getWorkShareId(); 
-  if (histWorkShareId >= curWorkShareId) {
-    RAW_LOG(FATAL, "not expecting hist iter id >= cur iter id");
-  }
-  uint64_t histPhase, curPhase;
-  histBaseSeg->getPhase(histPhase);
-  curBaseSeg->getPhase(curPhase);
+  RAW_CHECK(histWorkShareId < curWorkShareId, "not expecting hist iter id >= \
+          cur iter id");
+  auto histPhase = histBaseSeg->getPhase();
+  auto curPhase = curBaseSeg->getPhase();
   auto histExitRank = computeExitRank(histPhase);
   auto curEnterRank = computeEnterRank(curPhase);
   if (histExitRank < curEnterRank && 
@@ -238,9 +236,8 @@ bool analyzeNextImpExp(Label* histLabel, Label* curLabel, int diffIndex) {
   // it could be eliminated in production 
   auto histSeg = histLabel->getKthSegment(diffIndex);
   auto curSeg = curLabel->getKthSegment(diffIndex);
-  uint64_t histTaskcreate, curTaskcreate;
-  histSeg->getTaskcreate(histTaskcreate);
-  curSeg->getTaskcreate(curTaskcreate);
+  auto histTaskcreate = histSeg->getTaskcreate();
+  auto curTaskcreate = curSeg->getTaskcreate();
   RAW_CHECK(histTaskcreate > curTaskcreate, "unexpecting hist task create \
          count <= cur task create count");
 #endif
@@ -264,8 +261,8 @@ bool analzyeNextImpWork(Label* histLabel, Label* curLabel, int diffIndex) {
   auto histSeg = histLabel->getKthSegment(diffIndex);
   auto curSeg = curLabel->getKthSegment(diffIndex);
   uint64_t histLoopCnt, curLoopCnt;
-  histSeg->getLoopCount(histLoopCnt);
-  curSeg->getLoopCount(curLoopCnt);
+  auto histLoopCnt = histSeg->getLoopCount();
+  auto curLoopCnt = curSeg->getLoopCount();
   RAW_CHECK(histLoopCnt > curLoopCnt, "unexpecting hist loop count <= cur loop\
           count");
 #endif
@@ -285,16 +282,28 @@ bool analyzeNextExpImp(Label* histLabel, Label* curLabel, int diffIndex) {
 #ifdef DBEUG_CORE
   auto histSeg = histLabel->getKthSegment(diffIndex);
   auto curSeg = curLabel->getKthSegment(diffIndex);
-  uint64_t histTaskcreate, curTaskcreate;
-  histSeg->getTaskcreate(histTaskcreate);
-  curSeg->getTaskcreate(curTaskcreate);
+  auto histTaskcreate = histSeg->getTaskcreate();
+  auto curTaskcreate = curSeg->getTaskcreate();
   RAW_CHECK(curTaskcreate > histTaskcreate, "unexpecting cur task create \
           count <= hist task create count");
 #endif
   return false;
 }
 
+/*
+ * This function analyzes case when T(histLabel, diffIndex) and 
+ * T(curLabel, diffIndex) are the same implicit task, T'. T(histLabel) and
+ * T(curLabel) are descendent tasks of T'. T(histLabel, diffIndex+1) is 
+ * explicit task, T(curLabel, diffIndex+1) is also explicit task. 
+ * Check syncrhonization that could affect the happens-before relation. 
+ * e.g., taskwait, taskgroup
+ */
 bool analyzeNextExpExp(Label* histLabel, Label* curLabel, int diffIndex) {
+  auto histSeg = histLabel->getKthSegment(diffIndex);
+  auto curSeg = curLabel->getKthSegment(diffIndex);
+  auto histTaskwait = histSeg->getTaskwait();
+  auto curTaskwait = curSeg->getTaskwait();
+  //TODO: 
   return true;
 }
 
@@ -316,16 +325,38 @@ bool analyzeNextWorkWork(Label* histLabel, Label* curLabel, int diffIndex) {
 
 
 
-uint64_t computeExitRank(uint64_t phase) {
+uint32_t computeExitRank(uint32_t phase) {
   return phase - (phase % 2); 
 }
 
-uint64_t computeEnterRank(uint64_t phase) {
+uint32_t computeEnterRank(uint32_t phase) {
   return phase + (phase % 2);
 }
 
+/*
+ * This function determines whether the finish of task T(label, startIndex) 
+ * finalizes all its descendent tasks. i.e., not possible for any one of 
+ * its descendent tasks to continue exists after T(label, startIndex) finishes.
+ */
 bool inFinishScope(Label* label, int startIndex) {
-  //TODO: implement the check of finish scope
+  auto lenLabel = label->getLabelLength();
+  if (startIndex == lenLabel - 1) {
+    // T(label, startIndex) is already the leaf task
+    return true;
+  } 
+  /* Iterate over label segments. If a segment s is implicit, 
+   * T(label, s) is implicit, then the descendent tasks should sync
+   * with the parallel region associated with T(label, s). If a 
+   * segment marks the start of taskgroup construct, it also means 
+   * that descendent tasks should sync with the taskgroup.
+   */
+  for (int i = startIndex; i < lenLabel; ++i) {
+    auto seg = label->getKthSegment(i);   
+    auto segType = seg->getType();
+    if (segType == eImplicit) {
+      return true;
+    } 
+  } 
   return true;
 }
 

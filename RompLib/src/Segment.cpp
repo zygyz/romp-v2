@@ -14,6 +14,7 @@
 #define TASK_CREATE_MASK     0x00000000000fffe0
 #define SINGLE_MASK          0xc000000000000000
 #define WORKSHARE_TYPE_MASK  0x0000000000000004
+#define TASKGROUP_LEVEL_MASK 0x00000000ffffffff
 
 #define OFFSET_SPAN_WIDTH 16
 
@@ -80,6 +81,32 @@ void BaseSegment::getOffsetSpan(uint64_t& offset, uint64_t& span) const {
   span = (_value & SPAN_MASK) >> SPAN_SHIFT;
 }
 
+/* 
+ * Taskgroup id increases monotonically. It is at the upper half of the
+ * 64 bits long word _taskGroup 
+ */
+uint32_t BaseSegment::getTaskGroupId() const {
+  return static_cast<uint32_t>(_taskGroup >> 32);
+}
+                                   
+void BaseSegment::setTaskGroupId(uint32_t taskGroupId) {
+  _taskGroup &= TASKGROUP_LEVEL_MASK; // clear the upper half 
+  _taskGroup |= (static_cast<uint64_t>(taskGroupId) << 32) & 
+      ~TASKGROUP_LEVEL_MASK;
+}
+
+/*
+ * Taskgroup level marks the nested number of level of taskgorup. 
+ * It is the lower half of the 64 bits long word _taskGroup
+ */
+uint32_t BaseSegment::getTaskGroupLevel() const {
+  return static_cast<uint32_t>(_taskGroup & TASKGROUP_LEVEL_MASK); 
+}
+
+void BaseSegment::setTaskGroupLevel(uint32_t taskGroupLevel) {
+  _taskGroup |= static_cast<uint64_t>(taskGroupLevel) & TASKGROUP_LEVEL_MASK;
+}
+
 bool BaseSegment::operator==(const Segment& segment) const {
   return _value == dynamic_cast<const BaseSegment&>(segment)._value;
 }
@@ -96,8 +123,9 @@ void BaseSegment::setTaskwait(uint64_t taskwait) {
   _value |= (taskwait << TASKWAIT_SHIFT) & TASKWAIT_MASK;
 }
 
-void BaseSegment::getTaskwait(uint64_t& taskwait) const {
-  taskwait = (_value & TASKWAIT_MASK) >> TASKWAIT_SHIFT;
+uint64_t BaseSegment::getTaskwait() const {
+  uint64_t taskwait = (_value & TASKWAIT_MASK) >> TASKWAIT_SHIFT;
+  return taskwait;
 }
 
 void BaseSegment::setTaskcreate(uint64_t taskcreate) { 
@@ -106,8 +134,9 @@ void BaseSegment::setTaskcreate(uint64_t taskcreate) {
   _value |= (taskcreate << TASK_CREATE_SHIFT) & TASK_CREATE_MASK;
 }
 
-void BaseSegment::getTaskcreate(uint64_t& taskcreate) const {
-  taskcreate = (_value & TASK_CREATE_MASK) >> TASK_CREATE_SHIFT;
+uint64_t BaseSegment::getTaskcreate() const {
+  uint64_t taskcreate = (_value & TASK_CREATE_MASK) >> TASK_CREATE_SHIFT;
+  return taskcreate;
 }
 
 void BaseSegment::setPhase(uint64_t phase) {
@@ -117,8 +146,9 @@ void BaseSegment::setPhase(uint64_t phase) {
 
 }
 
-void BaseSegment::getPhase(uint64_t& phase) const {
-  phase = (_value & PHASE_MASK) >> PHASE_SHIFT;
+uint64_t BaseSegment::getPhase() const {
+  uint64_t phase = (_value & PHASE_MASK) >> PHASE_SHIFT;
+  return phase;
 }
 
 void BaseSegment::setLoopCount(uint64_t loopCount) {
@@ -127,8 +157,8 @@ void BaseSegment::setLoopCount(uint64_t loopCount) {
   _value |= (loopCount << LOOP_CNT_SHIFT) & LOOP_CNT_MASK;
 }
 
-void BaseSegment::getLoopCount(uint64_t& loopCount) const {
-  loopCount = (_value & LOOP_CNT_MASK) >> LOOP_CNT_SHIFT;
+uint64_t BaseSegment::getLoopCount() const {
+  uint64_t loopCount = (_value & LOOP_CNT_MASK) >> LOOP_CNT_SHIFT;
 }
 
 void BaseSegment::setType(SegmentType type) {

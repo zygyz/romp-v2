@@ -99,26 +99,28 @@ void on_ompt_callback_sync_region(
     return;
   }
   auto taskDataPtr = static_cast<TaskData*>(taskData->ptr);
-  auto label = taskDataPtr->label;  // never std::move here!
+  auto labelPtr = (taskDataPtr->label).get();  // never std::move here!
   std::shared_ptr<Label> mutatedLabel = nullptr;
   if (endPoint == ompt_scope_begin && kind == ompt_sync_region_taskgroup) {
     // TODO: start of taskgroup construct 
+    mutatedLabel = mutateTaskGroupBegin(labelPtr);
   } else if (endPoint == ompt_scope_end) {
-    auto labelPtr = label.get();
     switch(kind) {
       case ompt_sync_region_taskwait:
         mutatedLabel = mutateTaskWait(labelPtr);
-        taskDataPtr->label = std::move(mutatedLabel);
         break;
       case ompt_sync_region_barrier:
         mutatedLabel = mutateBarrierEnd(labelPtr);
-        taskDataPtr->label = std::move(mutatedLabel);
         break;
       case ompt_sync_region_taskgroup:
-        // TODO
+        mutatedLabel = mutateTaskGroupEnd(labelPtr);
+        break;
+      default:
+        RAW_LOG(FATAL, "unknown endpoint type");
         break;
     }
   }
+  taskDataPtr->label = std::move(mutatedLabel);
   return;
 }
 

@@ -161,8 +161,7 @@ std::shared_ptr<Label> mutateBarrierEnd(Label* label) {
 std::shared_ptr<Label> mutateTaskWait(Label* label) {
   auto newLabel = std::make_shared<Label>(*label);
   auto lastSegment = newLabel->popSegment(); // replace the last segment
-  uint64_t taskwait;
-  lastSegment->getTaskwait(taskwait);
+  auto taskwait = lastSegment->getTaskwait();
   taskwait += 1;
   auto newSegment = lastSegment->clone();
   newSegment->setTaskwait(taskwait);
@@ -178,8 +177,7 @@ std::shared_ptr<Label> mutateTaskWait(Label* label) {
 std::shared_ptr<Label> mutateOrderSection(Label* label) {
   auto newLabel = std::make_shared<Label>(*label);
   auto lastSegment = newLabel->popSegment(); // replace the last segment
-  uint64_t phase;
-  lastSegment->getPhase(phase);
+  auto phase = lastSegment->getPhase();
   phase += 1;
   auto newSegment = lastSegment->clone();
   newSegment->setPhase(phase);
@@ -207,9 +205,8 @@ std::shared_ptr<Label> mutateLoopBegin(Label* label) {
 std::shared_ptr<Label> mutateLoopEnd(Label* label) {
   auto newLabel = std::make_shared<Label>(*label); 
   newLabel->popSegment();
-  uint64_t loopCount = 0;
   auto segment = newLabel->popSegment();
-  segment->getLoopCount(loopCount);
+  auto loopCount = segment->getLoopCount();
   loopCount += 1;
   auto newSegment = segment->clone(); 
   newSegment->setLoopCount(loopCount);
@@ -307,6 +304,45 @@ std::shared_ptr<Label> mutateIterDispatch(Label* label, uint64_t id) {
 
 std::shared_ptr<Label> mutateSectionDispatch(Label* label, void* id) {  
   return mutateWorkShareDispatch(label, reinterpret_cast<uint64_t>(id), true);
+}
+
+/*
+ * Mutate the label of the task that encounters the beginnning of task group
+ * This is done by incrementing the task group level by one, and increment the
+ * task group id by one
+ */
+std::shared_ptr<Label> mutateTaskGroupBegin(Label* label) {
+ auto newLabel = std::make_shared<Label>(*label);      
+ auto segment = newLabel->popSegment();
+ auto taskGroupId = segment->getTaskGroupId();
+ taskGroupId += 1;
+ auto taskGroupLevel = segment->getTaskGroupLevel();
+ taskGroupLevel += 1;
+ auto newSegment = segment->clone();
+ newSegment->setTaskGroupId(taskGroupId);
+ newSegment->setTaskGroupLevel(taskGroupLevel);
+ newLabel->appendSegment(newSegment);
+ return newLabel;
+}
+
+/*
+ * Mutate the label of the task that encounters the end of task group. 
+ * This is done by decrementing the task group level by one, and increment
+ * the task group id by one
+ */
+std::shared_ptr<Label> mutateTaskGroupEnd(Label* label) {
+  auto newLabel = std::make_shared<Label>(*label);
+  auto segment = newLabel->popSegment();
+  auto taskGroupId = segment->getTaskGroupId();
+  taskGroupId += 1;
+  auto taskGroupLevel = segment->getTaskGroupLevel();
+  taskGroupLevel -= 1;
+  RAW_CHECK(taskGroupLevel >= 0, "not expecting task group level < 0");
+  auto newSegment = segment->clone();
+  newSegment->setTaskGroupId(taskGroupId);
+  newSegment->setTaskGroupLevel(taskGroupLevel);
+  newLabel->appendSegment(newSegment);
+  return newLabel;
 }
 
 }
