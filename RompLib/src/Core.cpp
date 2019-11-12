@@ -233,8 +233,9 @@ bool analyzeSameImpTask(Label* histLabel, Label* curLabel, int diffIndex) {
  * histLabel[diffIndex] and curLabel[diffIndex] should have been different.
  */
 bool analyzeNextImpExp(Label* histLabel, Label* curLabel, int diffIndex) {
-  //TODO: this check may be eliminated in production
 #ifdef DEBUG_CORE
+  // checking like this is to make sure label segments meet our expectation
+  // it could be eliminated in production 
   auto histSeg = histLabel->getKthSegment(diffIndex);
   auto curSeg = curLabel->getKthSegment(diffIndex);
   uint64_t histTaskcreate, curTaskcreate;
@@ -275,10 +276,22 @@ bool analzyeNextImpWork(Label* histLabel, Label* curLabel, int diffIndex) {
  * This function analyes case when T(histLabel, diffIndex) and 
  * T(curLabel, diffIndex) are the same implicit task, T'. T(histLabel) and 
  * T(curLabel) are descendent tasks of T'. T(histLabel, diffIndex+1) is
- * explicit task, T(curLabel, diffIndex+1) is implicit task. 
+ * explicit task, T(curLabel, diffIndex+1) is implicit task. For the same
+ * reason described in comment of `analyeNextImpWork`, implicit task 
+ * T(curLabel, diffIndex+1) must not be created before explicit task
+ * T(histLabel, diffIndex+1). 
  */
 bool analyzeNextExpImp(Label* histLabel, Label* curLabel, int diffIndex) {
-  return true;
+#ifdef DBEUG_CORE
+  auto histSeg = histLabel->getKthSegment(diffIndex);
+  auto curSeg = curLabel->getKthSegment(diffIndex);
+  uint64_t histTaskcreate, curTaskcreate;
+  histSeg->getTaskcreate(histTaskcreate);
+  curSeg->getTaskcreate(curTaskcreate);
+  RAW_CHECK(curTaskcreate > histTaskcreate, "unexpecting cur task create \
+          count <= hist task create count");
+#endif
+  return false;
 }
 
 bool analyzeNextExpExp(Label* histLabel, Label* curLabel, int diffIndex) {
