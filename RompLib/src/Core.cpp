@@ -226,9 +226,11 @@ bool analyzeSameImpTask(Label* histLabel, Label* curLabel, int diffIndex) {
  * implicit task, T(curLabel, diffIndex + 1) is explicit task. 
  * In this case, we assume that task create count at histLabel[diffIndex] 
  * is smaller than task create count at curLabel[diffIndex]. And 
- * T(histLabel) must happens before T(curLabel) because the sub parallel
- * region associated with implicit task T(histLabel, diffIndex + 1) syncs
- * all descendent tasks inside the parallel region.
+ * T(histLabel) must be in parallel with T(curLabel). Because if implicit
+ * task T(histLabel, diffIndex + 1) is created first, the explicit task
+ * T(curLabel, diffIndex + 1) can only be created after the end of parallel
+ * region with T(histLabel, diffIndex+1). Then the offset field in
+ * histLabel[diffIndex] and curLabel[diffIndex] should have been different.
  */
 bool analyzeNextImpExp(Label* histLabel, Label* curLabel, int diffIndex) {
   auto histSeg = histLabel->getKthSegment(diffIndex);
@@ -236,12 +238,17 @@ bool analyzeNextImpExp(Label* histLabel, Label* curLabel, int diffIndex) {
   uint64_t histTaskcreate, curTaskcreate;
   histSeg->getTaskcreate(histTaskcreate);
   curSeg->getTaskcreate(curTaskcreate);
-  RAW_CHECK(histTaskcreate < curTaskcreate, "unexpecting hist task create \
-          count < cur task create count");
-  return true;
+  RAW_CHECK(histTaskcreate > curTaskcreate, "unexpecting hist task create \
+         count <= cur task create count");
+  return false;
 }
 
-
+/*
+ * This function analyzes case when T(histLabel, diffIndex) and 
+ * T(curLabel, diffIndex) are the same implicit task, T'. T(histLabel) and
+ * T(curLabel) are descendent tasks of T'. T(histLabel, diffIndex+1) is
+ * implicit task, T(curLabel, diffIndex+1) is workshare task. 
+ */
 bool analzyeNextImpWork(Label* histLabel, Label* curLabel, int diffIndex) {
   return true;
 }
