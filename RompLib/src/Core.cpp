@@ -168,23 +168,15 @@ bool analyzeOrderedSection(Label* histLabel, Label* curLabel, int startIndex) {
   if (histExitRank < curEnterRank) {
     auto histLen = histLabel->getLabelLength();
     auto curLen = curLabel->getLabelLength();
-    if (histLen == curLen && startIndex == histLen - 1) {
-      // both T(histLabel, startIndex) and T(curLabel, startIndex) are 
-      // leaf task
-      return true;
-    }
     if (startIndex == histLen - 1) {
       /* T(histLabel, startIndex) is leaf task, while T(curLabel) is descendent
-       * task of T(curLabel. startIndex), we have to check if T(curLabel) 
-       * finishes before T(curLabel, startIndex + 1) finishes
+       * task of T(curLabel. startIndex), ordered section has imposed happens
+       * before relation in this case
        */
-      return inFinishScope(curLabel, startIndex + 1);
-    } else if (startIndex == curLen - 1) {
-      return inFinishScope(histLabel, startIndex + 1);
+      return true;
     } else {
-      return inFinishScope(curLabel, startIndex + 1) && inFinishScope(histLabel,
-              startIndex + 1);
-    }
+      return inFinishScope(histLabel, startIndex + 1);
+    } 
   }
   return false;
 }
