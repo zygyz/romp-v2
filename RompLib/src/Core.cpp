@@ -165,10 +165,26 @@ bool analyzeOrderedSection(Label* histLabel, Label* curLabel, int startIndex) {
   auto curPhase = curBaseSeg->getPhase();
   auto histExitRank = computeExitRank(histPhase);
   auto curEnterRank = computeEnterRank(curPhase);
-  if (histExitRank < curEnterRank && 
-      inFinishScope(histLabel, startIndex) &&
-      inFinishScope(curLabel, startIndex)) {
-    return true; 
+  if (histExitRank < curEnterRank) {
+    auto histLen = histLabel->getLabelLength();
+    auto curLen = curLabel->getLabelLength();
+    if (histLen == curLen && startIndex == histLen - 1) {
+      // both T(histLabel, startIndex) and T(curLabel, startIndex) are 
+      // leaf task
+      return true;
+    }
+    if (startIndex == histLen - 1) {
+      /* T(histLabel, startIndex) is leaf task, while T(curLabel) is descendent
+       * task of T(curLabel. startIndex), we have to check if T(curLabel) 
+       * finishes before T(curLabel, startIndex + 1) finishes
+       */
+      return inFinishScope(curLabel, startIndex + 1);
+    } else if (startIndex == curLen - 1) {
+      return inFinishScope(histLabel, startIndex + 1);
+    } else {
+      return inFinishScope(curLabel, startIndex + 1) && inFinishScope(histLabel,
+              startIndex + 1);
+    }
   }
   return false;
 }
@@ -344,11 +360,24 @@ bool inFinishScope(Label* label, int startIndex) {
     // T(label, startIndex) is already the leaf task
     return true;
   } 
-  /* Iterate over label segments. If a segment s is implicit, 
-   * T(label, s) is implicit, then the descendent tasks should sync
-   * with the parallel region associated with T(label, s). If a 
-   * segment marks the start of taskgroup construct, it also means 
-   * that descendent tasks should sync with the taskgroup.
+  auto seg = label->getKthSegment(startIndex);
+  auto segType = seg->getType();
+  if (segType == eImplicit) {
+    // descendent tasks of this implicit task will finishes as the implicit
+    // task finishes 
+    return true;
+  }
+  // label[startIndex] is either a workshare segment or an explicit segment
+  auto taskGroupLevel = seg->getTaskGroupLevel();
+  if (taskGroupLevel > 0) {
+    // T(label) is wrapped in a taskgroup construct, should finish before 
+    // T(label, startInde) finish
+    return true;
+  }
+  /*
+   * T(label, startIndex) is not an implicit task. We travese the label segment
+   * to determine if it is possible for T(label) to be not finished when 
+   * T(label, startIndex) finishes. If we encountered 
    */
   for (int i = startIndex; i < lenLabel; ++i) {
     auto seg = label->getKthSegment(i);   
@@ -356,6 +385,11 @@ bool inFinishScope(Label* label, int startIndex) {
     if (segType == eImplicit) {
       return true;
     } 
+    // if 
+    auto taskGroupLevel = seg->getTaskGroupLevel();
+    if (taskGroupLevel > 0) {
+       
+    }
   } 
   return true;
 }
