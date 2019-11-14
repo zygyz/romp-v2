@@ -36,7 +36,7 @@ bool analyzeNextExpWork(Label* histLabel, Label* curLabel, int diffIndex);
 bool analyzeNextWorkImp(Label* histLabel, Label* curLabel, int diffIndex);
 bool analyzeNextWorkExp(Label* histLabel, Label* curLabel, int diffIndex);
 bool analyzeNextWorkWork(Label* histLabel, Label* curLabel, int diffIndex);
-
+bool analyzeOrderedDescendents(Label* histLabel, int startIndex);
 
 bool inFinishScope(Label* label, int startIndex);
 bool dispatchAnalysis(CheckCase checkCase, Label* hist, Label* cur, int index);

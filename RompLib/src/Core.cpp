@@ -96,11 +96,11 @@ bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex) {
 
 /*
  * This function analyzes happens-before relation when first pair of different 
- * segments are implicit segment, where offset are different. This means the 
- * T(histLabel, diffIndex) and T(curLabel, diffIndex) are two sibling implicit 
- * tasks in the same parallel region. T(histLabel) and T(curLabel) are 
- * descendent tasks of T(histLabel, diffIndex), T(curLabel, diffIndex) 
- * respectively.
+ * segments are implicit segment, where offset are different and offset%span 
+ * are different. This means the T(histLabel, diffIndex) and 
+ * T(curLabel, diffIndex) are two sibling implicit tasks in the same parallel 
+ * region. T(histLabel) and T(curLabel) are descendent tasks of 
+ * T(histLabel, diffIndex), T(curLabel, diffIndex) respectively.
  *
  * Return true if T(histLabel) -> T(curLabel)
  * Return false if T(histLabel) || T(curLabel)
@@ -175,12 +175,48 @@ bool analyzeOrderedSection(Label* histLabel, Label* curLabel, int startIndex) {
        */
       return true;
     } else {
-      return inFinishScope(histLabel, startIndex + 1);
+      /*
+       * T(histLabel)
+       */
+      return analyzeOrderedDescendents(histLabel, startIndex);
     } 
   }
   return false;
 }
 
+/*
+ * This function analyzes if T(histLabel) sync with T(histLabel, startIndex) 
+ * and thus is ordered by ordered section. 
+ *
+ * Return true if T(histLabel) sync with T(histLabel, startIndex) within the 
+ * effect of ordered section
+ * Return false if T(histLabel) does not sync with ordered section
+ */
+bool analyzeOrderedDescendents(Label* histLabel, int startIndex) {
+  auto nextSeg = histLabel->getKthSegment(startIndex + 1);
+  auto nextSegType = nextSeg->getType();
+  if (nextSegType == eImplicit) {
+    // we know that implicit task syncs with its parent task
+    return true;
+  } else if (nextSegType == eWorkShare) {
+    RAW_LOG(FATAL, "does not expect next segment of workshare seg to be \
+           workshare segment"); 
+  } else if (nextSegType == eExplicit) {
+    /*
+     * Explicit task does not interact with ordered section. i.e., if an
+     * explicit task is created inside an ordered section, the finish 
+     * of ordered section does not sync the explicit task. Here the idea 
+     * is that since we have already moved to next iteration of ordered 
+     * section, T(histLabel, startIndex+1) is an explicit task, and 
+     * T(histLabel) is its descendent task. If T(histLabel) does sync by
+     * the ordered section, there must be some explicit tasking sync 
+     * applied (e.g., taskwait, taskgroup) within the phase of 
+     * T(histLabel, startIndex)'s creation. 
+     */ 
+     
+       
+  }
+}
 /*
  * This function analyzes happens-before relation when first pair of different 
  * segments are implicit segment, where offset are the same. This means that 
@@ -355,7 +391,7 @@ bool inFinishScope(Label* label, int startIndex) {
   auto seg = label->getKthSegment(startIndex);
   auto segType = seg->getType();
   if (segType == eImplicit) {
-    // descendent tasks of this implicit task will finishes as the implicit
+    // descendent tasks of this implicit task will finish as the implicit
     // task finishes 
     return true;
   }
@@ -363,14 +399,10 @@ bool inFinishScope(Label* label, int startIndex) {
   auto taskGroupLevel = seg->getTaskGroupLevel();
   if (taskGroupLevel > 0) {
     // T(label) is wrapped in a taskgroup construct, should finish before 
-    // T(label, startInde) finish
+    // T(label, startIndex) finish
     return true;
   }
-  /*
-   * T(label, startIndex) is not an implicit task. We travese the label segment
-   * to determine if it is possible for T(label) to be not finished when 
-   * T(label, startIndex) finishes. If we encountered 
-   */
+   
   for (int i = startIndex; i < lenLabel; ++i) {
     auto seg = label->getKthSegment(i);   
     auto segType = seg->getType();
