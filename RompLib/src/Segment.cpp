@@ -14,6 +14,7 @@
 #define TASK_CREATE_MASK     0x00000000000fffe0
 #define SINGLE_MASK          0xc000000000000000
 #define WORKSHARE_TYPE_MASK  0x0000000000000004
+#define TASKWAIT_SYNC_MASK   0x0000000000000008
 #define TASKGROUP_LEVEL_MASK 0x00000000ffffffff
 
 #define OFFSET_SPAN_WIDTH 16
@@ -40,6 +41,7 @@ namespace romp {
  * [24, 27]: phase count
  * [20, 23]: loop count
  * [5, 19]: task create count
+ * [3]: mark if current task (must be explicit) syncs with taskwait 
  * [2]: mark if current workshare semgent is section, bit set: yes. 
  *      otherwise, sgment is iteration
  *
@@ -101,6 +103,14 @@ void BaseSegment::setTaskGroupId(uint32_t taskGroupId) {
  */
 uint32_t BaseSegment::getTaskGroupLevel() const {
   return static_cast<uint32_t>(_taskGroup & TASKGROUP_LEVEL_MASK); 
+}
+
+void BaseSegment::setTaskwaited() {
+  _value |= TASKWAIT_SYNC_MASK; 
+}
+
+bool BaseSegment::isTaskwaited() const {
+  return (_value & TASKWAIT_SYNC_MASK) != 0;
 }
 
 void BaseSegment::setTaskGroupLevel(uint32_t taskGroupLevel) {
