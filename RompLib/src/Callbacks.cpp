@@ -87,6 +87,20 @@ void on_ompt_callback_implicit_task(
   }
 }
 
+/*
+ * Once a task encounters a taskwait clause, mark the task's explicit children
+ * to be taskwaited. So that the anlaysis algorithm knows that the explicit
+ * child is synchronized with taskwait.
+ */
+void markExpChildrenTaskwait(TaskData* taskData) {
+  for (const auto& child : taskData->childExpTaskData) {
+    auto childTaskData = static_cast<const TaskData*>(child); 
+    auto lenLabel = childTaskData->label->getLabelLength(); 
+    childTaskData->label->getKthSegment(lenLabel - 1)->setTaskwaited();
+  }
+  taskData->childExpTaskData.clear(); // clear the children after taskwait
+}
+
 void on_ompt_callback_sync_region(
        ompt_sync_region_t kind,
        ompt_scope_endpoint_t endPoint,
@@ -108,6 +122,7 @@ void on_ompt_callback_sync_region(
     switch(kind) {
       case ompt_sync_region_taskwait:
         mutatedLabel = mutateTaskWait(labelPtr);
+
         break;
       case ompt_sync_region_barrier:
         mutatedLabel = mutateBarrierEnd(labelPtr);
@@ -359,6 +374,7 @@ void on_ompt_callback_task_create(
     auto parentLabel = (parentTaskData->label).get();
     auto newTaskLabel = genExpTaskLabel(parentLabel);
     taskData->label = std::move(newTaskLabel);
+    parentTaskData->childExpTaskData.push_back(static_cast<void*>(taskData));
   } else if (flags == ompt_task_target) {
     // TODO: prepare the task data pointer for target 
     RAW_LOG(FATAL, "ompt_task_target not implemented yet");

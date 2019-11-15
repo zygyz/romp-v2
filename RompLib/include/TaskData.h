@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <vector>
 
 namespace romp {
 class Label;
@@ -15,6 +16,7 @@ typedef struct TaskData {
   std::shared_ptr<Label> label;
   std::shared_ptr<LockSet> lockSet;
   bool inReduction;
+  std::vector<void*> childExpTaskData;
   TaskData() {
     label = nullptr;
     lockSet = nullptr;
