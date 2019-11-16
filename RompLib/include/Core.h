@@ -23,20 +23,20 @@ enum CheckCase {
   eWorkWork = eWorkShare | (eWorkShare << CASE_SHIFT),
 }; 
 
-bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex);
+bool happensBefore(Label* hl, Label* cl, int& di, void* hp, void* cp);
 bool analyzeRaceCondition(const Record& histRecord, const Record& curRecord);
-bool analyzeSiblingImpTask(Label* histLabel, Label* curLabel, int diffIndex);
-bool analyzeSameImpTask(Label* histLabel, Label* curLabel, int diffIndex);
-bool analyzeOrderedSection(Label* histLabel, Label* curLabel, int startIndex);
-bool analyzeNextImpExp(Label* histLabel, Label* curLabel, int diffIndex);
-bool analyzeNextImpWork(Label* histLabel, Label* curLabel, int diffIndex);
-bool analyzeNextExpImp(Label* histLabel, Label* curLabel, int diffIndex);
-bool analyzeNextExpExp(Label* histLabel, Label* curLabel, int diffIndex);
-bool analyzeNextExpWork(Label* histLabel, Label* curLabel, int diffIndex);
-bool analyzeNextWorkImp(Label* histLabel, Label* curLabel, int diffIndex);
-bool analyzeNextWorkExp(Label* histLabel, Label* curLabel, int diffIndex);
-bool analyzeNextWorkWork(Label* histLabel, Label* curLabel, int diffIndex);
-bool analyzeOrderedDescendents(Label* histLabel, int startIndex);
+bool analyzeSiblingImpTask(Label* hl, Label* cl, int di, void* hp, void* cp);
+bool analyzeSameImpTask(Label* hl, Label* cl, int di, void* hp, void* cp);
+bool analyzeOrderedSection(Label* hl, Label* cl, int di, void* hp,void* cp);
+bool analyzeNextImpExp(Label* hl, Label* cl, int di);
+bool analyzeNextImpWork(Label* hl, Label* cl, int di);
+bool analyzeNextExpImp(Label* hl, Label* cl, int di);
+bool analyzeNextExpExp(Label* hl, Label* cl, int di);
+bool analyzeNextExpWork(Label* hl, Label* cl, int di);
+bool analyzeNextWorkImp(Label* hl, Label* cl, int di);
+bool analyzeNextWorkExp(Label* hl, Label* cl, int di);
+bool analyzeNextWorkWork(Label* hl, Label* cl, int di);
+bool analyzeOrderedDescendents(Label* hl, int si, void* hp, void* cp);
 
 bool inFinishScope(Label* label, int startIndex);
 bool dispatchAnalysis(CheckCase checkCase, Label* hist, Label* cur, int index);

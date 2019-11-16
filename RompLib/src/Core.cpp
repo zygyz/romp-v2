@@ -25,8 +25,11 @@ namespace romp {
 bool analyzeRaceCondition(const Record& histRecord, const Record& curRecord) {
   auto histLabel = histRecord.getLabel(); 
   auto curLabel = curRecord.getLabel(); 
+  auto histTaskPtr = histRecord.getTaskPtr();
+  auto curTaskPtr = curRecord.getTaskPtr();
   int diffIndex;
-  auto histBeforeCur = happensBefore(histLabel, curLabel, diffIndex);
+  auto histBeforeCur = happensBefore(histLabel, curLabel, diffIndex, 
+          histTaskPtr, curTaskPtr);
   return histBeforeCur;
 }
 
@@ -45,7 +48,8 @@ bool analyzeRaceCondition(const Record& histRecord, const Record& curRecord) {
  * Return false if hist task is logically concurrent with current task
  * Issue fatal warning if current task happens before hist task.
  */
-bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex) {
+bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex, 
+        void* histTaskPtr, void* curTaskPtr) {
   diffIndex = compareLabels(histLabel, curLabel);
   if (diffIndex < 0) {
     switch(diffIndex) {
@@ -86,10 +90,12 @@ bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex) {
          */
         return true; 
       } else {
-        return analyzeSiblingImpTask(histLabel, curLabel, diffIndex);
+        return analyzeSiblingImpTask(histLabel, curLabel, diffIndex, 
+                histTaskPtr, curTaskPtr);
       }
     } else { 
-      return analyzeSameImpTask(histLabel, curLabel, diffIndex); 
+      return analyzeSameImpTask(histLabel, curLabel, diffIndex, histTaskPtr,
+              curTaskPtr); 
     }
   }
 }
@@ -107,7 +113,8 @@ bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex) {
  * Issue fatal warning if T(curLabel) -> T(histLabel)
  *
  */
-bool analyzeSiblingImpTask(Label* histLabel, Label* curLabel, int diffIndex) { 
+bool analyzeSiblingImpTask(Label* histLabel, Label* curLabel, int diffIndex,
+        void* histTaskPtr, void* curTaskPtr) { 
   auto lenHistLabel = histLabel->getLabelLength();
   auto lenCurLabel = curLabel->getLabelLength();
   if (diffIndex == (lenHistLabel - 1) || diffIndex == (lenCurLabel - 1)) {
@@ -136,7 +143,8 @@ bool analyzeSiblingImpTask(Label* histLabel, Label* curLabel, int diffIndex) {
     auto histSegLoopCount = histSeg->getLoopCount();
     auto curSegLoopCount = curSeg->getLoopCount();
     if (histSegLoopCount == curSegLoopCount) {
-      return analyzeOrderedSection(histLabel, curLabel, diffIndex + 1);
+      return analyzeOrderedSection(histLabel, curLabel, diffIndex + 1, 
+              histTaskPtr, curTaskPtr);
     } 
     return false;
   }
@@ -148,7 +156,8 @@ bool analyzeSiblingImpTask(Label* histLabel, Label* curLabel, int diffIndex) {
  * with Task(curLabel). T(histLabel, startIndex) and T(curLabel, startIndex) 
  * are workshare task.
  */
-bool analyzeOrderedSection(Label* histLabel, Label* curLabel, int startIndex) {
+bool analyzeOrderedSection(Label* histLabel, Label* curLabel, int startIndex, 
+        void* histTaskPtr, void* curTaskPtr) {
   auto histBaseSeg  = histLabel->getKthSegment(startIndex);
   auto curBaseSeg = curLabel->getKthSegment(startIndex);
   auto histSegment = static_cast<WorkShareSegment*>(histBaseSeg);
@@ -178,7 +187,8 @@ bool analyzeOrderedSection(Label* histLabel, Label* curLabel, int startIndex) {
       /*
        * T(histLabel)
        */
-      return analyzeOrderedDescendents(histLabel, startIndex);
+      return analyzeOrderedDescendents(histLabel, startIndex, histTaskPtr, 
+              curTaskPtr);
     } 
   }
   return false;
@@ -192,7 +202,8 @@ bool analyzeOrderedSection(Label* histLabel, Label* curLabel, int startIndex) {
  * effect of ordered section
  * Return false if T(histLabel) does not sync with ordered section
  */
-bool analyzeOrderedDescendents(Label* histLabel, int startIndex) {
+bool analyzeOrderedDescendents(Label* histLabel, int startIndex, 
+        void* histTaskPtr, void* curTaskPtr) {
   auto nextSeg = histLabel->getKthSegment(startIndex + 1);
   auto nextSegType = nextSeg->getType();
   if (nextSegType == eImplicit) {
@@ -210,11 +221,14 @@ bool analyzeOrderedDescendents(Label* histLabel, int startIndex) {
      * section, T(histLabel, startIndex+1) is an explicit task, and 
      * T(histLabel) is its descendent task. If T(histLabel) does sync by
      * the ordered section, there must be some explicit tasking sync 
-     * applied (e.g., taskwait, taskgroup) within the phase of 
-     * T(histLabel, startIndex)'s creation. 
+     * applied (e.g., taskwait, taskgroup).
      */ 
-     
-       
+    auto curSeg = histLabel->getKthSegment(startIndex);
+    // check task group synchronization
+    if (!nextSeg->isTaskwaited()) {
+      // explicit task T(histLabel, startIndex + 1) is not taskwaited by 
+      //
+    }
   }
 }
 /*
@@ -228,7 +242,8 @@ bool analyzeOrderedDescendents(Label* histLabel, int startIndex) {
  * Return false if T(histLabel) || T(curLabel)
  * Issue fatal warning if T(curLabel) -> T(histLabel)
  */
-bool analyzeSameImpTask(Label* histLabel, Label* curLabel, int diffIndex) {
+bool analyzeSameImpTask(Label* histLabel, Label* curLabel, int diffIndex, 
+        void* histTaskPtr, void* curTaskPtr) {
   auto lenHistLabel = histLabel->getLabelLength(); 
   auto lenCurLabel = curLabel->getLabelLength();
   if (lenHistLabel == lenCurLabel) {
