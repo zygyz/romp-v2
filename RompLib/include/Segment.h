@@ -10,6 +10,11 @@ enum SegmentType {
   eExplicit = 0x2,
   eWorkShare = 0x3, 
 };
+
+enum TaskSyncType {
+  eTaskwait,
+  eTaskGroupEnd,
+};
 /*
  *  The abstract class definition for label segment 
  */
@@ -30,6 +35,7 @@ public:
   virtual void setTaskwaitPhase(uint16_t phase) = 0;
   virtual void getOffsetSpan(uint64_t& offset, uint64_t& span) const = 0;
   virtual void setTaskwaited() = 0;
+  virtual void setTaskGroupSync() = 0;
   virtual uint64_t getTaskwait() const = 0;
   virtual uint64_t getTaskcreate() const = 0;
   virtual uint64_t getPhase() const = 0;
@@ -39,6 +45,7 @@ public:
   virtual uint16_t getTaskGroupPhase() const = 0;
   virtual uint16_t getTaskwaitPhase() const = 0;
   virtual bool isTaskwaited() const = 0;
+  virtual bool isTaskGroupSync() const = 0;
   virtual bool operator==(const Segment& rhs) const = 0;
   virtual bool operator!=(const Segment& rhs) const = 0;
   virtual ~Segment() = default;
@@ -71,6 +78,7 @@ public:
   void setTaskGroupPhase(uint16_t phase) override;
   void setTaskwaitPhase(uint16_t phase) override;
   void setTaskwaited() override;
+  void setTaskGroupSync() override; 
   void getOffsetSpan(uint64_t& offset, uint64_t& span) const override;
   uint64_t getTaskwait() const override;
   uint64_t getTaskcreate() const override;
@@ -81,6 +89,7 @@ public:
   uint16_t getTaskGroupPhase() const override;
   uint16_t getTaskwaitPhase() const override;
   bool isTaskwaited() const override;
+  bool isTaskGroupSync() const override;
   bool operator==(const Segment& rhs) const override; 
   bool operator!=(const Segment& rhs) const override;
   uint64_t getValue() const;

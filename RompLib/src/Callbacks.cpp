@@ -87,16 +87,34 @@ void on_ompt_callback_implicit_task(
   }
 }
 
-/*
- * Once a task encounters a taskwait clause, mark the task's explicit children
- * to be taskwaited. So that the anlaysis algorithm knows that the explicit
- * child is synchronized with taskwait.
+
+/* 
+ * Helper function for getting the phase value of the last label segment.
  */
-void markExpChildrenTaskwait(TaskData* taskData) {
+inline uint64_t getLastSegmentPhase(Label* label) {
+  auto lenLabel = label->getLabelLength();
+  auto seg = label->getKthSegment(lenLabel - 1);
+  return seg->getPhase();
+}
+
+
+/*
+ * Once a task encounters a explicit task sync (taskwait/taskgroup end), mark 
+ * the task's explicit children to be taskwaited or taskgroup sync 
+ */
+void markExpChildrenTaskSync(TaskData* taskData, Label* label, TaskSyncType type) {
+  auto phase = getLastSegmentPhase(label);
   for (const auto& child : taskData->childExpTaskData) {
     auto childTaskData = static_cast<const TaskData*>(child); 
     auto lenLabel = childTaskData->label->getLabelLength(); 
-    childTaskData->label->getKthSegment(lenLabel - 1)->setTaskwaited();
+    auto lastSeg = childTaskData->label->getKthSegment(lenLabel - 1);
+    if (type == eTaskwait) {
+      lastSeg->setTaskwaited();
+      lastSeg->setTaskwaitPhase(phase);
+    } else if (type == eTaskGroupEnd) {
+      lastSeg->setTaskGroupSync();
+      lastSeg->setTaskGroupPhase(phase);
+    }
   }
   taskData->childExpTaskData.clear(); // clear the children after taskwait
 }
@@ -121,13 +139,14 @@ void on_ompt_callback_sync_region(
     switch(kind) {
       case ompt_sync_region_taskwait:
         mutatedLabel = mutateTaskWait(labelPtr);
-        markExpChildrenTaskwait(taskDataPtr);
+        markExpChildrenTaskSync(taskDataPtr, labelPtr, eTaskwait);
         break;
       case ompt_sync_region_barrier:
         mutatedLabel = mutateBarrierEnd(labelPtr);
         break;
       case ompt_sync_region_taskgroup:
         mutatedLabel = mutateTaskGroupEnd(labelPtr);
+        markExpChildrenTaskSync(taskDataPtr, labelPtr, eTaskGroupEnd);
         break;
       default:
         RAW_LOG(FATAL, "unknown endpoint type");

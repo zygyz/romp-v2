@@ -143,8 +143,7 @@ bool analyzeSiblingImpTask(Label* histLabel, Label* curLabel, int diffIndex,
     auto histSegLoopCount = histSeg->getLoopCount();
     auto curSegLoopCount = curSeg->getLoopCount();
     if (histSegLoopCount == curSegLoopCount) {
-      return analyzeOrderedSection(histLabel, curLabel, diffIndex + 1, 
-              histTaskPtr, curTaskPtr);
+      return analyzeOrderedSection(histLabel, curLabel, diffIndex + 1);
     } 
     return false;
   }
@@ -156,8 +155,7 @@ bool analyzeSiblingImpTask(Label* histLabel, Label* curLabel, int diffIndex,
  * with Task(curLabel). T(histLabel, startIndex) and T(curLabel, startIndex) 
  * are workshare task.
  */
-bool analyzeOrderedSection(Label* histLabel, Label* curLabel, int startIndex, 
-        void* histTaskPtr, void* curTaskPtr) {
+bool analyzeOrderedSection(Label* histLabel, Label* curLabel, int startIndex) {
   auto histBaseSeg  = histLabel->getKthSegment(startIndex);
   auto curBaseSeg = curLabel->getKthSegment(startIndex);
   auto histSegment = static_cast<WorkShareSegment*>(histBaseSeg);
@@ -187,8 +185,7 @@ bool analyzeOrderedSection(Label* histLabel, Label* curLabel, int startIndex,
       /*
        * T(histLabel) is the descendent task of T(histLabel, startIndex)
        */
-      return analyzeOrderedDescendents(histLabel, startIndex, histTaskPtr, 
-              curTaskPtr);
+      return analyzeOrderedDescendents(histLabel, startIndex, histPhase);
     } 
   }
   return false;
@@ -203,7 +200,7 @@ bool analyzeOrderedSection(Label* histLabel, Label* curLabel, int startIndex,
  * Return false if T(histLabel) does not sync with ordered section
  */
 bool analyzeOrderedDescendents(Label* histLabel, int startIndex, 
-        void* histTaskPtr, void* curTaskPtr) {
+        uint64_t histPhase) {
   auto nextSeg = histLabel->getKthSegment(startIndex + 1);
   auto nextSegType = nextSeg->getType();
   if (nextSegType == eImplicit) {
@@ -212,6 +209,7 @@ bool analyzeOrderedDescendents(Label* histLabel, int startIndex,
   } else if (nextSegType == eWorkShare) {
     RAW_LOG(FATAL, "does not expect next segment of workshare seg to be \
            workshare segment"); 
+    return false;
   } else if (nextSegType == eExplicit) {
     /*
      * Explicit task does not interact with ordered section. i.e., if an
@@ -224,45 +222,37 @@ bool analyzeOrderedDescendents(Label* histLabel, int startIndex,
      * applied (e.g., taskwait, taskgroup).
      */ 
     auto curSeg = histLabel->getKthSegment(startIndex);
-    /*
-     * first determine if T(histLabel, startIndex + 1) is outside of the scope
-     * of ordered section or not. This is done by checking the phase value of 
-     * label segment histLabel[startIndex]. If the phase value is even, it is 
-     * out of the ordered section scope.
-     */
-    auto phase = curSeg->getPhase();  
-    if (phase % 2 == 0) {
+    auto taskGroupLevel = curSeg->getTaskGroupLevel();
+    if (taskGroupLevel > 0) {
+      auto phase = curSeg->getPhase();  
+      if (phase % 2 == 0 && nextSeg->isTaskGroupSync() && 
+              nextSeg->getTaskGroupPhase() <= histPhase) {
       /* 
+       * If phase is even, it is out of the ordered section scope.
        * T(histLabel, startIndex + 1) is out of ordered section scope
        * In this case, taskgroup construct's scope could be wrapping the 
        * ordered section's lexical scope. Thus taskgroup construct does
        * not necessarily guarantees T(histLabel) is in sync.
        */
-      if (!nextSeg->isTaskwaited()) {
-   
-      } else {
-        
-      }
-    } else {
+        return true;
+      } else if (phase % 2 == 1) {
       /* T(histLabel, startIndex + 1) is in ordered section scope
        * In this case, taskgroup construct would be confined in the ordered 
        * section's lexical scope. So if T(histLabel, startIndex) has the 
        * taskgroup construct, T(histLabel) should be in sync.
        */
-      auto taskGroupLevel = curSeg->getTaskGroupLevel();  
-      if (taskGroupLevel > 0) {
         return true;
-      } else {
-       // further check taskwait sync
-        if (!nextSeg->isTaskwaited()) {
-          return false; 
-        } else {
-          // explicit task T(histLabel, startIndex+1) is sync with taskwait clause, 
-          // check further down the task creation chain
-          return analyzeSyncChain(histLabel, startIndex + 1);     
-        }
-      }
+      } 
     }
+    if (nextSeg->isTaskwaited() && nextSeg->getTaskwaitPhase() <= histPhase) {
+      /* explicit task T(histLabel, startIndex+1) is sync with taskwait clause, 
+       * we need to check the phase to make sure taskwait is not after the ordered
+       * section. If taskwait is not after the ordered section, check further 
+       * down the task creation chain
+       */
+      return analyzeSyncChain(histLabel, startIndex + 1);
+    }
+    return false;
   }
 }
 

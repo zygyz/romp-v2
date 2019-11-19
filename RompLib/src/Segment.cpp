@@ -15,6 +15,7 @@
 #define SINGLE_MASK          0xc000000000000000
 #define WORKSHARE_TYPE_MASK  0x0000000000000004
 #define TASKWAIT_SYNC_MASK   0x0000000000000008
+#define TASKGROUP_SYNC_MASK  0x0000000000000010
 
 #define TASKGROUP_ID_MASK    0x00000000ffff0000
 #define TASKGROUP_LEVEL_MASK 0x000000000000ffff
@@ -45,6 +46,7 @@ namespace romp {
  * [24, 27]: phase count
  * [20, 23]: loop count
  * [5, 19]: task create count
+ * [4]: mark if current task sync by taskgroup with its parent task
  * [3]: mark if current task (must be explicit) syncs with taskwait 
  * [2]: mark if current workshare semgent is section, bit set: yes. 
  *      otherwise, sgment is iteration
@@ -115,7 +117,6 @@ void BaseSegment::setTaskGroupPhase(uint16_t phase) {
           (static_cast<uint64_t>(phase) << 16) & TASKGROUP_PHASE_MASK);
 }
 
-
 /*
  * Upon encountering the takwait, the task informs its direct children to record 
  * the ordered section phase. Store the phase at the lower half of the 32 bit
@@ -156,6 +157,14 @@ void BaseSegment::setTaskwaited() {
 
 bool BaseSegment::isTaskwaited() const {
   return (_value & TASKWAIT_SYNC_MASK) != 0;
+}
+
+void BaseSegment::setTaskGroupSync() { 
+  _value |= TASKGROUP_SYNC_MASK;
+}
+
+bool BaseSegment::isTaskGroupSync() const {
+  return (_value & TASKGROUP_SYNC_MASK) != 0;
 }
 
 void BaseSegment::setTaskGroupLevel(uint16_t taskGroupLevel) {
