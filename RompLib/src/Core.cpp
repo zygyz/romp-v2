@@ -232,8 +232,17 @@ bool analyzeOrderedDescendents(Label* histLabel, int startIndex,
      */
     auto phase = curSeg->getPhase();  
     if (phase % 2 == 0) {
-      // T(histLabel, startIndex + 1) is out of ordered section scope
-    
+      /* 
+       * T(histLabel, startIndex + 1) is out of ordered section scope
+       * In this case, taskgroup construct's scope could be wrapping the 
+       * ordered section's lexical scope. Thus taskgroup construct does
+       * not necessarily guarantees T(histLabel) is in sync.
+       */
+      if (!nextSeg->isTaskwaited()) {
+   
+      } else {
+        
+      }
     } else {
       /* T(histLabel, startIndex + 1) is in ordered section scope
        * In this case, taskgroup construct would be confined in the ordered 

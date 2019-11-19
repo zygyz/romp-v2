@@ -24,16 +24,20 @@ public:
   virtual void setTaskcreate(uint64_t taskcreate) = 0; 
   virtual void setPhase(uint64_t phase) = 0;
   virtual void setLoopCount(uint64_t loopCount) = 0;
-  virtual void setTaskGroupId(uint32_t taskGroupId) = 0;
-  virtual void setTaskGroupLevel(uint32_t taskGroupLevel) = 0;
+  virtual void setTaskGroupId(uint16_t taskGroupId) = 0;
+  virtual void setTaskGroupLevel(uint16_t taskGroupLevel) = 0;
+  virtual void setTaskGroupPhase(uint16_t phase) = 0;
+  virtual void setTaskwaitPhase(uint16_t phase) = 0;
   virtual void getOffsetSpan(uint64_t& offset, uint64_t& span) const = 0;
   virtual void setTaskwaited() = 0;
   virtual uint64_t getTaskwait() const = 0;
   virtual uint64_t getTaskcreate() const = 0;
   virtual uint64_t getPhase() const = 0;
   virtual uint64_t getLoopCount() const = 0;  
-  virtual uint32_t getTaskGroupId() const = 0;
-  virtual uint32_t getTaskGroupLevel() const = 0;
+  virtual uint16_t getTaskGroupId() const = 0;
+  virtual uint16_t getTaskGroupLevel() const = 0;
+  virtual uint16_t getTaskGroupPhase() const = 0;
+  virtual uint16_t getTaskwaitPhase() const = 0;
   virtual bool isTaskwaited() const = 0;
   virtual bool operator==(const Segment& rhs) const = 0;
   virtual bool operator!=(const Segment& rhs) const = 0;
@@ -43,6 +47,10 @@ public:
 /*
  * Base segment is for representing implicit task with no 
  * worksharing construct attached to it.
+ * _value records most of the information wrt. openmp synchronization
+ * _taskGroup records the taskgroup information
+ * _orderSecVal records ordered section phase when taskwait/taskgroup
+ * sync happens
  */
 class BaseSegment : public Segment {
 public:
@@ -58,23 +66,28 @@ public:
   void setTaskcreate(uint64_t taskcreate) override;
   void setPhase(uint64_t phase) override;
   void setLoopCount(uint64_t loopCount) override;
-  void setTaskGroupId(uint32_t taskGroupId) override;
-  void setTaskGroupLevel(uint32_t taskGroupLevel) override;
+  void setTaskGroupId(uint16_t taskGroupId) override;
+  void setTaskGroupLevel(uint16_t taskGroupLevel) override;
+  void setTaskGroupPhase(uint16_t phase) override;
+  void setTaskwaitPhase(uint16_t phase) override;
   void setTaskwaited() override;
   void getOffsetSpan(uint64_t& offset, uint64_t& span) const override;
   uint64_t getTaskwait() const override;
   uint64_t getTaskcreate() const override;
   uint64_t getPhase() const override;
   uint64_t getLoopCount() const override;
-  uint32_t getTaskGroupId() const override;
-  uint32_t getTaskGroupLevel() const override;
+  uint16_t getTaskGroupId() const override;
+  uint16_t getTaskGroupLevel() const override;
+  uint16_t getTaskGroupPhase() const override;
+  uint16_t getTaskwaitPhase() const override;
   bool isTaskwaited() const override;
   bool operator==(const Segment& rhs) const override; 
   bool operator!=(const Segment& rhs) const override;
   uint64_t getValue() const;
 protected:
   uint64_t _value;
-  uint64_t _taskGroup;
+  uint32_t _taskGroup;
+  uint32_t _orderSecVal; 
 };
 
 /*

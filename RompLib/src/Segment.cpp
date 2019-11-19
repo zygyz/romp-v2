@@ -15,7 +15,11 @@
 #define SINGLE_MASK          0xc000000000000000
 #define WORKSHARE_TYPE_MASK  0x0000000000000004
 #define TASKWAIT_SYNC_MASK   0x0000000000000008
-#define TASKGROUP_LEVEL_MASK 0x00000000ffffffff
+
+#define TASKGROUP_ID_MASK    0x00000000ffff0000
+#define TASKGROUP_LEVEL_MASK 0x000000000000ffff
+#define TASKGROUP_PHASE_MASK 0x00000000ffff0000
+#define TASKWAIT_PHASE_MASK  0x000000000000ffff
 
 #define OFFSET_SPAN_WIDTH 16
 
@@ -85,24 +89,65 @@ void BaseSegment::getOffsetSpan(uint64_t& offset, uint64_t& span) const {
 
 /* 
  * Taskgroup id increases monotonically. It is at the upper half of the
- * 64 bits long word _taskGroup 
+ * 32 bits _taskGroup value
  */
-uint32_t BaseSegment::getTaskGroupId() const {
-  return static_cast<uint32_t>(_taskGroup >> 32);
+uint16_t BaseSegment::getTaskGroupId() const {
+  return static_cast<uint16_t>(_taskGroup >> 16);
 }
                                    
-void BaseSegment::setTaskGroupId(uint32_t taskGroupId) {
-  _taskGroup &= TASKGROUP_LEVEL_MASK; // clear the upper half 
-  _taskGroup |= (static_cast<uint64_t>(taskGroupId) << 32) & 
-      ~TASKGROUP_LEVEL_MASK;
+void BaseSegment::setTaskGroupId(uint16_t taskGroupId) {
+  _taskGroup = static_cast<uint32_t>(
+          static_cast<uint64_t>(_taskGroup) & TASKGROUP_ID_MASK);
+  _taskGroup |= static_cast<uint32_t>(
+          (static_cast<uint64_t>(taskGroupId) << 16) & TASKGROUP_ID_MASK);
+}
+
+/*
+ * Upon encountering the end of taskgroup, the task informs its direct children
+ * to record the ordered section phase. This is for reasoning about the 
+ * happens-before relation when ordered section is involed. Store the phase at 
+ * the upper half of the 32 bit _orderSecVal.
+ */
+void BaseSegment::setTaskGroupPhase(uint16_t phase) {
+  _orderSecVal = static_cast<uint32_t>(
+         static_cast<uint64_t>(_orderSecVal) & TASKGROUP_PHASE_MASK); 
+  _orderSecVal |= static_cast<uint32_t>(
+          (static_cast<uint64_t>(phase) << 16) & TASKGROUP_PHASE_MASK);
+}
+
+
+/*
+ * Upon encountering the takwait, the task informs its direct children to record 
+ * the ordered section phase. Store the phase at the lower half of the 32 bit
+ * _orderSecVal.
+ */
+void BaseSegment::setTaskwaitPhase(uint16_t phase) {
+  _orderSecVal = static_cast<uint32_t>(
+          static_cast<uint64_t>(_orderSecVal) & TASKWAIT_PHASE_MASK);
+  _orderSecVal |= static_cast<uint32_t>(
+          (static_cast<uint64_t>(phase) & TASKWAIT_PHASE_MASK));
+}
+
+uint16_t BaseSegment::getTaskwaitPhase() const {
+  return static_cast<uint16_t>(
+      static_cast<uint64_t>(_orderSecVal) & TASKWAIT_PHASE_MASK);
 }
 
 /*
  * Taskgroup level marks the nested number of level of taskgorup. 
- * It is the lower half of the 64 bits long word _taskGroup
+ * It is the lower 16 bits of the 32 bits long word _taskGroup
  */
-uint32_t BaseSegment::getTaskGroupLevel() const {
-  return static_cast<uint32_t>(_taskGroup & TASKGROUP_LEVEL_MASK); 
+uint16_t BaseSegment::getTaskGroupLevel() const {
+  return static_cast<uint16_t>(
+          static_cast<uint64_t>(_taskGroup) & TASKGROUP_LEVEL_MASK); 
+}
+
+/*
+ * Task group phase records the phase of the workshare task, if applicable,
+ * as the task encounters the taskgroup start/end point.
+ */
+uint16_t BaseSegment::getTaskGroupPhase() const {
+  return static_cast<uint16_t>((_taskGroup & TASKGROUP_PHASE_MASK) >> 16);
 }
 
 void BaseSegment::setTaskwaited() {
@@ -113,8 +158,9 @@ bool BaseSegment::isTaskwaited() const {
   return (_value & TASKWAIT_SYNC_MASK) != 0;
 }
 
-void BaseSegment::setTaskGroupLevel(uint32_t taskGroupLevel) {
-  _taskGroup |= static_cast<uint64_t>(taskGroupLevel) & TASKGROUP_LEVEL_MASK;
+void BaseSegment::setTaskGroupLevel(uint16_t taskGroupLevel) {
+  _taskGroup |= static_cast<uint32_t>(
+          static_cast<uint64_t>(taskGroupLevel) & TASKGROUP_LEVEL_MASK);
 }
 
 bool BaseSegment::operator==(const Segment& segment) const {
