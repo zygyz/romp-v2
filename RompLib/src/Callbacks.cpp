@@ -116,13 +116,12 @@ void on_ompt_callback_sync_region(
   auto labelPtr = (taskDataPtr->label).get();  // never std::move here!
   std::shared_ptr<Label> mutatedLabel = nullptr;
   if (endPoint == ompt_scope_begin && kind == ompt_sync_region_taskgroup) {
-    // TODO: start of taskgroup construct 
     mutatedLabel = mutateTaskGroupBegin(labelPtr);
   } else if (endPoint == ompt_scope_end) {
     switch(kind) {
       case ompt_sync_region_taskwait:
         mutatedLabel = mutateTaskWait(labelPtr);
-
+        markExpChildrenTaskwait(taskDataPtr);
         break;
       case ompt_sync_region_barrier:
         mutatedLabel = mutateBarrierEnd(labelPtr);

@@ -37,6 +37,7 @@ bool analyzeNextWorkImp(Label* hl, Label* cl, int di);
 bool analyzeNextWorkExp(Label* hl, Label* cl, int di);
 bool analyzeNextWorkWork(Label* hl, Label* cl, int di);
 bool analyzeOrderedDescendents(Label* hl, int si, void* hp, void* cp);
+bool analyzeSyncChain(Label* label, int index);
 
 bool inFinishScope(Label* label, int startIndex);
 bool dispatchAnalysis(CheckCase checkCase, Label* hist, Label* cur, int index);

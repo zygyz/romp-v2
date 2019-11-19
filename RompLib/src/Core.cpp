@@ -152,7 +152,7 @@ bool analyzeSiblingImpTask(Label* histLabel, Label* curLabel, int diffIndex,
 }
 
 /*
- * This function analyzes if Task(histLabel) is ordered with ordered section 
+ * This function analyzes if Task(histLabel) is ordered by ordered section 
  * with Task(curLabel). T(histLabel, startIndex) and T(curLabel, startIndex) 
  * are workshare task.
  */
@@ -185,7 +185,7 @@ bool analyzeOrderedSection(Label* histLabel, Label* curLabel, int startIndex,
       return true;
     } else {
       /*
-       * T(histLabel)
+       * T(histLabel) is the descendent task of T(histLabel, startIndex)
        */
       return analyzeOrderedDescendents(histLabel, startIndex, histTaskPtr, 
               curTaskPtr);
@@ -224,13 +224,76 @@ bool analyzeOrderedDescendents(Label* histLabel, int startIndex,
      * applied (e.g., taskwait, taskgroup).
      */ 
     auto curSeg = histLabel->getKthSegment(startIndex);
-    // check task group synchronization
-    if (!nextSeg->isTaskwaited()) {
-      // explicit task T(histLabel, startIndex + 1) is not taskwaited by 
-      //
+    /*
+     * first determine if T(histLabel, startIndex + 1) is outside of the scope
+     * of ordered section or not. This is done by checking the phase value of 
+     * label segment histLabel[startIndex]. If the phase value is even, it is 
+     * out of the ordered section scope.
+     */
+    auto phase = curSeg->getPhase();  
+    if (phase % 2 == 0) {
+      // T(histLabel, startIndex + 1) is out of ordered section scope
+    
+    } else {
+      /* T(histLabel, startIndex + 1) is in ordered section scope
+       * In this case, taskgroup construct would be confined in the ordered 
+       * section's lexical scope. So if T(histLabel, startIndex) has the 
+       * taskgroup construct, T(histLabel) should be in sync.
+       */
+      auto taskGroupLevel = curSeg->getTaskGroupLevel();  
+      if (taskGroupLevel > 0) {
+        return true;
+      } else {
+       // further check taskwait sync
+        if (!nextSeg->isTaskwaited()) {
+          return false; 
+        } else {
+          // explicit task T(histLabel, startIndex+1) is sync with taskwait clause, 
+          // check further down the task creation chain
+          return analyzeSyncChain(histLabel, startIndex + 1);     
+        }
+      }
     }
   }
 }
+
+/* 
+ * This function analyzes if T(label) is in sync with T(label, startIndex).
+ * i.e., T(label, startIndex)'s completion guarantees the completion of 
+ * T(label)
+ *
+ * Return ture if T(label) is in sync with T(label, startIndex)
+ * Return false otherwise.
+ */
+bool analyzeSyncChain(Label* label, int startIndex) {
+  auto lenLabel = label->getLabelLength(); 
+  if (startIndex == lenLabel - 1) {
+    // already the leaf task
+    return true;
+  }
+  for (auto i = startIndex; i < lenLabel; ++i) {
+    auto seg = label->getKthSegment(i);
+    auto segType = seg->getType();
+    if (segType == eImplicit) {
+      return true;
+    } else if (segType == eExplicit) {
+      auto taskGroupLevel = seg->getTaskGroupLevel();    
+      if (taskGroupLevel > 0) {
+        // taskgroup guarantees completion of descendents
+        return true;
+      } else {
+        if (!seg->isTaskwaited()) { 
+          // if current explicit task T(label, i) is not waited 
+          // by parent task, no sync.
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+
 /*
  * This function analyzes happens-before relation when first pair of different 
  * segments are implicit segment, where offset are the same. This means that 
