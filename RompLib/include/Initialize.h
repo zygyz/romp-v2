@@ -1,7 +1,7 @@
 #pragma once
 #include <glog/logging.h>
 #include <ompt.h>
-#include <iostream>
+
 #include "Callbacks.h"
 #include "QueryFuncs.h"
 
