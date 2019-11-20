@@ -77,6 +77,16 @@ bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex,
   }
   if (histSpan == 1) { // explicit task or work share task or initial task
     //TODO
+    /*
+     * T(histLabel, diffIndex) and T(curLabel, diffIndex) can not be 
+     * explicit tasks. Otherwise, histLabel[diffIndex-1] and
+     * curLabel[diffIndex - 1] should have been different.
+     */ 
+    auto histType = histSegment->getType();
+    auto curType = curSegment->getType();
+    RAW_CHECK((histType == eWorkShare && curType == eWorkShare), "not \
+            expecting hist and cur segment are not workshare segment");
+    return analyzeOrderedSection(histLabel, curLabel,  diffIndex);
   } else { // left span == right span and span > 1, implicit task
     if (histOffset != curOffset) { 
       auto span = histSpan;
@@ -353,7 +363,8 @@ bool analyzeSameImpTask(Label* histLabel, Label* curLabel, int diffIndex,
         return analyzeSyncChain(histLabel, diffIndex + 1); 
       }
     } else if (histNextType == eWorkShare) {
-      // TODO 
+      // TODO: comment on this case
+      return false; 
     }
   } else {
     // both T(histLabel, diffIndex) and T(curLabel, diffIndex) are not leaf task 
@@ -455,7 +466,7 @@ bool analyzeNextExpExp(Label* histLabel, Label* curLabel, int diffIndex) {
   auto curSeg = curLabel->getKthSegment(diffIndex);
   auto histTaskwait = histSeg->getTaskwait();
   auto curTaskwait = curSeg->getTaskwait();
-  //TODO: 
+  //TODO 
   return true;
 }
 
@@ -464,9 +475,22 @@ bool analyzeNextExpWork(Label* histLabel, Label* curLabel, int diffIndex) {
   return true;
 }
 
+/*
+ * This function analyzes case when T(histLabel, diffIndex) and 
+ * T(curLabel, diffIndex) are the same implicit task, T'. T(histLabel) and
+ * T(curLabel) are descendent tasks of T'. T(histLabel, diffIndex+1) is
+ * workshare task, T(curLabel, diffIndex+1) is implicit task. The workshare
+ * task must be created first (If the implicit task is created first, it has
+ * to be joined before creating the workshare task, then the offset field in 
+ * histLabel[diffIndex] and curLabel[diffIndex] would be different) and does 
+ * not encounter the implicit barrier because of the nowait clause (If there 
+ * is no nowait clause, the implicit barrier would have made the offset field 
+ * in histLabel[diffIndex], curLabel[diffIndex] different). 
+ * Since T(histLabel) is descendent task of T(histLabel, diffIndex + 1),
+ * there is no happens before relationship.
+ */
 bool analyzeNextWorkImp(Label* histLabel, Label* curLabel, int diffIndex) {
-  //TODO
-  return true;
+  return false; 
 }
 
 bool analyzeNextWorkExp(Label* histLabel, Label* curLabel, int diffIndex) {
@@ -474,12 +498,19 @@ bool analyzeNextWorkExp(Label* histLabel, Label* curLabel, int diffIndex) {
   return true;
 }
 
+/*
+ * This function analyzes case when T(histLabel, diffIndex) and 
+ * T(curLabel, diffIndex) are the same implicit task, T'. T(histLabel) and
+ * T(curLabel) are descendent tasks of T'. T(histLabel, diffIndex+1) is
+ * workshare task, T(curLabel, diffIndex+1) is also workshare task. 
+ * If T(histLabel, diffIndex+1) and T(curLabel, diffIndex+1) are in the same
+ * workshare construct, curLabel[diffIndex] and histLabel[diffIndex] would
+ * not be different. So they must be in two different workshare construct
+ * with nowait specified. 
+ */
 bool analyzeNextWorkWork(Label* histLabel, Label* curLabel, int diffIndex) {
-  //TODO
-  return true;
+  return false;
 }
-
-
 
 uint32_t computeExitRank(uint32_t phase) {
   return phase - (phase % 2); 
