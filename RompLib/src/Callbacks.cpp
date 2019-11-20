@@ -91,32 +91,52 @@ void on_ompt_callback_implicit_task(
 /* 
  * Helper function for getting the phase value of the last label segment.
  */
-inline uint64_t getLastSegmentPhase(Label* label) {
+inline Segment* getLastSegment(Label* label) {
   auto lenLabel = label->getLabelLength();
-  auto seg = label->getKthSegment(lenLabel - 1);
-  return seg->getPhase();
+  return label->getKthSegment(lenLabel - 1);
 }
 
-
 /*
- * Once a task encounters a explicit task sync (taskwait/taskgroup end), mark 
- * the task's explicit children to be taskwaited or taskgroup sync 
+ * Once a task encounters a taskwait, mark the task's explicit children to 
+ * be taskwaited, and record the ordered section phase value 
  */
-void markExpChildrenTaskSync(TaskData* taskData, Label* label, TaskSyncType type) {
-  auto phase = getLastSegmentPhase(label);
+void markExpChildSyncTaskwait(TaskData* taskData, Label* curLabel) {
+  auto seg = getLastSegment(curLabel);
+  auto phase = seg->getPhase();
   for (const auto& child : taskData->childExpTaskData) {
     auto childTaskData = static_cast<const TaskData*>(child); 
     auto lenLabel = childTaskData->label->getLabelLength(); 
     auto lastSeg = childTaskData->label->getKthSegment(lenLabel - 1);
-    if (type == eTaskwait) {
-      lastSeg->setTaskwaited();
-      lastSeg->setTaskwaitPhase(phase);
-    } else if (type == eTaskGroupEnd) {
-      lastSeg->setTaskGroupSync();
-      lastSeg->setTaskGroupPhase(phase);
-    }
+    lastSeg->setTaskwaited();
+    lastSeg->setTaskwaitPhase(phase);
   }
   taskData->childExpTaskData.clear(); // clear the children after taskwait
+}
+
+/*
+ * Once a task encounters the end of taskgroup, mark all explicit task 
+ * children which are inside the ending taskgroup. 
+ */
+void markExpChildSyncTaskGroupEnd(TaskData* taskData, Label* curLabel) {
+  auto seg = getLastSegment(curLabel);
+  auto phase = seg->getPhase();
+  auto taskGroupLevel = seg->getTaskGroupLevel();
+  auto it = taskData->childExpTaskData.begin();
+  while (it != taskData->childExpTaskData.end()) {
+    auto childTaskData = static_cast<const TaskData*>(*it);
+    auto childLabel = childTaskData->label;
+    auto lenLabel = childLabel->getLabelLength();
+    auto lastSeg = childLabel->getKthSegment(lenLabel - 1);
+    auto parentSeg = childLabel->getKthSegment(lenLabel - 2);
+    if (parentSeg->getTaskGroupLevel() == taskGroupLevel) {
+      lastSeg->setTaskGroupSync();
+      lastSeg->setTaskGroupPhase(phase);
+      it = taskData->childExpTaskData.erase(it); 
+      //erase the synced child explicit task
+    } else {
+      it++;
+    }
+  }
 }
 
 void on_ompt_callback_sync_region(
@@ -139,14 +159,14 @@ void on_ompt_callback_sync_region(
     switch(kind) {
       case ompt_sync_region_taskwait:
         mutatedLabel = mutateTaskWait(labelPtr);
-        markExpChildrenTaskSync(taskDataPtr, labelPtr, eTaskwait);
+        markExpChildSyncTaskwait(taskDataPtr, labelPtr);
         break;
       case ompt_sync_region_barrier:
         mutatedLabel = mutateBarrierEnd(labelPtr);
         break;
       case ompt_sync_region_taskgroup:
         mutatedLabel = mutateTaskGroupEnd(labelPtr);
-        markExpChildrenTaskSync(taskDataPtr, labelPtr, eTaskGroupEnd);
+        markExpChildSyncTaskGroupEnd(taskDataPtr, labelPtr);
         break;
       default:
         RAW_LOG(FATAL, "unknown endpoint type");

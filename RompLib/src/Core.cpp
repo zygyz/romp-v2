@@ -76,7 +76,7 @@ bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex,
     RAW_LOG(FATAL, "left span: %lu != right span: %lu", histSpan, curSpan);
   }
   if (histSpan == 1) { // explicit task or work share task or initial task
-
+    //TODO
   } else { // left span == right span and span > 1, implicit task
     if (histOffset != curOffset) { 
       auto span = histSpan;
@@ -308,33 +308,64 @@ bool analyzeSameImpTask(Label* histLabel, Label* curLabel, int diffIndex,
         void* histTaskPtr, void* curTaskPtr) {
   auto lenHistLabel = histLabel->getLabelLength(); 
   auto lenCurLabel = curLabel->getLabelLength();
-  if (lenHistLabel == lenCurLabel) {
-    if (diffIndex == (lenHistLabel - 1)) {
-      // T(histLabel) and T(curLabel) are the same implicit task (they are
-      // leaf task)  but at different stages. In this case, it is only
-      // possible to have T(histLabel) happens before T(curLabel)
-      return true;
-    } else { 
-     /*
-      * T(histLabel) and T(curLabel) are descendent tasks of
-      * T(histLabel, diffIndex) and T(curLabel, diffIndex) respectively
-      * We assert that T(histLabel, diffIndex + 1) and 
-      * T(curLabel, diffIndex + 1) are not sibling implicit task. Because
-      * otherwise histLabel[diffIndex] and curLabel[diffIndex] should be the 
-      * same.
-      */
-      auto histNextSeg = histLabel->getKthSegment(diffIndex + 1);
-      auto curNextSeg = curLabel->getKthSegment(diffIndex + 1);
-      auto histNextType = histNextSeg->getType();
-      auto curNextType = curNextSeg->getType();
-      RAW_CHECK(!(histNextType == eImplicit && curNextType == eImplicit),
-              "not expecting next level tasks are sibling implicit tasks");
-      // invoke different checking depending on next segment's type 
-      auto checkCase = buildCheckCase(histNextType, curNextType);
-      return dispatchAnalysis(checkCase, histLabel, curLabel, diffIndex);
+  if (diffIndex == (lenHistLabel - 1)) {
+    /*
+     * T(histLabel, diffIndex) == T(histLabel), which is leaf task. 
+     * In this case, it is only possible to have T(histLabel) happens before
+     * T(curLabel)
+     */
+    return true;
+  }      
+  // T(histLabel, diffIndex) is not leaf task
+  if (diffIndex == (lenCurLabel - 1)) {
+    /*
+     * T(curLabel, diffIndex) is leaf task, while T(histLabel) is descendent
+     * task of T(histLabel, diffIndex). We assert that T(histLabel, diffIndex+1)
+     * is not implicit task. Because otherwise, T(curLabel, diffIndex) must be
+     * the implicit task after join of the parallel region.
+     */
+    auto histNextSeg = histLabel->getKthSegment(diffIndex + 1);
+    auto histNextType = histNextSeg->getType();
+    RAW_CHECK(histNextType != eImplicit, 
+            "not expecting next level task to be implicit task");
+    if (histNextType == eExplicit) {
+      // check if T(histLabel) happens before T(curLabel) because of explicit 
+      // task synchronization
+      auto histSeg = histLabel->getKthSegment(diffIndex);
+      auto histTaskwait = histSeg->getTaskwait();
+      auto curSeg = curLabel->getKthSegment(diffIndex);
+      auto curTaskwait = curSeg->getTaskwait();
+      RAW_CHECK(curTaskwait >= histTaskwait, "not expecting hist taskwait\
+              to be larger than cur taskwait");
+      if (curTaskwait == histTaskwait) {
+        // futher check task group sync 
+        auto histTaskGroupLevel = histSeg->getTaskGroupLevel();      
+        if (histTaskGroupLevel > 0 && histNextSeg->isTaskGroupSync()) {
+          // T(histLabel) happens before T(curLabel) only when the taskgroup 
+          // construct wrapping T(histLabel,diffIndex + 1) finishes before 
+          // T(curLabel, diffIndex)
+          return true;
+        } else {
+          return false;
+        }
+      } else {
+        // curTaskwait > histTaskwait
+        return analyzeSyncChain(histLabel, diffIndex + 1); 
+      }
+    } else if (histNextType == eWorkShare) {
+      // TODO 
     }
-  } else { 
-     
+  } else {
+    // both T(histLabel, diffIndex) and T(curLabel, diffIndex) are not leaf task 
+    auto histNextSeg = histLabel->getKthSegment(diffIndex + 1);
+    auto curNextSeg = curLabel->getKthSegment(diffIndex + 1);
+    auto histNextType = histNextSeg->getType();
+    auto curNextType = curNextSeg->getType();
+    RAW_CHECK(!(histNextType == eImplicit && curNextType == eImplicit),
+            "not expecting next level tasks are sibling implicit tasks");
+    // invoke different checking depending on next segment's type 
+    auto checkCase = buildCheckCase(histNextType, curNextType);
+    return dispatchAnalysis(checkCase, histLabel, curLabel, diffIndex);
   }
 }
 
@@ -377,7 +408,7 @@ bool analyzeNextImpExp(Label* histLabel, Label* curLabel, int diffIndex) {
  * is no nowait clause, the implicit barrier would have made the offset field 
  * in histLabel[diffIndex], curLabel[diffIndex] different). 
  */
-bool analzyeNextImpWork(Label* histLabel, Label* curLabel, int diffIndex) {
+bool analyzeNextImpWork(Label* histLabel, Label* curLabel, int diffIndex) {
 #ifdef DEBUG_CORE
   auto histSeg = histLabel->getKthSegment(diffIndex);
   auto curSeg = curLabel->getKthSegment(diffIndex);
@@ -429,18 +460,22 @@ bool analyzeNextExpExp(Label* histLabel, Label* curLabel, int diffIndex) {
 }
 
 bool analyzeNextExpWork(Label* histLabel, Label* curLabel, int diffIndex) {
+ //TODO
   return true;
 }
 
 bool analyzeNextWorkImp(Label* histLabel, Label* curLabel, int diffIndex) {
+  //TODO
   return true;
 }
 
 bool analyzeNextWorkExp(Label* histLabel, Label* curLabel, int diffIndex) {
+  //TODO
   return true;
 }
 
 bool analyzeNextWorkWork(Label* histLabel, Label* curLabel, int diffIndex) {
+  //TODO
   return true;
 }
 
@@ -516,7 +551,7 @@ bool dispatchAnalysis(CheckCase checkCase, Label* hist, Label* cur,
     case eImpExp:
       return analyzeNextImpExp(hist, cur, diffIndex);
     case eImpWork:
-      return analzyeNextImpWork(hist, cur, diffIndex);
+      return analyzeNextImpWork(hist, cur, diffIndex);
     case eExpImp:
       return analyzeNextExpImp(hist, cur, diffIndex);
     case eExpExp:
