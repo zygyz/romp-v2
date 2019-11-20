@@ -599,6 +599,7 @@ bool dispatchAnalysis(CheckCase checkCase, Label* hist, Label* cur,
 RecordManagement manageAccessRecord(const Record& histRecord, 
                                     const Record& curRecord,
                                     bool isHistBeforeCurrent,
+                                    AccessHistory* accessHistory, 
                                     int diffIndex) {
   auto histIsWrite = histRecord.isWrite();  
   auto curIsWrite = curRecord.isWrite();
@@ -608,6 +609,35 @@ RecordManagement manageAccessRecord(const Record& histRecord,
   } else if (diffIndex == static_cast<int>(eSameLabel) && 
             ((!histIsWrite && !curIsWrite) || histIsWrite)) {
       return eSkipAddCur; 
+  } else { // if in parallel 
+    auto histLabel = histRecord.getLabel();
+    auto curLabel = curRecord.getLabel(); 
+    auto recordState = accessHistory->getRecordState();
+    if (isSibling(histLabel, curLabel, diffIndex)) {
+      switch(recordState) {
+        case eSingle:
+          accessHistory->setRecordState(eSibling);
+          return eAddCur;
+        case eSibling:
+          return eSkipAddCur;
+        case eNonSibling:
+          return eSkipAddCur;
+        default:
+          return eNoOp;
+      }
+    } else {
+      switch(recordState) {
+        case eSingle:
+          accessHistory->setRecordState(eNonSibling);
+          return eAddCur;
+        case eSibling:
+          return eDelHist;
+        case eNonSibling:
+          return eSkipAddCur;
+        default:
+          return eNoOp;
+      }
+    }
   }
   return eNoOp;
 } 
@@ -625,6 +655,22 @@ void modifyAccessHistory(RecordManagement decision,
     it = records->erase(it);
   } else {
     it++;
+  }
+}
+
+/*
+ */
+bool isSibling(Label* histLabel, Label* curLabel, int diffIndex) {
+   //TODO: for now we only consider implicit and workshare segment
+  auto lenHistLabel = histLabel->getLabelLength();
+  auto lenCurLabel = curLabel->getLabelLength();
+  if (lenHistLabel != lenCurLabel) {
+    return false; 
+  }
+  auto histParentSeg = histLabel->getKthSegment(lenHistLabel - 2);
+  auto curParentSeg = curLabel->getKthSegment(lenCurLabel - 2);  
+  if (*histParentSeg == *curParentSeg) {
+    return true;
   }
 }
 

@@ -45,6 +45,7 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
   if (records->empty()) {
     // no access record, add current access to the record
     //RAW_DLOG(INFO, "records list is empty, add record");
+    accessHistory->setRecordState(eSingle);
     records->push_back(curRecord);
   } else {
     // check previous access records with current access
@@ -63,7 +64,7 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
         accessHistory->setFlag(eDataRaceFound);  
       }
       auto decision = manageAccessRecord(histRecord, curRecord, 
-              isHistBeforeCurrent, diffIndex);
+              isHistBeforeCurrent, accessHistory, diffIndex);
       if (decision == eSkipAddCur) {
         skipAddCur = true;
       }

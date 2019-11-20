@@ -26,6 +26,8 @@ enum RecordManagement{
   eNoOp,
   eSkipAddCur,
   eDelHist,
+  eAddCur,
+  eDelOther,
 };
 
 bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex);
@@ -44,6 +46,9 @@ bool analyzeOrderedDescendents(Label* histLabel, int index, uint64_t histPhase);
 bool analyzeSyncChain(Label* label, int index);
 bool analyzeRaceCondition(const Record& histRecord, const Record& curRecord, 
                           bool& isHistBeforeCur, int& diffIndex);
+
+bool isSibling(Label* histLabel, Label* curLabel, int diffIndex);
+
 bool inFinishScope(Label* label, int startIndex);
 bool dispatchAnalysis(CheckCase checkCase, Label* hist, Label* cur, int index);
 uint64_t computeExitRank(uint64_t phase);
@@ -53,6 +58,7 @@ inline CheckCase buildCheckCase(SegmentType histType, SegmentType curType);
 RecordManagement manageAccessRecord(const Record& histRecord,
                                     const Record& curRecord, 
                                     bool isHistBeforeCur,
+                                    AccessHistory* accessHistory,
                                     int diffIndex);
 
 void modifyAccessHistory(RecordManagement decision,

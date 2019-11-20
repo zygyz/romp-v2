@@ -13,6 +13,14 @@ std::mutex& AccessHistory::getMutex() {
   return _mutex;
 }
 
+
+RecordState AccessHistory::getRecordState() const {
+  return _recordState;
+}
+
+void AccessHistory::setRecordState(RecordState state) {
+  _recordState = state;
+}
 /*
  * If records pointer has not been initialized, initialize the record first.
  * Then return the raw pointer to the records vector.
