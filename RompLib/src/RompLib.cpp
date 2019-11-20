@@ -20,7 +20,7 @@ using LockSetPtr = std::shared_ptr<LockSet>;
 ShadowMemory<AccessHistory> shadowMemory;
 
 /*
- * Driver function to do data race checking 
+ * Driver function to do data race checking and access history management.
  */
 void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel, 
                    const LockSetPtr& curLockSet, const CheckInfo& checkInfo) {
@@ -43,10 +43,13 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
     records->push_back(curRecord);
   } else {
     // check previous access records with current access
+    auto isHistBeforeCure = false;
     for (const auto& histRecord : *records) {
       RAW_DLOG(INFO, "hist record: %s", histRecord.toString().c_str());
-      auto analyzeResult = analyzeRaceCondition(histRecord, curRecord);
-      
+      if (analyzeRaceCondition(histRecord, curRecord, isHistBeforeCure)) {
+        // TODO: report line info
+        RAW_LOG(INFO, "data race found"); 
+      }
     }
   }
 }

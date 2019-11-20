@@ -20,16 +20,15 @@ namespace romp {
 /*
  * This function is a driver function that analyzes race condition between two
  * memory accesses.  Return true if there is race condition between the two 
- * accesses. Return false if no race condition is found.
+ * accesses. Return true if there is race condition
  */
-bool analyzeRaceCondition(const Record& histRecord, const Record& curRecord) {
+bool analyzeRaceCondition(const Record& histRecord, const Record& curRecord, 
+        bool& isHistBeforeCur) {
   auto histLabel = histRecord.getLabel(); 
   auto curLabel = curRecord.getLabel(); 
-  auto histTaskPtr = histRecord.getTaskPtr();
-  auto curTaskPtr = curRecord.getTaskPtr();
-  int diffIndex;
-  auto histBeforeCur = happensBefore(histLabel, curLabel, diffIndex);
-  return histBeforeCur;
+  // TODO: lockset analysis
+  isHistBeforeCur = happensBefore(histLabel, curLabel);
+  return !isHistBeforeCur && (histRecord.isWrite() || curRecord.isWrite());
 }
 
 /*
@@ -47,8 +46,8 @@ bool analyzeRaceCondition(const Record& histRecord, const Record& curRecord) {
  * Return false if hist task is logically concurrent with current task
  * Issue fatal warning if current task happens before hist task.
  */
-bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex) {
-  diffIndex = compareLabels(histLabel, curLabel);
+bool happensBefore(Label* histLabel, Label* curLabel) {
+  auto diffIndex = compareLabels(histLabel, curLabel);
   if (diffIndex < 0) {
     switch(diffIndex) {
       case static_cast<int>(eSameLabel):

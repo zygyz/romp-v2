@@ -23,8 +23,8 @@ enum CheckCase {
   eWorkWork = eWorkShare | (eWorkShare << CASE_SHIFT),
 }; 
 
-bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex);
-bool analyzeRaceCondition(const Record& histRecord, const Record& curRecord);
+bool happensBefore(Label* histLabel, Label* curLabel);
+bool analyzeRaceCondition(const Record& histRec, const Record& curRec, bool& hb);
 bool analyzeSiblingImpTask(Label* histLabel, Label* curLabel, int index);
 bool analyzeSameImpTask(Label* histLabel, Label* curLabel, int index);
 bool analyzeOrderedSection(Label* histLabel, Label* curLabel, int index);
