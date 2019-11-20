@@ -28,8 +28,7 @@ bool analyzeRaceCondition(const Record& histRecord, const Record& curRecord) {
   auto histTaskPtr = histRecord.getTaskPtr();
   auto curTaskPtr = curRecord.getTaskPtr();
   int diffIndex;
-  auto histBeforeCur = happensBefore(histLabel, curLabel, diffIndex, 
-          histTaskPtr, curTaskPtr);
+  auto histBeforeCur = happensBefore(histLabel, curLabel, diffIndex);
   return histBeforeCur;
 }
 
@@ -48,8 +47,7 @@ bool analyzeRaceCondition(const Record& histRecord, const Record& curRecord) {
  * Return false if hist task is logically concurrent with current task
  * Issue fatal warning if current task happens before hist task.
  */
-bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex, 
-        void* histTaskPtr, void* curTaskPtr) {
+bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex) {
   diffIndex = compareLabels(histLabel, curLabel);
   if (diffIndex < 0) {
     switch(diffIndex) {
@@ -76,7 +74,6 @@ bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex,
     RAW_LOG(FATAL, "left span: %lu != right span: %lu", histSpan, curSpan);
   }
   if (histSpan == 1) { // explicit task or work share task or initial task
-    //TODO
     /*
      * T(histLabel, diffIndex) and T(curLabel, diffIndex) can not be 
      * explicit tasks. Otherwise, histLabel[diffIndex-1] and
@@ -100,12 +97,10 @@ bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex,
          */
         return true; 
       } else {
-        return analyzeSiblingImpTask(histLabel, curLabel, diffIndex, 
-                histTaskPtr, curTaskPtr);
+        return analyzeSiblingImpTask(histLabel, curLabel, diffIndex);
       }
     } else { 
-      return analyzeSameImpTask(histLabel, curLabel, diffIndex, histTaskPtr,
-              curTaskPtr); 
+      return analyzeSameImpTask(histLabel, curLabel, diffIndex); 
     }
   }
 }
@@ -123,8 +118,7 @@ bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex,
  * Issue fatal warning if T(curLabel) -> T(histLabel)
  *
  */
-bool analyzeSiblingImpTask(Label* histLabel, Label* curLabel, int diffIndex,
-        void* histTaskPtr, void* curTaskPtr) { 
+bool analyzeSiblingImpTask(Label* histLabel, Label* curLabel, int diffIndex) { 
   auto lenHistLabel = histLabel->getLabelLength();
   auto lenCurLabel = curLabel->getLabelLength();
   if (diffIndex == (lenHistLabel - 1) || diffIndex == (lenCurLabel - 1)) {
@@ -314,8 +308,7 @@ bool analyzeSyncChain(Label* label, int startIndex) {
  * Return false if T(histLabel) || T(curLabel)
  * Issue fatal warning if T(curLabel) -> T(histLabel)
  */
-bool analyzeSameImpTask(Label* histLabel, Label* curLabel, int diffIndex, 
-        void* histTaskPtr, void* curTaskPtr) {
+bool analyzeSameImpTask(Label* histLabel, Label* curLabel, int diffIndex) {
   auto lenHistLabel = histLabel->getLabelLength(); 
   auto lenCurLabel = curLabel->getLabelLength();
   if (diffIndex == (lenHistLabel - 1)) {
@@ -462,16 +455,14 @@ bool analyzeNextExpImp(Label* histLabel, Label* curLabel, int diffIndex) {
  * e.g., taskwait, taskgroup
  */
 bool analyzeNextExpExp(Label* histLabel, Label* curLabel, int diffIndex) {
-  auto histSeg = histLabel->getKthSegment(diffIndex);
-  auto curSeg = curLabel->getKthSegment(diffIndex);
-  auto histTaskwait = histSeg->getTaskwait();
-  auto curTaskwait = curSeg->getTaskwait();
   //TODO 
+  RAW_LOG(FATAL, "not implemented yet");
   return true;
 }
 
 bool analyzeNextExpWork(Label* histLabel, Label* curLabel, int diffIndex) {
  //TODO
+  RAW_LOG(FATAL, "not implemented yet");
   return true;
 }
 
@@ -495,6 +486,7 @@ bool analyzeNextWorkImp(Label* histLabel, Label* curLabel, int diffIndex) {
 
 bool analyzeNextWorkExp(Label* histLabel, Label* curLabel, int diffIndex) {
   //TODO
+  RAW_LOG(FATAL, "not implemented yet");
   return true;
 }
 

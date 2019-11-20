@@ -23,10 +23,10 @@ enum CheckCase {
   eWorkWork = eWorkShare | (eWorkShare << CASE_SHIFT),
 }; 
 
-bool happensBefore(Label* hl, Label* cl, int& di, void* hp, void* cp);
+bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex);
 bool analyzeRaceCondition(const Record& histRecord, const Record& curRecord);
-bool analyzeSiblingImpTask(Label* hl, Label* cl, int di, void* hp, void* cp);
-bool analyzeSameImpTask(Label* hl, Label* cl, int di, void* hp, void* cp);
+bool analyzeSiblingImpTask(Label* histLabel, Label* curLabel, int index);
+bool analyzeSameImpTask(Label* histLabel, Label* curLabel, int index);
 bool analyzeOrderedSection(Label* histLabel, Label* curLabel, int index);
 bool analyzeNextImpExp(Label* histLabel, Label* curLabel, int index);
 bool analyzeNextImpWork(Label* histLabel, Label* curLabel, int index);
