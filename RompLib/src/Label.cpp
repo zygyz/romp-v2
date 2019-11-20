@@ -125,13 +125,9 @@ std::shared_ptr<Label> genExpTaskLabel(Label* parentLabel) {
   return newLabel;
 }
 
-std::shared_ptr<Label> mutateParentImpEnd(
-        Label* parentLabel,
-        Label* childLabel) {
-  auto newLabel = std::make_shared<Label>(*parentLabel);
+std::shared_ptr<Label> mutateParentImpEnd(Label* childLabel) {
+  auto newLabel = std::make_shared<Label>(*childLabel);
   newLabel->popSegment();       
-  auto childSegment = childLabel->getLastKthSegment(2);
-  newLabel->appendSegment(childSegment);
   return newLabel;
 }
 

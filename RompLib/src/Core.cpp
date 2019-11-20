@@ -23,11 +23,11 @@ namespace romp {
  * accesses. Return true if there is race condition
  */
 bool analyzeRaceCondition(const Record& histRecord, const Record& curRecord, 
-        bool& isHistBeforeCur) {
+        bool& isHistBeforeCur, int& diffIndex) {
   auto histLabel = histRecord.getLabel(); 
   auto curLabel = curRecord.getLabel(); 
   // TODO: lockset analysis
-  isHistBeforeCur = happensBefore(histLabel, curLabel);
+  isHistBeforeCur = happensBefore(histLabel, curLabel, diffIndex);
   return !isHistBeforeCur && (histRecord.isWrite() || curRecord.isWrite());
 }
 
@@ -46,12 +46,12 @@ bool analyzeRaceCondition(const Record& histRecord, const Record& curRecord,
  * Return false if hist task is logically concurrent with current task
  * Issue fatal warning if current task happens before hist task.
  */
-bool happensBefore(Label* histLabel, Label* curLabel) {
-  auto diffIndex = compareLabels(histLabel, curLabel);
+bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex) {
+  diffIndex = compareLabels(histLabel, curLabel);
   if (diffIndex < 0) {
     switch(diffIndex) {
       case static_cast<int>(eSameLabel):
-        return false;
+        return true;
       case static_cast<int>(eLeftIsPrefix):
         return true;
       case static_cast<int>(eRightIsPrefix):
@@ -590,5 +590,42 @@ bool dispatchAnalysis(CheckCase checkCase, Label* hist, Label* cur,
   return false;
 }
 
+/*
+ * This function determines the action on access history depending on 
+ * various conditions between hist record and cur record. This is where
+ * access history maintenence decision is made.
+ * Here we implement the baseline pruning algorithm
+ */
+RecordManagement manageAccessRecord(const Record& histRecord, 
+                                    const Record& curRecord,
+                                    bool isHistBeforeCurrent,
+                                    int diffIndex) {
+  auto histIsWrite = histRecord.isWrite();  
+  auto curIsWrite = curRecord.isWrite();
+  // TODO: fill the lockset analysis part
+  if (((histIsWrite && curIsWrite) || !histIsWrite) && isHistBeforeCurrent) {
+    return eDelHist;  
+  } else if (diffIndex == static_cast<int>(eSameLabel) && 
+            ((!histIsWrite && !curIsWrite) || histIsWrite)) {
+      return eSkipAddCur; 
+  }
+  return eNoOp;
+} 
+
+                         
+/*
+ * This function modifies the access record associated with a memory address
+ * based on the management decision. It advances the iterator to the container
+ * that holds access records 
+ */
+void modifyAccessHistory(RecordManagement decision, 
+                         std::vector<Record>* records,
+                         std::vector<Record>::iterator& it) {
+  if (decision == eDelHist) {
+    it = records->erase(it);
+  } else {
+    it++;
+  }
+}
 
 }

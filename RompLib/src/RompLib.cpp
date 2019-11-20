@@ -25,31 +25,52 @@ ShadowMemory<AccessHistory> shadowMemory;
 void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel, 
                    const LockSetPtr& curLockSet, const CheckInfo& checkInfo) {
   std::unique_lock<std::mutex> guard(accessHistory->getMutex());
+  auto records = accessHistory->getRecords();
   if (accessHistory->dataRaceFound()) {
-    // data race has already been found on this memory location, romp only 
-    // reports one data race on any memory location in one run. Once the data 
-    // race is reported, romp clears the access history with respect to this
-    // memory location and mark this memory location as found. Future access 
-    // to this memory location does not go through data race checking.
-    // TODO: implement the logic described above.
+    /* data race has already been found on this memory location, romp only 
+     * reports one data race on any memory location in one run. Once the data 
+     * race is reported, romp clears the access history with respect to this
+     * memory location and mark this memory location as found. Future access 
+     * to this memory location does not go through data race checking.
+     * TODO: implement the logic described above.
+     */
+    if (!records->empty()) {
+      records->clear();
+    }
     return;
   }
-  auto records = accessHistory->getRecords();
+  //RAW_LOG(INFO, "access record length: %d", records->size());
   auto curRecord = Record(checkInfo.isWrite, curLabel, curLockSet, 
           checkInfo.taskPtr, checkInfo.instnAddr);
   if (records->empty()) {
     // no access record, add current access to the record
-    RAW_DLOG(INFO, "records list is empty, add record");
+    //RAW_DLOG(INFO, "records list is empty, add record");
     records->push_back(curRecord);
   } else {
     // check previous access records with current access
-    auto isHistBeforeCure = false;
-    for (const auto& histRecord : *records) {
-      RAW_DLOG(INFO, "hist record: %s", histRecord.toString().c_str());
-      if (analyzeRaceCondition(histRecord, curRecord, isHistBeforeCure)) {
+    auto isHistBeforeCurrent = false;
+    auto it = records->begin();
+    std::vector<Record>::const_iterator cit;
+    auto skipAddCur = false;
+    int diffIndex;
+    while (it != records->end()) {
+      cit = it; 
+      auto histRecord = *cit;
+      if (analyzeRaceCondition(histRecord, curRecord, isHistBeforeCurrent, 
+                  diffIndex)) {
         // TODO: report line info
         RAW_LOG(INFO, "data race found"); 
+        accessHistory->setFlag(eDataRaceFound);  
       }
+      auto decision = manageAccessRecord(histRecord, curRecord, 
+              isHistBeforeCurrent, diffIndex);
+      if (decision == eSkipAddCur) {
+        skipAddCur = true;
+      }
+      modifyAccessHistory(decision, records, it);
+    }
+    if (!skipAddCur) {
+      records->push_back(curRecord); 
     }
   }
 }
@@ -105,7 +126,6 @@ void checkAccess(void* address,
     return;
   }
   auto curTaskData = static_cast<TaskData*>(allTaskInfo.taskData->ptr);
-  RAW_DLOG(INFO, "cur label: %s", curTaskData->label->toString().c_str());
   auto& curLabel = curTaskData->label;
   auto& curLockSet = curTaskData->lockSet;
   

@@ -1,5 +1,5 @@
 #pragma once 
-#include "Record.h"
+#include "AccessHistory.h"
 
 namespace romp {
 
@@ -9,7 +9,6 @@ namespace romp {
  * segments.
  */
 #define CASE_SHIFT 2
-#define DBEUG_CORE
 
 enum CheckCase {
   eImpImp = eImplicit | (eImplicit << CASE_SHIFT),
@@ -23,8 +22,13 @@ enum CheckCase {
   eWorkWork = eWorkShare | (eWorkShare << CASE_SHIFT),
 }; 
 
-bool happensBefore(Label* histLabel, Label* curLabel);
-bool analyzeRaceCondition(const Record& histRec, const Record& curRec, bool& hb);
+enum RecordManagement{
+  eNoOp,
+  eSkipAddCur,
+  eDelHist,
+};
+
+bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex);
 bool analyzeSiblingImpTask(Label* histLabel, Label* curLabel, int index);
 bool analyzeSameImpTask(Label* histLabel, Label* curLabel, int index);
 bool analyzeOrderedSection(Label* histLabel, Label* curLabel, int index);
@@ -38,11 +42,22 @@ bool analyzeNextWorkExp(Label* histLabel, Label* curLabel, int index);
 bool analyzeNextWorkWork(Label* histLabel , Label* curLabel, int index);
 bool analyzeOrderedDescendents(Label* histLabel, int index, uint64_t histPhase);
 bool analyzeSyncChain(Label* label, int index);
-
+bool analyzeRaceCondition(const Record& histRecord, const Record& curRecord, 
+                          bool& isHistBeforeCur, int& diffIndex);
 bool inFinishScope(Label* label, int startIndex);
 bool dispatchAnalysis(CheckCase checkCase, Label* hist, Label* cur, int index);
 uint64_t computeExitRank(uint64_t phase);
 uint64_t computeEnterRank(uint64_t phase);
 inline CheckCase buildCheckCase(SegmentType histType, SegmentType curType);
+
+RecordManagement manageAccessRecord(const Record& histRecord,
+                                    const Record& curRecord, 
+                                    bool isHistBeforeCur,
+                                    int diffIndex);
+
+void modifyAccessHistory(RecordManagement decision,
+                         std::vector<Record>* records,
+                         std::vector<Record>::iterator& cit);
+
 
 }

@@ -50,7 +50,7 @@ void on_ompt_callback_implicit_task(
     return;
   }
   int parentTaskType, parentThreadNum;
-  void* parentDataPtr;
+  void* parentDataPtr = nullptr;
   if (!queryTaskInfo(1, eTaskData, parentTaskType, parentThreadNum,
              parentDataPtr)) {
     RAW_LOG(FATAL, "cannot get parent task info");     
@@ -63,9 +63,11 @@ void on_ompt_callback_implicit_task(
             actualParallelism); 
     // return value optimization should avoid the ref count mod
     auto newTaskDataPtr = new TaskData();
-    RAW_DLOG(INFO, "created task data ptr: 0x%lx", newTaskDataPtr);
+    RAW_DLOG(INFO, "created task data ptr: %p stored at %p",
+            newTaskDataPtr, taskData);
     // cast to rvalue and avoid atomic ref count modification
     newTaskDataPtr->label = std::move(newTaskLabel); 
+    RAW_DLOG(INFO, "%p label is: %p", newTaskDataPtr, newTaskDataPtr->label.get());
     taskData->ptr = static_cast<void*>(newTaskDataPtr);
   } else if (endPoint == ompt_scope_end) {
     /* 
@@ -78,10 +80,12 @@ void on_ompt_callback_implicit_task(
     if (!taskDataPtr) { 
       RAW_LOG(FATAL, "task data pointer is null");
     }
-    auto parentLabel = parentTaskData->label; 
-    auto mutatedLabel = mutateParentImpEnd(
-            parentLabel.get(), (taskDataPtr->label).get());
+    if (taskDataPtr->label == nullptr) {
+      RAW_LOG(FATAL, "%p, %p label is nullptr", taskData, taskDataPtr);; 
+    }
+    auto mutatedLabel = mutateParentImpEnd(taskDataPtr->label.get());
     parentTaskData->label = std::move(mutatedLabel);
+    RAW_DLOG(INFO, "modifying parent label: %p %p", parentTaskData);
     delete taskDataPtr; 
     taskData->ptr = nullptr;
   }
@@ -145,7 +149,8 @@ void on_ompt_callback_sync_region(
        ompt_data_t *parallelData,
        ompt_data_t *taskData,
        const void* codePtrRa) {
-  RAW_LOG(INFO,  "on_ompt_callback_sync_region called");
+  RAW_LOG(INFO,  "on_ompt_callback_sync_region called %p %d %d", 
+          taskData, kind, endPoint);
   if (!taskData || !taskData->ptr) {
     RAW_LOG(FATAL, "task data pointer is null");  
     return;
@@ -153,27 +158,42 @@ void on_ompt_callback_sync_region(
   auto taskDataPtr = static_cast<TaskData*>(taskData->ptr);
   auto labelPtr = (taskDataPtr->label).get();  // never std::move here!
   std::shared_ptr<Label> mutatedLabel = nullptr;
-  if (endPoint == ompt_scope_begin && kind == ompt_sync_region_taskgroup) {
-    mutatedLabel = mutateTaskGroupBegin(labelPtr);
+  if (endPoint == ompt_scope_begin) {
+    switch(kind) {
+      case ompt_sync_region_taskgroup:
+        mutatedLabel = mutateTaskGroupBegin(labelPtr);
+        break;
+      case ompt_sync_region_barrier:
+      case ompt_sync_region_barrier_implicit:
+      case ompt_sync_region_barrier_explicit:
+        mutatedLabel = mutateBarrierEnd(labelPtr);
+        break;
+      default:
+        RAW_LOG(WARNING, "ignoring endpoint type %d", kind);
+        break;
+    }
   } else if (endPoint == ompt_scope_end) {
     switch(kind) {
       case ompt_sync_region_taskwait:
         mutatedLabel = mutateTaskWait(labelPtr);
         markExpChildSyncTaskwait(taskDataPtr, labelPtr);
         break;
-      case ompt_sync_region_barrier:
-        mutatedLabel = mutateBarrierEnd(labelPtr);
-        break;
       case ompt_sync_region_taskgroup:
         mutatedLabel = mutateTaskGroupEnd(labelPtr);
         markExpChildSyncTaskGroupEnd(taskDataPtr, labelPtr);
         break;
+      case ompt_sync_region_reduction:
+        //TODO: implement reduction
+        RAW_LOG(FATAL, "implement ompt_sync_region_reduction");
+        break;
       default:
-        RAW_LOG(FATAL, "unknown endpoint type");
+        RAW_DLOG(WARNING, "ignoring endpoint type %d", kind);
         break;
     }
   }
-  taskDataPtr->label = std::move(mutatedLabel);
+  if (mutatedLabel != nullptr) { // for default case, don't modify
+    taskDataPtr->label = std::move(mutatedLabel);
+  }
   return;
 }
 

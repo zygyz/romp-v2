@@ -44,8 +44,7 @@ std::shared_ptr<Label> genImpTaskLabel(
 std::shared_ptr<Label> genInitTaskLabel();
 std::shared_ptr<Label> genExpTaskLabel(Label* parentLabel);
 
-std::shared_ptr<Label> mutateParentImpEnd(Label* parentLabel,
-                                          Label* childLabel);
+std::shared_ptr<Label> mutateParentImpEnd(Label* childLabel);
 
 std::shared_ptr<Label> mutateBarrierEnd(Label* label);
 std::shared_ptr<Label> mutateTaskWait(Label* label);
