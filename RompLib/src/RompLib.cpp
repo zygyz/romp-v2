@@ -39,7 +39,7 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
     }
     return;
   }
-  RAW_LOG(INFO, "access record length: %d", records->size());
+  //RAW_LOG(INFO, "access record length: %d", records->size());
   auto curRecord = Record(checkInfo.isWrite, curLabel, curLockSet, 
           checkInfo.taskPtr, checkInfo.instnAddr);
   if (records->empty()) {
