@@ -355,7 +355,11 @@ bool analyzeSameImpTask(Label* histLabel, Label* curLabel, int diffIndex) {
         return analyzeSyncChain(histLabel, diffIndex + 1); 
       }
     } else if (histNextType == eWorkShare) {
-      // TODO: comment on this case
+      /*
+       * T(histLabel, diffIndex + 1) is workshare task. As descendent task, 
+       * T(histLabel) is logically concurrent with T(curLabel) even with 
+       * ordered section depending on the scheduling of the workshare work.
+       */ 
       return false; 
     }
   } else {
@@ -454,8 +458,24 @@ bool analyzeNextExpImp(Label* histLabel, Label* curLabel, int diffIndex) {
  * e.g., taskwait, taskgroup
  */
 bool analyzeNextExpExp(Label* histLabel, Label* curLabel, int diffIndex) {
-  //TODO 
-  RAW_LOG(FATAL, "not implemented yet");
+  auto histSeg = histLabel->getKthSegment(diffIndex);      
+  auto histNextSeg = histLabel->getKthSegment(diffIndex + 1);
+  if (!histNextSeg->isTaskGroupSync()) {
+    auto histTaskwait = histSeg->getTaskwait();
+    auto curSeg = curLabel->getKthSegment(diffIndex);
+    auto curTsakwait = curSeg->getTaskwait();
+    if (histTaskwait == curTaskwait) {
+      return false;
+    } else if (histTaskwait < curTaskwait) {
+      // there is taskwait between creation of T(histLabel, diffIndex + 1) and 
+      // T(curLabel, diffIndex + 1)  
+      return analyzeSyncChain(histLabel, diffIndex + 1); 
+    } else {
+      RAW_LOG(FATAL, "not expecting hist taskwait to be larger than \
+            cur taskwait");
+      return false;
+    }
+  } 
   return true;
 }
 

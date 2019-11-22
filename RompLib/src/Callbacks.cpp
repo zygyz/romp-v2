@@ -158,20 +158,8 @@ void on_ompt_callback_sync_region(
   auto taskDataPtr = static_cast<TaskData*>(taskData->ptr);
   auto labelPtr = (taskDataPtr->label).get();  // never std::move here!
   std::shared_ptr<Label> mutatedLabel = nullptr;
-  if (endPoint == ompt_scope_begin) {
-    switch(kind) {
-      case ompt_sync_region_taskgroup:
-        mutatedLabel = mutateTaskGroupBegin(labelPtr);
-        break;
-      case ompt_sync_region_barrier:
-      case ompt_sync_region_barrier_implicit:
-      case ompt_sync_region_barrier_explicit:
-        mutatedLabel = mutateBarrierEnd(labelPtr);
-        break;
-      default:
-        RAW_LOG(WARNING, "ignoring endpoint type %d", kind);
-        break;
-    }
+  if (endPoint == ompt_scope_begin && kind == ompt_sync_region_taskgroup) {
+    mutatedLabel = mutateTaskGroupBegin(labelPtr);
   } else if (endPoint == ompt_scope_end) {
     switch(kind) {
       case ompt_sync_region_taskwait:
@@ -181,6 +169,11 @@ void on_ompt_callback_sync_region(
       case ompt_sync_region_taskgroup:
         mutatedLabel = mutateTaskGroupEnd(labelPtr);
         markExpChildSyncTaskGroupEnd(taskDataPtr, labelPtr);
+        break;
+      case ompt_sync_region_barrier:
+      case ompt_sync_region_barrier_implicit:
+      case ompt_sync_region_barrier_explicit:
+        mutatedLabel = mutateBarrierEnd(labelPtr);
         break;
       case ompt_sync_region_reduction:
         //TODO: implement reduction
