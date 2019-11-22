@@ -463,7 +463,7 @@ bool analyzeNextExpExp(Label* histLabel, Label* curLabel, int diffIndex) {
   if (!histNextSeg->isTaskGroupSync()) {
     auto histTaskwait = histSeg->getTaskwait();
     auto curSeg = curLabel->getKthSegment(diffIndex);
-    auto curTsakwait = curSeg->getTaskwait();
+    auto curTaskwait = curSeg->getTaskwait();
     if (histTaskwait == curTaskwait) {
       return false;
     } else if (histTaskwait < curTaskwait) {
