@@ -455,7 +455,11 @@ bool analyzeNextExpImp(Label* histLabel, Label* curLabel, int diffIndex) {
  * T(curLabel) are descendent tasks of T'. T(histLabel, diffIndex+1) is 
  * explicit task, T(curLabel, diffIndex+1) is also explicit task. 
  * Check syncrhonization that could affect the happens-before relation. 
- * e.g., taskwait, taskgroup
+ * e.g., taskwait, taskgroup. Note that we treat explicit task dependency 
+ * as an extra syncrhonization imposed on tasks and is checked separately
+ *
+ * Return true if T(histLabel) happens before T(curLabel) w
+ * Return false otherwise.
  */
 bool analyzeNextExpExp(Label* histLabel, Label* curLabel, int diffIndex) {
   auto histSeg = histLabel->getKthSegment(diffIndex);      
@@ -479,10 +483,19 @@ bool analyzeNextExpExp(Label* histLabel, Label* curLabel, int diffIndex) {
   return true;
 }
 
+/*
+ * This function analyzes case when T(histLabel, diffIndex) and 
+ * T(curLabel, diffIndex) are the same implicit task, T'. T(histLabel) and 
+ * T(curLabel) are descendent tasks of T'. T(histLabel, diffIndex + 1) is 
+ * explicit task, T(curLabel, diffIndex + 1) is workshare task.
+ * The intereseting part is that since T(histLabel, diffIndex+1) is explicit
+ * task, T(histLabel) happens before T(curLabel) only when T(histLabel) 
+ * finishes before T(histLabel, diffIndex + 1), while T(histLabel, diffIndex+1)
+ * finishes before T(curLabel, diffIndex + 1). This means that the analysis
+ * is the same as the one for analyzeNextExpExp()
+ */
 bool analyzeNextExpWork(Label* histLabel, Label* curLabel, int diffIndex) {
- //TODO
-  RAW_LOG(FATAL, "not implemented yet");
-  return true;
+  return analyzeNextExpExp(histLabel, curLabel, diffIndex);
 }
 
 /*
