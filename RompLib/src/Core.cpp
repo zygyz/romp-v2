@@ -516,10 +516,16 @@ bool analyzeNextWorkImp(Label* histLabel, Label* curLabel, int diffIndex) {
   return false; 
 }
 
+
+/*
+ * This function analyzes case when T(histLabel, diffIndex) and 
+ * T(curLabel, diffIndex) are the same implicit task, T'. T(histLabel) and 
+ * T(curLabel) are descendent tasks of T'. T(histLabel, diffIndex+1) is 
+ * workshare task, T(curLabel, diffIndex + 1) is explicit task. 
+ * The reasoning is similar to the one in `analyzeNextWorkImp`
+ */
 bool analyzeNextWorkExp(Label* histLabel, Label* curLabel, int diffIndex) {
-  //TODO
-  RAW_LOG(FATAL, "not implemented yet");
-  return true;
+  return false;  
 }
 
 /*
