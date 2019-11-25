@@ -208,9 +208,10 @@ void on_ompt_callback_mutex_acquired(
     mutatedLabel = mutateOrderSection(label.get()); 
   } else {
     if (taskDataPtr->lockSet == nullptr) {
-      // TODO: set the lockset
+      auto lockSet = std::make_shared<SmallLockSet>();
+      taskDataPtr->lockSet = std::move(lockSet);
     }
-    // TODO add the lock to the lockset
+    taskDataPtr->lockSet->addLock(static_cast<uint64_t>(waitId));
   }
   taskDataPtr->label = std::move(mutatedLabel);
 }
@@ -232,7 +233,7 @@ void on_ompt_callback_mutex_released(
   if (kind == ompt_mutex_ordered) {
     mutatedLabel = mutateOrderSection(label.get());
   } else {
-    // TODO: remove the lock from lockset
+    taskDataPtr->lockSet->removeLock(waitId);
   }
   taskDataPtr->label = std::move(mutatedLabel);
 }

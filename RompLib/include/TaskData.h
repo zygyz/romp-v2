@@ -4,7 +4,7 @@
 
 namespace romp {
 class Label;
-class LockSet;
+class SmallLockSet;
 
 /*
  * TaskData struct records information related to a task.
@@ -14,7 +14,7 @@ class LockSet;
  */
 typedef struct TaskData {
   std::shared_ptr<Label> label;
-  std::shared_ptr<LockSet> lockSet;
+  std::shared_ptr<SmallLockSet> lockSet;
   bool inReduction;
   std::vector<void*> childExpTaskData;
   TaskData() {
