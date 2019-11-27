@@ -22,7 +22,7 @@ void on_ompt_callback_implicit_task(
        unsigned int actualParallelism,
        unsigned int index,
        int flags) {
-  RAW_LOG(INFO, "on_ompt_callback_implicit_task called:%u p:%lx t:%lx %u %u %d",
+  RAW_DLOG(INFO, "on_ompt_callback_implicit_task called:%u p:%lx t:%lx %u %u %d",
           endPoint, parallelData, taskData, actualParallelism, index, flags);
 
   if (flags == ompt_task_initial || actualParallelism == 1) {
@@ -149,7 +149,7 @@ void on_ompt_callback_sync_region(
        ompt_data_t *parallelData,
        ompt_data_t *taskData,
        const void* codePtrRa) {
-  RAW_LOG(INFO,  "on_ompt_callback_sync_region called %p %d %d", 
+  RAW_DLOG(INFO,  "on_ompt_callback_sync_region called %p %d %d", 
           taskData, kind, endPoint);
   if (!taskData || !taskData->ptr) {
     RAW_LOG(FATAL, "task data pointer is null");  
@@ -203,7 +203,7 @@ void on_ompt_callback_mutex_acquired(
         ompt_mutex_t kind,
         ompt_wait_id_t waitId,
         const void *codePtrRa) {
-  RAW_LOG(INFO, "on_ompt_callback_mutex_acquired called");
+  RAW_DLOG(INFO, "on_ompt_callback_mutex_acquired called");
   int taskType, threadNum;
   void* dataPtr;
   if (!queryTaskInfo(0, eTaskData, taskType, threadNum, dataPtr)) {
@@ -229,7 +229,7 @@ void on_ompt_callback_mutex_released(
         ompt_mutex_t kind,
         ompt_wait_id_t waitId,
         const void *codePtrRa) {
-  RAW_LOG(INFO, "on_ompt_callback_mutex_released called");
+  RAW_DLOG(INFO, "on_ompt_callback_mutex_released called");
   int taskType, threadNum;
   void* dataPtr;
   if (!queryTaskInfo(0, eTaskData, taskType, threadNum, dataPtr)) {
@@ -354,7 +354,7 @@ void on_ompt_callback_work(
       ompt_data_t *taskData,
       uint64_t count,
       const void *codePtrRa) {
-  RAW_LOG(INFO, "on_ompt_callback_work called");
+  RAW_DLOG(INFO, "on_ompt_callback_work called");
   if (!taskData || !taskData->ptr) {
     RAW_LOG(FATAL, "task data pointer is null");
   }
