@@ -224,6 +224,7 @@ void BaseSegment::setLoopCount(uint64_t loopCount) {
 
 uint64_t BaseSegment::getLoopCount() const {
   uint64_t loopCount = (_value & LOOP_CNT_MASK) >> LOOP_CNT_SHIFT;
+  return loopCount;
 }
 
 void BaseSegment::setType(SegmentType type) {

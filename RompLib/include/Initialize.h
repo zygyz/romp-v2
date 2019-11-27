@@ -12,6 +12,7 @@
 namespace romp{
 
 bool gOmptInitialized = false; 
+bool gDataRaceFound = false;
 ompt_get_task_info_t omptGetTaskInfo;
 ompt_get_parallel_info_t omptGetParallelInfo;
 ompt_get_thread_data_t omptGetThreadData;
@@ -66,6 +67,9 @@ int omptInitialize(ompt_function_lookup_t lookup,
  */
 void omptFinalize(ompt_data_t* toolData) {
   LOG(INFO) << "finalizing ompt";
+  if (gDataRaceFound) {
+    LOG(INFO) << "data race is found";
+  }
 }
 
 }
