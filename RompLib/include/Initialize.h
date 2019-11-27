@@ -1,6 +1,9 @@
 #pragma once
 #include <glog/logging.h>
+#include <ompt.h>
+
 #include "Callbacks.h"
+#include "QueryFuncs.h"
 
 /* 
  * This header file defines functions that are used 
@@ -9,8 +12,9 @@
 namespace romp{
 
 bool gOmptInitialized = false; 
-ompt_get_task_info_t ompt_get_task_info;
-ompt_get_thread_data_t ompt_get_thread_data;
+ompt_get_task_info_t omptGetTaskInfo;
+ompt_get_parallel_info_t omptGetParallelInfo;
+ompt_get_thread_data_t omptGetThreadData;
 /* 
  * Define macro for registering ompt callback functions. 
  */
@@ -30,7 +34,6 @@ do {                                                         \
 int omptInitialize(ompt_function_lookup_t lookup,
                    int initialDeviceNum,
                    ompt_data_t* toolData) {
-  google::InitGoogleLogging("romp");
   LOG(INFO) << "start initializing ompt";
   auto ompt_set_callback = 
       (ompt_set_callback_t)lookup("ompt_set_callback");
@@ -50,7 +53,9 @@ int omptInitialize(ompt_function_lookup_t lookup,
   register_callback(ompt_callback_thread_end);
   register_callback(ompt_callback_dispatch);
 
-  ompt_get_task_info = (ompt_get_task_info_t)lookup("ompt_get_task_info");
+  omptGetTaskInfo = (ompt_get_task_info_t)lookup("ompt_get_task_info");
+  omptGetParallelInfo = (ompt_get_parallel_info_t)lookup("ompt_get_parallel_info");
+  omptGetThreadData = (ompt_get_thread_data_t)lookup("ompt_get_thread_data");
 
   gOmptInitialized = true;
   return 1;
@@ -63,6 +68,4 @@ void omptFinalize(ompt_data_t* toolData) {
   LOG(INFO) << "finalizing ompt";
 }
 
-
 }
-
