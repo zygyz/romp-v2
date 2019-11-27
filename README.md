@@ -1,13 +1,16 @@
-## Please refer to the readme in experimental branch for now
 
 
 
+This readme is mainly for the purpose of showing how to build romp directly with cmake.
+For a release version of romp, we encourage installation with spack. 
 
 ### System Requirements
 1. Operating Systems:  Linux
 
 2. Architecture:  x86_64
 
+3. Compiler: gcc 4.8.5 (recommended, later version e.g., 9.2.0 generates abi error.
+Also, gnu 9.2.0 compiled workshare loop generates assertion failiure in llvm openmp rtl) 
 ### Prerequisites
 Checkout my version of spack, which contains some modification to package.py 
 for llvm-openmp 
@@ -28,7 +31,7 @@ gflags glog llvm-openmp
 
 1. Build dyninst. Suppose the dyninst is located in `/path/to/dyninst`, and 
  the artifact is installed in `path/to/dyninst/install`. Create a symlink:
- ``` ln -s /path/to/dyninst/install dyninst```
+ ``` ln -s /path/to/dyninst/install $HOME/dyninst```
  
 2. set environement variables
 ```
@@ -36,6 +39,8 @@ export GLOG_PREFIX=`spack location --install-dir glog`
 export GFLAGS_PREFIX=`spack location --install-dir gflags`
 export LLVM_PREFIX=`spack location --install-dir llvm-openmp`
 export CUSTOM_DYNINST_PREFIX=$HOME/dyninst
+export LIBRARY_PATH=`spack location --install-dir glog`/lib\
+`spack location --install-dir llvm-openmp`/lib
 ```
 3. Change directory to `romp-v2`: 
 ```mkdir build
@@ -43,12 +48,12 @@ export CUSTOM_DYNINST_PREFIX=$HOME/dyninst
    cd build
    cmake -DCMAKE_PREFIX_PATH="$GFLAGS_PREFIX;$GLOG_PREFIX;$CUSTOM_DYNINST_PREFIX"
          -DLLVM_PATH=$LLVM_PREFIX -DCMAKE_CXX_FLAGS=-std=c++11 -DCUSTOM_DYNINST=ON 
-         -DCMAKE_INSTALL_PREFIX=`pwd`/../install ..
+         -DCMAKE_INSTALL_PREFIX=`pwd`/../install -DCMAKE_CXX_COMPILER=/usr/bin/g++ ..
    make
    make install
  ```
 4. Now dyninst client `InstrumentMain` is installed in `romp-v2/install/bin`
-   Before running instrumentation, set up several environemnt variables:
+   Before running instrumentation, set up several environment variables:
   ```
    export ROMP_PATH=/path/to/romp-v2/install/lib/libomptrace.so
    export DYNINSTAPI_RT_LIB=$HOME/dyninst/lib/libdyninstAPI_RT.so
