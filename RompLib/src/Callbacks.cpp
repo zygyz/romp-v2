@@ -158,8 +158,18 @@ void on_ompt_callback_sync_region(
   auto taskDataPtr = static_cast<TaskData*>(taskData->ptr);
   auto labelPtr = (taskDataPtr->label).get();  // never std::move here!
   std::shared_ptr<Label> mutatedLabel = nullptr;
-  if (endPoint == ompt_scope_begin && kind == ompt_sync_region_taskgroup) {
-    mutatedLabel = mutateTaskGroupBegin(labelPtr);
+  if (endPoint == ompt_scope_begin) {
+    switch(kind) {
+      case ompt_sync_region_reduction:
+        taskDataPtr->inReduction = true;
+        break;
+      case ompt_sync_region_taskgroup:
+        mutatedLabel = mutateTaskGroupBegin(labelPtr);
+        break;
+      default:
+        RAW_DLOG(WARNING, "ignoring endpoint type %d", kind);
+        break;
+    } 
   } else if (endPoint == ompt_scope_end) {
     switch(kind) {
       case ompt_sync_region_taskwait:
@@ -176,8 +186,7 @@ void on_ompt_callback_sync_region(
         mutatedLabel = mutateBarrierEnd(labelPtr);
         break;
       case ompt_sync_region_reduction:
-        //TODO: implement reduction
-        RAW_LOG(FATAL, "implement ompt_sync_region_reduction");
+        taskDataPtr->inReduction = false;
         break;
       default:
         RAW_DLOG(WARNING, "ignoring endpoint type %d", kind);
@@ -530,6 +539,10 @@ void on_ompt_callback_dispatch(
   taskDataPtr->label = std::move(mutatedLabel);
 }
 
+/*
+ * Note: this callback is merged into on_ompt_callback_sync_region in 
+ * latest version of openmp spec. We keep this for backward compatibility.
+ */
 void on_ompt_callback_reduction(
        ompt_sync_region_t kind,
        ompt_scope_endpoint_t endPoint,
