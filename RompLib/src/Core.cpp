@@ -26,9 +26,31 @@ bool analyzeRaceCondition(const Record& histRecord, const Record& curRecord,
         bool& isHistBeforeCur, int& diffIndex) {
   auto histLabel = histRecord.getLabel(); 
   auto curLabel = curRecord.getLabel(); 
-  // TODO: lockset analysis
+  if (analyzeMutualExclusion(histRecord, curRecord)) {
+    return false;
+  }  
+  auto curTaskPtr = curRecord.getTaskPtr();   
+  if (static_cast<TaskData*>(curTaskPtr)->inReduction) { 
+    // current memory access is in reduction phase, we trust runtime library
+    // that in this phase no data race is genereted by reduction method.
+    return false;
+  }
   isHistBeforeCur = happensBefore(histLabel, curLabel, diffIndex);
   return !isHistBeforeCur && (histRecord.isWrite() || curRecord.isWrite());
+}
+
+/*
+ * This function analyzes mutual exclusion between memory access recorded in 
+ * histRecord and memory access recorded in curRecord.
+ * Return true if there is mutual exclusion; Return false otherwise.
+ */
+bool analyzeMutualExclusion(const Record& histRecord, const Record& curRecord) {
+  auto histLockSet = histRecord.getLockSet(); 
+  auto curLockSet = curRecord.getLockSet();  
+  if (histLockSet == nullptr || curLockSet == nullptr)
+    return false;
+  return histLockSet->hasCommonLock(*curLockSet) || 
+           (histRecord.hasHwLock() && curRecord.hasHwLock());
 }
 
 /*
@@ -355,7 +377,11 @@ bool analyzeSameImpTask(Label* histLabel, Label* curLabel, int diffIndex) {
         return analyzeSyncChain(histLabel, diffIndex + 1); 
       }
     } else if (histNextType == eWorkShare) {
-      // TODO: comment on this case
+      /*
+       * T(histLabel, diffIndex + 1) is workshare task. As descendent task, 
+       * T(histLabel) is logically concurrent with T(curLabel) even with 
+       * ordered section depending on the scheduling of the workshare work.
+       */ 
       return false; 
     }
   } else {
@@ -451,18 +477,47 @@ bool analyzeNextExpImp(Label* histLabel, Label* curLabel, int diffIndex) {
  * T(curLabel) are descendent tasks of T'. T(histLabel, diffIndex+1) is 
  * explicit task, T(curLabel, diffIndex+1) is also explicit task. 
  * Check syncrhonization that could affect the happens-before relation. 
- * e.g., taskwait, taskgroup
+ * e.g., taskwait, taskgroup. Note that we treat explicit task dependency 
+ * as an extra syncrhonization imposed on tasks and is checked separately
+ *
+ * Return true if T(histLabel) happens before T(curLabel) w
+ * Return false otherwise.
  */
 bool analyzeNextExpExp(Label* histLabel, Label* curLabel, int diffIndex) {
-  //TODO 
-  RAW_LOG(FATAL, "not implemented yet");
+  auto histSeg = histLabel->getKthSegment(diffIndex);      
+  auto histNextSeg = histLabel->getKthSegment(diffIndex + 1);
+  if (!histNextSeg->isTaskGroupSync()) {
+    auto histTaskwait = histSeg->getTaskwait();
+    auto curSeg = curLabel->getKthSegment(diffIndex);
+    auto curTaskwait = curSeg->getTaskwait();
+    if (histTaskwait == curTaskwait) {
+      return false;
+    } else if (histTaskwait < curTaskwait) {
+      // there is taskwait between creation of T(histLabel, diffIndex + 1) and 
+      // T(curLabel, diffIndex + 1)  
+      return analyzeSyncChain(histLabel, diffIndex + 1); 
+    } else {
+      RAW_LOG(FATAL, "not expecting hist taskwait to be larger than \
+            cur taskwait");
+      return false;
+    }
+  } 
   return true;
 }
 
+/*
+ * This function analyzes case when T(histLabel, diffIndex) and 
+ * T(curLabel, diffIndex) are the same implicit task, T'. T(histLabel) and 
+ * T(curLabel) are descendent tasks of T'. T(histLabel, diffIndex + 1) is 
+ * explicit task, T(curLabel, diffIndex + 1) is workshare task.
+ * The intereseting part is that since T(histLabel, diffIndex+1) is explicit
+ * task, T(histLabel) happens before T(curLabel) only when T(histLabel) 
+ * finishes before T(histLabel, diffIndex + 1), while T(histLabel, diffIndex+1)
+ * finishes before T(curLabel, diffIndex + 1). This means that the analysis
+ * is the same as the one for analyzeNextExpExp()
+ */
 bool analyzeNextExpWork(Label* histLabel, Label* curLabel, int diffIndex) {
- //TODO
-  RAW_LOG(FATAL, "not implemented yet");
-  return true;
+  return analyzeNextExpExp(histLabel, curLabel, diffIndex);
 }
 
 /*
@@ -483,10 +538,16 @@ bool analyzeNextWorkImp(Label* histLabel, Label* curLabel, int diffIndex) {
   return false; 
 }
 
+
+/*
+ * This function analyzes case when T(histLabel, diffIndex) and 
+ * T(curLabel, diffIndex) are the same implicit task, T'. T(histLabel) and 
+ * T(curLabel) are descendent tasks of T'. T(histLabel, diffIndex+1) is 
+ * workshare task, T(curLabel, diffIndex + 1) is explicit task. 
+ * The reasoning is similar to the one in `analyzeNextWorkImp`
+ */
 bool analyzeNextWorkExp(Label* histLabel, Label* curLabel, int diffIndex) {
-  //TODO
-  RAW_LOG(FATAL, "not implemented yet");
-  return true;
+  return false;  
 }
 
 /*
@@ -509,47 +570,6 @@ uint32_t computeExitRank(uint32_t phase) {
 
 uint32_t computeEnterRank(uint32_t phase) {
   return phase + (phase % 2);
-}
-
-/*
- * This function determines whether the finish of task T(label, startIndex) 
- * finalizes all its descendent tasks. i.e., not possible for any one of 
- * its descendent tasks to continue exists after T(label, startIndex) finishes.
- */
-bool inFinishScope(Label* label, int startIndex) {
-  auto lenLabel = label->getLabelLength();
-  if (startIndex == lenLabel - 1) {
-    // T(label, startIndex) is already the leaf task
-    return true;
-  } 
-  auto seg = label->getKthSegment(startIndex);
-  auto segType = seg->getType();
-  if (segType == eImplicit) {
-    // descendent tasks of this implicit task will finish as the implicit
-    // task finishes 
-    return true;
-  }
-  // label[startIndex] is either a workshare segment or an explicit segment
-  auto taskGroupLevel = seg->getTaskGroupLevel();
-  if (taskGroupLevel > 0) {
-    // T(label) is wrapped in a taskgroup construct, should finish before 
-    // T(label, startIndex) finish
-    return true;
-  }
-   
-  for (int i = startIndex; i < lenLabel; ++i) {
-    auto seg = label->getKthSegment(i);   
-    auto segType = seg->getType();
-    if (segType == eImplicit) {
-      return true;
-    } 
-    // if 
-    auto taskGroupLevel = seg->getTaskGroupLevel();
-    if (taskGroupLevel > 0) {
-       
-    }
-  } 
-  return true;
 }
 
 /*
@@ -603,11 +623,14 @@ RecordManagement manageAccessRecord(const Record& histRecord,
                                     int diffIndex) {
   auto histIsWrite = histRecord.isWrite();  
   auto curIsWrite = curRecord.isWrite();
-  // TODO: fill the lockset analysis part
-  if (((histIsWrite && curIsWrite) || !histIsWrite) && isHistBeforeCurrent) {
+  auto histLockSet = histRecord.getLockSet();
+  auto curLockSet = curRecord.getLockSet();
+  if (((histIsWrite && curIsWrite) || !histIsWrite) && 
+          isHistBeforeCurrent && isSubset(curLockSet, histLockSet)) {
     return eDelHist;  
   } else if (diffIndex == static_cast<int>(eSameLabel) && 
-            ((!histIsWrite && !curIsWrite) || histIsWrite)) {
+            ((!histIsWrite && !curIsWrite) || histIsWrite) && 
+            isSubset(histLockSet, curLockSet)) {
       return eSkipAddCur; 
   } else { // if in parallel 
     auto histLabel = histRecord.getLabel();

@@ -22,7 +22,7 @@ void on_ompt_callback_implicit_task(
        unsigned int actualParallelism,
        unsigned int index,
        int flags) {
-  RAW_LOG(INFO, "on_ompt_callback_implicit_task called:%u p:%lx t:%lx %u %u %d",
+  RAW_DLOG(INFO, "on_ompt_callback_implicit_task called:%u p:%lx t:%lx %u %u %d",
           endPoint, parallelData, taskData, actualParallelism, index, flags);
 
   if (flags == ompt_task_initial || actualParallelism == 1) {
@@ -149,7 +149,7 @@ void on_ompt_callback_sync_region(
        ompt_data_t *parallelData,
        ompt_data_t *taskData,
        const void* codePtrRa) {
-  RAW_LOG(INFO,  "on_ompt_callback_sync_region called %p %d %d", 
+  RAW_DLOG(INFO,  "on_ompt_callback_sync_region called %p %d %d", 
           taskData, kind, endPoint);
   if (!taskData || !taskData->ptr) {
     RAW_LOG(FATAL, "task data pointer is null");  
@@ -160,18 +160,16 @@ void on_ompt_callback_sync_region(
   std::shared_ptr<Label> mutatedLabel = nullptr;
   if (endPoint == ompt_scope_begin) {
     switch(kind) {
+      case ompt_sync_region_reduction:
+        taskDataPtr->inReduction = true;
+        break;
       case ompt_sync_region_taskgroup:
         mutatedLabel = mutateTaskGroupBegin(labelPtr);
         break;
-      case ompt_sync_region_barrier:
-      case ompt_sync_region_barrier_implicit:
-      case ompt_sync_region_barrier_explicit:
-        mutatedLabel = mutateBarrierEnd(labelPtr);
-        break;
       default:
-        RAW_LOG(WARNING, "ignoring endpoint type %d", kind);
+        RAW_DLOG(WARNING, "ignoring endpoint type %d", kind);
         break;
-    }
+    } 
   } else if (endPoint == ompt_scope_end) {
     switch(kind) {
       case ompt_sync_region_taskwait:
@@ -182,9 +180,13 @@ void on_ompt_callback_sync_region(
         mutatedLabel = mutateTaskGroupEnd(labelPtr);
         markExpChildSyncTaskGroupEnd(taskDataPtr, labelPtr);
         break;
+      case ompt_sync_region_barrier:
+      case ompt_sync_region_barrier_implicit:
+      case ompt_sync_region_barrier_explicit:
+        mutatedLabel = mutateBarrierEnd(labelPtr);
+        break;
       case ompt_sync_region_reduction:
-        //TODO: implement reduction
-        RAW_LOG(FATAL, "implement ompt_sync_region_reduction");
+        taskDataPtr->inReduction = false;
         break;
       default:
         RAW_DLOG(WARNING, "ignoring endpoint type %d", kind);
@@ -201,7 +203,7 @@ void on_ompt_callback_mutex_acquired(
         ompt_mutex_t kind,
         ompt_wait_id_t waitId,
         const void *codePtrRa) {
-  RAW_LOG(INFO, "on_ompt_callback_mutex_acquired called");
+  RAW_DLOG(INFO, "on_ompt_callback_mutex_acquired called");
   int taskType, threadNum;
   void* dataPtr;
   if (!queryTaskInfo(0, eTaskData, taskType, threadNum, dataPtr)) {
@@ -215,9 +217,10 @@ void on_ompt_callback_mutex_acquired(
     mutatedLabel = mutateOrderSection(label.get()); 
   } else {
     if (taskDataPtr->lockSet == nullptr) {
-      // TODO: set the lockset
+      auto lockSet = std::make_shared<SmallLockSet>();
+      taskDataPtr->lockSet = std::move(lockSet);
     }
-    // TODO add the lock to the lockset
+    taskDataPtr->lockSet->addLock(static_cast<uint64_t>(waitId));
   }
   taskDataPtr->label = std::move(mutatedLabel);
 }
@@ -226,7 +229,7 @@ void on_ompt_callback_mutex_released(
         ompt_mutex_t kind,
         ompt_wait_id_t waitId,
         const void *codePtrRa) {
-  RAW_LOG(INFO, "on_ompt_callback_mutex_released called");
+  RAW_DLOG(INFO, "on_ompt_callback_mutex_released called");
   int taskType, threadNum;
   void* dataPtr;
   if (!queryTaskInfo(0, eTaskData, taskType, threadNum, dataPtr)) {
@@ -239,7 +242,7 @@ void on_ompt_callback_mutex_released(
   if (kind == ompt_mutex_ordered) {
     mutatedLabel = mutateOrderSection(label.get());
   } else {
-    // TODO: remove the lock from lockset
+    taskDataPtr->lockSet->removeLock(waitId);
   }
   taskDataPtr->label = std::move(mutatedLabel);
 }
@@ -351,7 +354,7 @@ void on_ompt_callback_work(
       ompt_data_t *taskData,
       uint64_t count,
       const void *codePtrRa) {
-  RAW_LOG(INFO, "on_ompt_callback_work called");
+  RAW_DLOG(INFO, "on_ompt_callback_work called");
   if (!taskData || !taskData->ptr) {
     RAW_LOG(FATAL, "task data pointer is null");
   }
@@ -536,6 +539,10 @@ void on_ompt_callback_dispatch(
   taskDataPtr->label = std::move(mutatedLabel);
 }
 
+/*
+ * Note: this callback is merged into on_ompt_callback_sync_region in 
+ * latest version of openmp spec. We keep this for backward compatibility.
+ */
 void on_ompt_callback_reduction(
        ompt_sync_region_t kind,
        ompt_scope_endpoint_t endPoint,

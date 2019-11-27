@@ -4,7 +4,7 @@
 
 namespace romp {
 class Label;
-class LockSet;
+class SmallLockSet;
 
 /*
  * TaskData struct records information related to a task.
