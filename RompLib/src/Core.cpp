@@ -47,6 +47,8 @@ bool analyzeRaceCondition(const Record& histRecord, const Record& curRecord,
 bool analyzeMutualExclusion(const Record& histRecord, const Record& curRecord) {
   auto histLockSet = histRecord.getLockSet(); 
   auto curLockSet = curRecord.getLockSet();  
+  if (histLockSet == nullptr || curLockSet == nullptr)
+    return false;
   return histLockSet->hasCommonLock(*curLockSet) || 
            (histRecord.hasHwLock() && curRecord.hasHwLock());
 }
@@ -623,11 +625,11 @@ RecordManagement manageAccessRecord(const Record& histRecord,
   auto histLockSet = histRecord.getLockSet();
   auto curLockSet = curRecord.getLockSet();
   if (((histIsWrite && curIsWrite) || !histIsWrite) && 
-          isHistBeforeCurrent && curLockSet->isSubsetOf(*histLockSet)) {
+          isHistBeforeCurrent && isSubset(curLockSet, histLockSet)) {
     return eDelHist;  
   } else if (diffIndex == static_cast<int>(eSameLabel) && 
             ((!histIsWrite && !curIsWrite) || histIsWrite) && 
-            histLockSet->isSubsetOf(*curLockSet)) {
+            isSubset(histLockSet, curLockSet)) {
       return eSkipAddCur; 
   }
   return eNoOp;

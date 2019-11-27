@@ -1,5 +1,6 @@
 #pragma once 
 #include "AccessHistory.h"
+#include "LockSet.h"
 #include "TaskData.h"
 
 namespace romp {
