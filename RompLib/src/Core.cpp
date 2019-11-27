@@ -191,8 +191,6 @@ bool analyzeOrderedSection(Label* histLabel, Label* curLabel, int startIndex) {
   } 
   auto histWorkShareId = histSegment->getWorkShareId();
   auto curWorkShareId = curSegment->getWorkShareId(); 
-  RAW_CHECK(histWorkShareId < curWorkShareId, "not expecting hist iter id >= \
-          cur iter id");
   auto histPhase = histBaseSeg->getPhase();
   auto curPhase = curBaseSeg->getPhase();
   auto histExitRank = computeExitRank(histPhase);
@@ -564,11 +562,11 @@ bool analyzeNextWorkWork(Label* histLabel, Label* curLabel, int diffIndex) {
   return false;
 }
 
-uint32_t computeExitRank(uint32_t phase) {
+uint64_t computeExitRank(uint64_t phase) {
   return phase - (phase % 2); 
 }
 
-uint32_t computeEnterRank(uint32_t phase) {
+uint64_t computeEnterRank(uint64_t phase) {
   return phase + (phase % 2);
 }
 
