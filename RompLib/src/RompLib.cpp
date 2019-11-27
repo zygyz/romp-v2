@@ -18,7 +18,6 @@ using LabelPtr = std::shared_ptr<Label>;
 using LockSetPtr = std::shared_ptr<LockSet>;
 
 ShadowMemory<AccessHistory> shadowMemory;
-
 /*
  * Driver function to do data race checking and access history management.
  */
@@ -59,7 +58,7 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
       if (analyzeRaceCondition(histRecord, curRecord, isHistBeforeCurrent, 
                   diffIndex)) {
         // TODO: report line info
-        RAW_LOG(INFO, "data race found"); 
+        gDataRaceFound = true;
         accessHistory->setFlag(eDataRaceFound);  
       }
       auto decision = manageAccessRecord(histRecord, curRecord, 
