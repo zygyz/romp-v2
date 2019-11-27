@@ -26,7 +26,11 @@ bool analyzeRaceCondition(const Record& histRecord, const Record& curRecord,
         bool& isHistBeforeCur, int& diffIndex) {
   auto histLabel = histRecord.getLabel(); 
   auto curLabel = curRecord.getLabel(); 
-  // TODO: lockset analysis
+  auto histLockSet = histRecord.getLockSet(); 
+  auto curLockSet = curRecord.getLockSet();  
+  if (histLockSet->hasCommonLock(*curLockSet)) {
+    return false;
+  }  
   isHistBeforeCur = happensBefore(histLabel, curLabel, diffIndex);
   return !isHistBeforeCur && (histRecord.isWrite() || curRecord.isWrite());
 }
@@ -641,11 +645,14 @@ RecordManagement manageAccessRecord(const Record& histRecord,
                                     int diffIndex) {
   auto histIsWrite = histRecord.isWrite();  
   auto curIsWrite = curRecord.isWrite();
-  // TODO: fill the lockset analysis part
-  if (((histIsWrite && curIsWrite) || !histIsWrite) && isHistBeforeCurrent) {
+  auto histLockSet = histRecord.getLockSet();
+  auto curLockSet = curRecord.getLockSet();
+  if (((histIsWrite && curIsWrite) || !histIsWrite) && 
+          isHistBeforeCurrent && curLockSet->isSubsetOf(*histLockSet)) {
     return eDelHist;  
   } else if (diffIndex == static_cast<int>(eSameLabel) && 
-            ((!histIsWrite && !curIsWrite) || histIsWrite)) {
+            ((!histIsWrite && !curIsWrite) || histIsWrite) && 
+            histLockSet->isSubsetOf(*curLockSet)) {
       return eSkipAddCur; 
   }
   return eNoOp;

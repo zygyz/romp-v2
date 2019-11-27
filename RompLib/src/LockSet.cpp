@@ -57,6 +57,31 @@ bool SmallLockSet::hasCommonLock(const LockSet& other) const {
   return false;
 }
 
+void* SmallLockSet::getLocks() {
+  return static_cast<void*>(_locks);
+}
+/*
+ * Return true if current lockset is the subset of `other` lockset
+ */
+bool SmallLockSet::isSubsetOf(const LockSet& other) const {
+  auto otherLockSet = dynamic_cast<const SmallLockSet&>(other);
+  auto otherNumLocks = otherLockSet._numLocks;
+  auto otherLocks = otherLockSet.getLocks();
+  if (otherNumLocks < _numLocks) {
+    return false;
+  }
+  for (int i = 0; i < _numLocks; ++i) {
+    auto lock = _locks[i];
+    for (int j = 0; j < otherNumLocks; ++j) {
+      auto otherLock = static_cast<uint64_t*>(otherLocks)[j];
+      if (otherLock != lock) {
+        return false; 
+      }
+    } 
+  }
+  return true;
+}
+
 void SmallLockSet::removeLock(uint64_t lock) {
   auto index = -1;
   for (int i = 0; i < _numLocks; ++i) {
