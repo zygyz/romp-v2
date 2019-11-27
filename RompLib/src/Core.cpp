@@ -555,47 +555,6 @@ uint32_t computeEnterRank(uint32_t phase) {
 }
 
 /*
- * This function determines whether the finish of task T(label, startIndex) 
- * finalizes all its descendent tasks. i.e., not possible for any one of 
- * its descendent tasks to continue exists after T(label, startIndex) finishes.
- */
-bool inFinishScope(Label* label, int startIndex) {
-  auto lenLabel = label->getLabelLength();
-  if (startIndex == lenLabel - 1) {
-    // T(label, startIndex) is already the leaf task
-    return true;
-  } 
-  auto seg = label->getKthSegment(startIndex);
-  auto segType = seg->getType();
-  if (segType == eImplicit) {
-    // descendent tasks of this implicit task will finish as the implicit
-    // task finishes 
-    return true;
-  }
-  // label[startIndex] is either a workshare segment or an explicit segment
-  auto taskGroupLevel = seg->getTaskGroupLevel();
-  if (taskGroupLevel > 0) {
-    // T(label) is wrapped in a taskgroup construct, should finish before 
-    // T(label, startIndex) finish
-    return true;
-  }
-   
-  for (int i = startIndex; i < lenLabel; ++i) {
-    auto seg = label->getKthSegment(i);   
-    auto segType = seg->getType();
-    if (segType == eImplicit) {
-      return true;
-    } 
-    // if 
-    auto taskGroupLevel = seg->getTaskGroupLevel();
-    if (taskGroupLevel > 0) {
-       
-    }
-  } 
-  return true;
-}
-
-/*
  * Build the check case. Avoid conditional instructions. Concatenate 
  * bit level representation of two segment type to form a case code and 
  * directly  
