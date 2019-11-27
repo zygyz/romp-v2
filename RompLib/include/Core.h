@@ -1,5 +1,6 @@
 #pragma once 
 #include "AccessHistory.h"
+#include "TaskData.h"
 
 namespace romp {
 
@@ -42,9 +43,9 @@ bool analyzeNextWorkExp(Label* histLabel, Label* curLabel, int index);
 bool analyzeNextWorkWork(Label* histLabel , Label* curLabel, int index);
 bool analyzeOrderedDescendents(Label* histLabel, int index, uint64_t histPhase);
 bool analyzeSyncChain(Label* label, int index);
+bool analyzeMutualExclusion(const Record& histRecord, const Record& curRecord);
 bool analyzeRaceCondition(const Record& histRecord, const Record& curRecord, 
                           bool& isHistBeforeCur, int& diffIndex);
-bool inFinishScope(Label* label, int startIndex);
 bool dispatchAnalysis(CheckCase checkCase, Label* hist, Label* cur, int index);
 uint64_t computeExitRank(uint64_t phase);
 uint64_t computeEnterRank(uint64_t phase);

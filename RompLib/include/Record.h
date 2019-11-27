@@ -23,7 +23,9 @@ public:
         setAccessType(isWrite); 
       }
   void setAccessType(bool isWrite);
+  void setHasHwLock(bool hwLock);
   bool isWrite() const;
+  bool hasHwLock() const;
   std::string toString() const;
   Label* getLabel() const;
   LockSet* getLockSet() const;

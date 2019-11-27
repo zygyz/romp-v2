@@ -26,13 +26,29 @@ bool analyzeRaceCondition(const Record& histRecord, const Record& curRecord,
         bool& isHistBeforeCur, int& diffIndex) {
   auto histLabel = histRecord.getLabel(); 
   auto curLabel = curRecord.getLabel(); 
-  auto histLockSet = histRecord.getLockSet(); 
-  auto curLockSet = curRecord.getLockSet();  
-  if (histLockSet->hasCommonLock(*curLockSet)) {
+  if (analyzeMutualExclusion(histRecord, curRecord)) {
     return false;
   }  
+  auto curTaskPtr = curRecord.getTaskPtr();   
+  if (static_cast<TaskData*>(curTaskPtr)->inReduction) { 
+    // current memory access is in reduction phase, we trust runtime library
+    // that in this phase no data race is genereted by reduction method.
+    return false;
+  }
   isHistBeforeCur = happensBefore(histLabel, curLabel, diffIndex);
   return !isHistBeforeCur && (histRecord.isWrite() || curRecord.isWrite());
+}
+
+/*
+ * This function analyzes mutual exclusion between memory access recorded in 
+ * histRecord and memory access recorded in curRecord.
+ * Return true if there is mutual exclusion; Return false otherwise.
+ */
+bool analyzeMutualExclusion(const Record& histRecord, const Record& curRecord) {
+  auto histLockSet = histRecord.getLockSet(); 
+  auto curLockSet = curRecord.getLockSet();  
+  return histLockSet->hasCommonLock(*curLockSet) || 
+           (histRecord.hasHwLock() && curRecord.hasHwLock());
 }
 
 /*

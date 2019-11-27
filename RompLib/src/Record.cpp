@@ -14,10 +14,27 @@ void Record::setAccessType(bool isWrite) {
   }
 }
 
+/*
+ * If the current memory access is an atomic instruction, in x86, this is 
+ * indicated as having hw lock in the instruction. We seperate this hw lock
+ * from the software locks implemented with atomic instructions.
+ * If there is hw lock, set second lowest bit to 1, otherwise, set to 0.
+ */
+void Record::setHasHwLock(bool hwLock) {
+  if (hwLock) {
+    _state |= 0x2;
+  } else {
+    _state &= 0xfd;
+  }
+}
+
 bool Record::isWrite() const {
   return (_state & 0x1) == 0x1;
 }
 
+bool Record::hasHwLock() const {
+  return (_state & 0x2) == 0x2;
+}
 /*
  * toString() is mainly for debugging
  */
