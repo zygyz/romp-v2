@@ -28,7 +28,15 @@ However, we still use spack to install some dependent libraries:
 ```
 gflags glog llvm-openmp
 ```
-
+Remember to install with c++17 compatible compiler option. e.g.,
+```
+spack install gflags %gcc@9.2.0
+```
+Configure the compiler option by following the steps in 
+https://spack-tutorial.readthedocs.io/en/latest/tutorial_configuration.html
+```
+spack config edit compilers 
+```
 1. Build dyninst. Suppose the dyninst is located in `/path/to/dyninst`, and 
  the artifact is installed in `path/to/dyninst/install`. Create a symlink:
  ``` ln -s /path/to/dyninst/install $HOME/dyninst```
