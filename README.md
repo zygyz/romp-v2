@@ -32,7 +32,8 @@ Remember to install with c++17 compatible compiler option. e.g.,
 ```
 spack install gflags %gcc@9.2.0
 ```
-Configure the compiler option by following the steps in 
+Configure the compiler option by following the steps in
+
 https://spack-tutorial.readthedocs.io/en/latest/tutorial_configuration.html
 ```
 spack config edit compilers 
