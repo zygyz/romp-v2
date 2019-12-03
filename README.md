@@ -9,8 +9,8 @@ For a release version of romp, we encourage installation with spack.
 
 2. Architecture:  x86_64
 
-3. Compiler: gcc 4.8.5 (recommended, later version e.g., 9.2.0 generates abi error.
-Also, gnu 9.2.0 compiled workshare loop generates assertion failiure in llvm openmp rtl) 
+3. Compiler: gcc 9.2.0 (recommended); any compiler supporting c++17
+
 ### Prerequisites
 Checkout my version of spack, which contains some modification to package.py 
 for llvm-openmp 
@@ -48,7 +48,7 @@ export LIBRARY_PATH=`spack location --install-dir glog`/lib\
    cd build
    cmake -DCMAKE_PREFIX_PATH="$GFLAGS_PREFIX;$GLOG_PREFIX;$CUSTOM_DYNINST_PREFIX"
          -DLLVM_PATH=$LLVM_PREFIX -DCMAKE_CXX_FLAGS=-std=c++11 -DCUSTOM_DYNINST=ON 
-         -DCMAKE_INSTALL_PREFIX=`pwd`/../install -DCMAKE_CXX_COMPILER=/usr/bin/g++ ..
+         -DCMAKE_INSTALL_PREFIX=`pwd`/../install ..
    make
    make install
  ```
