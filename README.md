@@ -9,8 +9,8 @@ For a release version of romp, we encourage installation with spack.
 
 2. Architecture:  x86_64
 
-3. Compiler: gcc 4.8.5 (recommended, later version e.g., 9.2.0 generates abi error.
-Also, gnu 9.2.0 compiled workshare loop generates assertion failiure in llvm openmp rtl) 
+3. Compiler: gcc 9.2.0 (recommended); any compiler supporting c++17
+
 ### Prerequisites
 Checkout my version of spack, which contains some modification to package.py 
 for llvm-openmp 
@@ -28,7 +28,16 @@ However, we still use spack to install some dependent libraries:
 ```
 gflags glog llvm-openmp
 ```
+Remember to install with c++17 compatible compiler option. e.g.,
+```
+spack install gflags %gcc@9.2.0
+```
+Configure the compiler option by following the steps in
 
+https://spack-tutorial.readthedocs.io/en/latest/tutorial_configuration.html
+```
+spack config edit compilers 
+```
 1. Build dyninst. Suppose the dyninst is located in `/path/to/dyninst`, and 
  the artifact is installed in `path/to/dyninst/install`. Create a symlink:
  ``` ln -s /path/to/dyninst/install $HOME/dyninst```
@@ -47,8 +56,8 @@ export LIBRARY_PATH=`spack location --install-dir glog`/lib\
    mkdir install
    cd build
    cmake -DCMAKE_PREFIX_PATH="$GFLAGS_PREFIX;$GLOG_PREFIX;$CUSTOM_DYNINST_PREFIX"
-         -DLLVM_PATH=$LLVM_PREFIX -DCMAKE_CXX_FLAGS=-std=c++11 -DCUSTOM_DYNINST=ON 
-         -DCMAKE_INSTALL_PREFIX=`pwd`/../install -DCMAKE_CXX_COMPILER=/usr/bin/g++ ..
+         -DLLVM_PATH=$LLVM_PREFIX -DCMAKE_CXX_FLAGS=-std=c++17 -DCUSTOM_DYNINST=ON 
+         -DCMAKE_INSTALL_PREFIX=`pwd`/../install ..
    make
    make install
  ```
