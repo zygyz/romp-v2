@@ -43,19 +43,6 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
      * to this memory location does not go through data race checking.
      * TODO: implement the logic described above.
      */
-    auto instnAddr = reinterpret_cast<uint64_t>(checkInfo.instnAddr);
-    std::vector<LineNoTuple> lines;
-    obj->getSourceLines(lines, instnAddr);
-    if (lines.empty()) {
-      RAW_LOG(WARNING, "cannot get source lines info for address %lx", instnAddr); 
-    } else {
-      auto fileName = lines[0].getFile();
-      auto line = lines[0].getLine();
-      auto column = lines[0].getColumn();
-      RAW_LOG(INFO, "data race found: %s:%d, %d@%lx", 
-            fileName.c_str(), line, column, instnAddr);
-    }
-    //lineInfoReader->lookup(instnAddr, line, column, fileName);
     if (!records->empty()) {
       records->clear();
     }
@@ -80,9 +67,10 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
       auto histRecord = *cit;
       if (analyzeRaceCondition(histRecord, curRecord, isHistBeforeCurrent, 
                   diffIndex)) {
-        // TODO: report line info
         gDataRaceFound = true;
         accessHistory->setFlag(eDataRaceFound);  
+        reportDataRace(histRecord.getInstnAddr(), curRecord.getInstnAddr(), 
+                checkInfo.byteAddress, obj);
       }
       auto decision = manageAccessRecord(histRecord, curRecord, 
               isHistBeforeCurrent, diffIndex);
@@ -167,6 +155,7 @@ void checkAccess(void* address,
   for (uint64_t i = 0; i < bytesAccessed; ++i) {
     auto curAddress = reinterpret_cast<uint64_t>(address) + i;      
     auto accessHistory = shadowMemory.getShadowMemorySlot(curAddress);
+    checkInfo.byteAddress = curAddress;
     checkDataRace(accessHistory, curLabel, curLockSet, checkInfo);
   }
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include <utility>
+#include <Symtab.h>
 
 #include "DataSharing.h"
 #include "QueryFuncs.h"
@@ -42,6 +43,7 @@ typedef struct CheckInfo {
   int taskType;
   bool isWrite;
   bool hwLock; 
+  uint64_t byteAddress;
   DataSharingType dataSharingType;
 } CheckInfo; 
 
@@ -52,6 +54,9 @@ bool prepareAllInfo(int& taskType,
                     void*& curThreadData,
                     AllTaskInfo& allTaskInfo);
 
-void reportDataRace(void* instnAddrPrev, void* instnAddrCur, void* address);
+void reportDataRace(void* instnAddrPrev, 
+                    void* instnAddrCur, 
+                    uint64_t address, 
+                    Dyninst::SymtabAPI::Symtab* obj);
 
 }
