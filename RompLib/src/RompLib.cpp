@@ -2,6 +2,7 @@
 #include <glog/logging.h>
 #include <glog/raw_logging.h>
 #include <limits.h>
+#include <Symtab.h>
 #include <unistd.h>
 
 #include "AccessHistory.h"
@@ -16,6 +17,8 @@
 #include "ThreadData.h"
 
 namespace fs = std::filesystem;
+using namespace Dyninst;
+using namespace SymtabAPI;
 
 namespace romp {
 
@@ -23,6 +26,8 @@ using LabelPtr = std::shared_ptr<Label>;
 using LockSetPtr = std::shared_ptr<LockSet>;
 
 ShadowMemory<AccessHistory> shadowMemory;
+Symtab* obj = nullptr;
+
 /*
  * Driver function to do data race checking and access history management.
  */
@@ -38,6 +43,19 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
      * to this memory location does not go through data race checking.
      * TODO: implement the logic described above.
      */
+    auto instnAddr = reinterpret_cast<uint64_t>(checkInfo.instnAddr);
+    std::vector<LineNoTuple> lines;
+    obj->getSourceLines(lines, instnAddr);
+    if (lines.empty()) {
+      RAW_LOG(WARNING, "cannot get source lines info for address %lx", instnAddr); 
+    } else {
+      auto fileName = lines[0].getFile();
+      auto line = lines[0].getLine();
+      auto column = lines[0].getColumn();
+      RAW_LOG(INFO, "data race found: %s:%d, %d@%lx", 
+            fileName.c_str(), line, column, instnAddr);
+    }
+    //lineInfoReader->lookup(instnAddr, line, column, fileName);
     if (!records->empty()) {
       records->clear();
     }
@@ -97,6 +115,10 @@ ompt_start_tool_result_t* ompt_start_tool(
   }
   auto curAppPath = std::string(result, count);
   LOG(INFO) << "ompt_start_tool on executable: " << curAppPath;
+  auto success = Symtab::openFile(obj, curAppPath);
+  if (!success) {
+    LOG(FATAL) << "cannot parse executable into symtab: " << curAppPath;
+  }
   return &startToolResult;
 }
 
