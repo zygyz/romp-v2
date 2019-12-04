@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "Record.h"
-#define DEBUG_ACCESS_HISTORY
 
 namespace romp {
 

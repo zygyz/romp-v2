@@ -2,6 +2,11 @@
 
 #include <glog/logging.h>
 #include <glog/raw_logging.h>
+#include <string>
+#include <vector>
+
+using namespace Dyninst;
+using namespace SymtabAPI;
 
 namespace romp {
 
@@ -31,10 +36,48 @@ bool prepareAllInfo(int& taskType,
   return true;
 }
 
-void reportDataRace(void* instnAddrPrev, void* instnAddrCur, void* address) {
-  //TODO: add source line information
-  RAW_LOG(INFO, "data race found: 0x%lx 0x%lx @ 0x%lx", instnAddrPrev, 
-          instnAddrCur, address);
+void reportDataRace(void* instnAddrPrev, 
+                    void* instnAddrCur, 
+                    uint64_t address,
+                    Symtab* obj) {
+  auto instnPrev = reinterpret_cast<uint64_t>(instnAddrPrev);
+  auto instnCur = reinterpret_cast<uint64_t>(instnAddrCur);
+  std::vector<LineNoTuple> linesPrev;
+  std::vector<LineNoTuple> linesCur;
+  std::string prevFileName;
+  auto prevLine = -1;
+  int prevColumn = -1;
+  std::string curFileName;
+  auto curLine = -1;
+  auto curColumn = -1;
+  obj->getSourceLines(linesPrev, instnPrev);
+  if (linesPrev.empty()) {
+    RAW_LOG(WARNING, "cannot get source line info for instn addr: %lx", instnPrev);
+  } else {
+    prevFileName = linesPrev[0].getFile();
+    prevLine = linesPrev[0].getLine();
+    prevColumn = linesPrev[0].getColumn();
+  }
+  obj->getSourceLines(linesCur, instnCur);
+  if (linesCur.empty()) {
+    RAW_LOG(WARNING, "cannot get source line info for instn addr: %lx", instnCur);
+  } else {
+    curFileName = linesCur[0].getFile();
+    curLine = linesCur[0].getLine();
+    curColumn = linesCur[0].getColumn();
+  }
+  if (!linesCur.empty() && !linesPrev.empty()) {
+    RAW_LOG(INFO, "data race found at mem addr: \
+      %lx\n %s@[%lx]line:%d col:%d vs %s@[%lx]line:%d col:%d ", address, 
+          prevFileName.c_str(), instnPrev, prevLine, prevColumn, 
+          curFileName.c_str(), instnCur, curLine, curColumn);
+  } else if (!linesCur.empty()) {
+    RAW_LOG(INFO, "data race found at mem addr: %lx\n %s@[%lx]line:%d col:%d", 
+            address, curFileName.c_str(), instnCur, curLine, curColumn);
+  } else {
+    RAW_LOG(INFO, "data race found at mem addr: %lx\n %s@[%lx]line:%d col:%d", 
+            address, prevFileName.c_str(), instnPrev, prevLine, prevColumn);
+  }
 }
 
 }
