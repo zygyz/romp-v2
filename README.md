@@ -56,7 +56,7 @@ export LIBRARY_PATH=`spack location --install-dir glog`/lib\
    mkdir install
    cd build
    cmake -DCMAKE_PREFIX_PATH="$GFLAGS_PREFIX;$GLOG_PREFIX;$CUSTOM_DYNINST_PREFIX"
-         -DLLVM_PATH=$LLVM_PREFIX -DCMAKE_CXX_FLAGS=-std=c++11 -DCUSTOM_DYNINST=ON 
+         -DLLVM_PATH=$LLVM_PREFIX -DCMAKE_CXX_FLAGS=-std=c++17 -DCUSTOM_DYNINST=ON 
          -DCMAKE_INSTALL_PREFIX=`pwd`/../install ..
    make
    make install
