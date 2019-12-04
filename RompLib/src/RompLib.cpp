@@ -1,5 +1,8 @@
+#include <filesystem>
 #include <glog/logging.h>
 #include <glog/raw_logging.h>
+#include <limits.h>
+#include <unistd.h>
 
 #include "AccessHistory.h"
 #include "Core.h"
@@ -11,6 +14,8 @@
 #include "ShadowMemory.h"
 #include "TaskData.h"
 #include "ThreadData.h"
+
+namespace fs = std::filesystem;
 
 namespace romp {
 
@@ -85,7 +90,13 @@ ompt_start_tool_result_t* ompt_start_tool(
   ompt_data_t data;
   static ompt_start_tool_result_t startToolResult = { 
       &omptInitialize, &omptFinalize, data}; 
-  LOG(INFO) << "ompt_start_tool";
+  char result[PATH_MAX];
+  auto count = readlink("/proc/self/exe", result, PATH_MAX);
+  if (count == 0) {
+    LOG(FATAL) << "cannot get current executable path";
+  }
+  auto curAppPath = std::string(result, count);
+  LOG(INFO) << "ompt_start_tool on executable: " << curAppPath;
   return &startToolResult;
 }
 

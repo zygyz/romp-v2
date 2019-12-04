@@ -9,6 +9,7 @@ enum SegmentType {
   eImplicit = 0x1,
   eExplicit = 0x2,
   eWorkShare = 0x3, 
+  eError = 0x4,
 };
 
 enum TaskSyncType {
