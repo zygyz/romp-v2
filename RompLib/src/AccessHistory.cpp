@@ -6,7 +6,7 @@
 namespace romp {
 
 void AccessHistory::_initRecords() {
-  _records.reset(new std::vector<Record>());
+  _records = std::make_unique<std::vector<Record>>();
 }
 
 std::mutex& AccessHistory::getMutex() {

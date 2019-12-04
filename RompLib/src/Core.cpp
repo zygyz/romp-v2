@@ -277,6 +277,7 @@ bool analyzeOrderedDescendents(Label* histLabel, int startIndex,
     }
     return false;
   }
+  return false;
 }
 
 /* 
@@ -394,6 +395,7 @@ bool analyzeSameImpTask(Label* histLabel, Label* curLabel, int diffIndex) {
     auto checkCase = buildCheckCase(histNextType, curNextType);
     return dispatchAnalysis(checkCase, histLabel, curLabel, diffIndex);
   }
+  return false;
 }
 
 /* 

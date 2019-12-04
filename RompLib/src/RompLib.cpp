@@ -1,5 +1,9 @@
+#include <filesystem>
 #include <glog/logging.h>
 #include <glog/raw_logging.h>
+#include <limits.h>
+#include <Symtab.h>
+#include <unistd.h>
 
 #include "AccessHistory.h"
 #include "Core.h"
@@ -12,12 +16,18 @@
 #include "TaskData.h"
 #include "ThreadData.h"
 
+namespace fs = std::filesystem;
+using namespace Dyninst;
+using namespace SymtabAPI;
+
 namespace romp {
 
 using LabelPtr = std::shared_ptr<Label>;
 using LockSetPtr = std::shared_ptr<LockSet>;
 
 ShadowMemory<AccessHistory> shadowMemory;
+Symtab* obj = nullptr;
+
 /*
  * Driver function to do data race checking and access history management.
  */
@@ -58,9 +68,10 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
       auto histRecord = *cit;
       if (analyzeRaceCondition(histRecord, curRecord, isHistBeforeCurrent, 
                   diffIndex)) {
-        // TODO: report line info
         gDataRaceFound = true;
         accessHistory->setFlag(eDataRaceFound);  
+        reportDataRace(histRecord.getInstnAddr(), curRecord.getInstnAddr(), 
+                checkInfo.byteAddress, obj);
       }
       auto decision = manageAccessRecord(histRecord, curRecord, 
               isHistBeforeCurrent, accessHistory, diffIndex);
@@ -86,7 +97,17 @@ ompt_start_tool_result_t* ompt_start_tool(
   ompt_data_t data;
   static ompt_start_tool_result_t startToolResult = { 
       &omptInitialize, &omptFinalize, data}; 
-  LOG(INFO) << "ompt_start_tool";
+  char result[PATH_MAX];
+  auto count = readlink("/proc/self/exe", result, PATH_MAX);
+  if (count == 0) {
+    LOG(FATAL) << "cannot get current executable path";
+  }
+  auto curAppPath = std::string(result, count);
+  LOG(INFO) << "ompt_start_tool on executable: " << curAppPath;
+  auto success = Symtab::openFile(obj, curAppPath);
+  if (!success) {
+    LOG(FATAL) << "cannot parse executable into symtab: " << curAppPath;
+  }
   return &startToolResult;
 }
 
@@ -134,6 +155,7 @@ void checkAccess(void* address,
   for (uint64_t i = 0; i < bytesAccessed; ++i) {
     auto curAddress = reinterpret_cast<uint64_t>(address) + i;      
     auto accessHistory = shadowMemory.getShadowMemorySlot(curAddress);
+    checkInfo.byteAddress = curAddress;
     checkDataRace(accessHistory, curLabel, curLockSet, checkInfo);
   }
 }

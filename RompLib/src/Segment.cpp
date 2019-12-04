@@ -242,6 +242,7 @@ SegmentType BaseSegment::getType() const {
       return eWorkShare; 
   }
   RAW_LOG(FATAL, "undefined segment type: %d", mask);
+  return eError;
 }
 
 std::string WorkShareSegment::toString() const {
