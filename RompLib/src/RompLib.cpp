@@ -26,7 +26,6 @@ using LabelPtr = std::shared_ptr<Label>;
 using LockSetPtr = std::shared_ptr<LockSet>;
 
 ShadowMemory<AccessHistory> shadowMemory;
-Symtab* obj = nullptr;
 
 /*
  * Driver function to do data race checking and access history management.
@@ -70,8 +69,9 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
                   diffIndex)) {
         gDataRaceFound = true;
         accessHistory->setFlag(eDataRaceFound);  
-        reportDataRace(histRecord.getInstnAddr(), curRecord.getInstnAddr(), 
-                checkInfo.byteAddress, obj);
+        gDataRaceRecord.push_back(DataRaceInfo(histRecord.getInstnAddr(), 
+                                  curRecord.getInstnAddr(), 
+                                  checkInfo.byteAddress));
       }
       auto decision = manageAccessRecord(histRecord, curRecord, 
               isHistBeforeCurrent, accessHistory, diffIndex);
@@ -104,7 +104,7 @@ ompt_start_tool_result_t* ompt_start_tool(
   }
   auto curAppPath = std::string(result, count);
   LOG(INFO) << "ompt_start_tool on executable: " << curAppPath;
-  auto success = Symtab::openFile(obj, curAppPath);
+  auto success = Symtab::openFile(gSymtabHandle, curAppPath);
   if (!success) {
     LOG(FATAL) << "cannot parse executable into symtab: " << curAppPath;
   }

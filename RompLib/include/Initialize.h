@@ -1,8 +1,12 @@
 #pragma once
 #include <glog/logging.h>
 #include <ompt.h>
+#include <stdlib.h>
+#include <string>
+#include <Symtab.h>
 
 #include "Callbacks.h"
+#include "CoreUtil.h"
 #include "QueryFuncs.h"
 
 /* 
@@ -13,6 +17,10 @@ namespace romp{
 
 bool gOmptInitialized = false; 
 bool gDataRaceFound = false;
+bool gReportLineInfo = false;
+std::vector<DataRaceInfo> gDataRaceRecord;
+Dyninst::SymtabAPI::Symtab* gSymtabHandle = nullptr;
+
 ompt_get_task_info_t omptGetTaskInfo;
 ompt_get_parallel_info_t omptGetParallelInfo;
 ompt_get_thread_data_t omptGetThreadData;
@@ -36,6 +44,10 @@ int omptInitialize(ompt_function_lookup_t lookup,
                    int initialDeviceNum,
                    ompt_data_t* toolData) {
   LOG(INFO) << "start initializing ompt";
+  auto flag = getenv("ROMP_REPORT_LINE");
+  if (flag != nullptr && std::string(flag) == "on") {
+    gReportLineInfo = true;
+  }
   auto ompt_set_callback = 
       (ompt_set_callback_t)lookup("ompt_set_callback");
 
@@ -68,7 +80,17 @@ int omptInitialize(ompt_function_lookup_t lookup,
 void omptFinalize(ompt_data_t* toolData) {
   LOG(INFO) << "finalizing ompt";
   if (gDataRaceFound) {
-    LOG(INFO) << "data race is found";
+    LOG(INFO) << "found " << gDataRaceRecord.size() << " data races";
+    for (const auto& record : gDataRaceRecord) {
+      if (gReportLineInfo) {
+        reportDataRace(record.instnAddrPrev, record.instnAddrCur, 
+                record.memAddr, gSymtabHandle);
+      } else {
+        LOG(INFO) << "instn addr:" << std::hex << record.instnAddrPrev << 
+                   "--instn addr:" << record.instnAddrCur << "@mem addr: " <<
+                   record.memAddr << std::dec;
+      }
+    }
   }
 }
 
