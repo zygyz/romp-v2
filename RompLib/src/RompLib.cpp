@@ -2,7 +2,6 @@
 #include <glog/logging.h>
 #include <glog/raw_logging.h>
 #include <limits.h>
-#include <Symtab.h>
 #include <unistd.h>
 
 #include "AccessHistory.h"
@@ -17,8 +16,6 @@
 #include "ThreadData.h"
 
 namespace fs = std::filesystem;
-using namespace Dyninst;
-using namespace SymtabAPI;
 
 namespace romp {
 
@@ -26,7 +23,6 @@ using LabelPtr = std::shared_ptr<Label>;
 using LockSetPtr = std::shared_ptr<LockSet>;
 
 ShadowMemory<AccessHistory> shadowMemory;
-Symtab* obj = nullptr;
 
 /*
  * Driver function to do data race checking and access history management.
@@ -68,9 +64,17 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
       if (analyzeRaceCondition(histRecord, curRecord, isHistBeforeCurrent, 
                   diffIndex)) {
         gDataRaceFound = true;
+        gNumDataRace++;
+        if (gReportLineInfo) {
+          std::unique_lock<std::mutex> recordGuard(gDataRaceLock);
+          gDataRaceRecords.push_back(DataRaceInfo(histRecord.getInstnAddr(),
+                                                  curRecord.getInstnAddr(),
+                                                  checkInfo.byteAddress));
+        } else {
+          reportDataRace(histRecord.getInstnAddr(), curRecord.getInstnAddr(),
+                         checkInfo.byteAddress);
+        }
         accessHistory->setFlag(eDataRaceFound);  
-        reportDataRace(histRecord.getInstnAddr(), curRecord.getInstnAddr(), 
-                checkInfo.byteAddress, obj);
       }
       auto decision = manageAccessRecord(histRecord, curRecord, 
               isHistBeforeCurrent, diffIndex);
@@ -101,11 +105,11 @@ ompt_start_tool_result_t* ompt_start_tool(
   if (count == 0) {
     LOG(FATAL) << "cannot get current executable path";
   }
-  auto curAppPath = std::string(result, count);
-  LOG(INFO) << "ompt_start_tool on executable: " << curAppPath;
-  auto success = Symtab::openFile(obj, curAppPath);
+  auto appPath = std::string(result, count);
+  LOG(INFO) << "ompt_start_tool on executable: " << appPath;
+  auto success = Dyninst::SymtabAPI::Symtab::openFile(gSymtabHandle, appPath);
   if (!success) {
-    LOG(FATAL) << "cannot parse executable into symtab: " << curAppPath;
+    LOG(FATAL) << "cannot parse executable into symtab: " << appPath;
   }
   return &startToolResult;
 }

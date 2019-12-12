@@ -1,8 +1,14 @@
 #pragma once
+#include <atomic>
 #include <glog/logging.h>
+#include <mutex>
 #include <ompt.h>
+#include <stdlib.h>
+#include <string>
+#include <Symtab.h>
 
 #include "Callbacks.h"
+#include "CoreUtil.h"
 #include "QueryFuncs.h"
 
 /* 
@@ -13,6 +19,13 @@ namespace romp{
 
 bool gOmptInitialized = false; 
 bool gDataRaceFound = false;
+bool gReportLineInfo = false;
+Dyninst::SymtabAPI::Symtab* gSymtabHandle = nullptr;
+
+std::mutex gDataRaceLock;
+std::atomic_int gNumDataRace = 0;
+std::vector<DataRaceInfo> gDataRaceRecords;
+
 ompt_get_task_info_t omptGetTaskInfo;
 ompt_get_parallel_info_t omptGetParallelInfo;
 ompt_get_thread_data_t omptGetThreadData;
@@ -36,6 +49,10 @@ int omptInitialize(ompt_function_lookup_t lookup,
                    int initialDeviceNum,
                    ompt_data_t* toolData) {
   LOG(INFO) << "start initializing ompt";
+  auto flag = getenv("ROMP_REPORT_LINE");
+  if (flag != nullptr && std::string(flag) == "on") {
+    gReportLineInfo = true;
+  }
   auto ompt_set_callback = 
       (ompt_set_callback_t)lookup("ompt_set_callback");
 
@@ -68,7 +85,12 @@ int omptInitialize(ompt_function_lookup_t lookup,
 void omptFinalize(ompt_data_t* toolData) {
   LOG(INFO) << "finalizing ompt";
   if (gDataRaceFound) {
-    LOG(INFO) << "data race is found";
+    LOG(INFO) << "found " << gNumDataRace.load() << " data races";
+    if (gReportLineInfo) {
+      for (const auto& info : gDataRaceRecords) {
+        reportDataRaceWithLineInfo(info, gSymtabHandle);
+      } 
+    }
   }
 }
 

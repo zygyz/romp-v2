@@ -16,6 +16,15 @@
 
 namespace romp {
 
+typedef struct DataRaceInfo {
+  DataRaceInfo() {}
+  DataRaceInfo(void* instnAddrPrev, void* instnAddrCur, uint64_t memAddr):
+               instnAddrPrev(instnAddrPrev), instnAddrCur(instnAddrCur), 
+               memAddr(memAddr) {}
+  void* instnAddrPrev;
+  void* instnAddrCur;
+  uint64_t memAddr;
+} DataRaceInfo;
 /* 
  * Wrap all necessary information for data race checking.
  */
@@ -54,9 +63,9 @@ bool prepareAllInfo(int& taskType,
                     void*& curThreadData,
                     AllTaskInfo& allTaskInfo);
 
-void reportDataRace(void* instnAddrPrev, 
-                    void* instnAddrCur, 
-                    uint64_t address, 
-                    Dyninst::SymtabAPI::Symtab* obj);
+void reportDataRaceWithLineInfo(const DataRaceInfo& dataRaceInfo,
+                                Dyninst::SymtabAPI::Symtab* symtabHandle);
+
+void reportDataRace(void* instnAddrPrev, void* instnAddrCur, uint64_t address);
 
 }

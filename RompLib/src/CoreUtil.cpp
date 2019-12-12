@@ -36,12 +36,15 @@ bool prepareAllInfo(int& taskType,
   return true;
 }
 
-void reportDataRace(void* instnAddrPrev, 
-                    void* instnAddrCur, 
-                    uint64_t address,
-                    Symtab* obj) {
-  auto instnPrev = reinterpret_cast<uint64_t>(instnAddrPrev);
-  auto instnCur = reinterpret_cast<uint64_t>(instnAddrCur);
+/*
+ * Report data race with line information. The function uses symtabAPI's 
+ * api to get line information. It incurs quite large overhead because of 
+ * the inefficiency of parsing debug information everytime for every 
+ * instruction address. 
+ */
+void reportDataRaceWithLineInfo(const DataRaceInfo& info, Symtab* symtab) {
+  auto instnPrev = reinterpret_cast<uint64_t>(info.instnAddrPrev);
+  auto instnCur = reinterpret_cast<uint64_t>(info.instnAddrCur);
   std::vector<LineNoTuple> linesPrev;
   std::vector<LineNoTuple> linesCur;
   std::string prevFileName;
@@ -50,7 +53,7 @@ void reportDataRace(void* instnAddrPrev,
   std::string curFileName;
   auto curLine = -1;
   auto curColumn = -1;
-  obj->getSourceLines(linesPrev, instnPrev);
+  symtab->getSourceLines(linesPrev, instnPrev);
   if (linesPrev.empty()) {
     RAW_LOG(WARNING, "cannot get source line info for instn addr: %lx", instnPrev);
   } else {
@@ -58,7 +61,7 @@ void reportDataRace(void* instnAddrPrev,
     prevLine = linesPrev[0].getLine();
     prevColumn = linesPrev[0].getColumn();
   }
-  obj->getSourceLines(linesCur, instnCur);
+  symtab->getSourceLines(linesCur, instnCur);
   if (linesCur.empty()) {
     RAW_LOG(WARNING, "cannot get source line info for instn addr: %lx", instnCur);
   } else {
@@ -68,16 +71,22 @@ void reportDataRace(void* instnAddrPrev,
   }
   if (!linesCur.empty() && !linesPrev.empty()) {
     RAW_LOG(INFO, "data race found at mem addr: \
-      %lx\n %s@[%lx]line:%d col:%d vs %s@[%lx]line:%d col:%d ", address, 
+      %lx\n %s@[%lx]line:%d col:%d vs %s@[%lx]line:%d col:%d ", info.memAddr, 
           prevFileName.c_str(), instnPrev, prevLine, prevColumn, 
           curFileName.c_str(), instnCur, curLine, curColumn);
   } else if (!linesCur.empty()) {
     RAW_LOG(INFO, "data race found at mem addr: %lx\n %s@[%lx]line:%d col:%d", 
-            address, curFileName.c_str(), instnCur, curLine, curColumn);
+            info.memAddr, curFileName.c_str(), instnCur, curLine, curColumn);
   } else {
     RAW_LOG(INFO, "data race found at mem addr: %lx\n %s@[%lx]line:%d col:%d", 
-            address, prevFileName.c_str(), instnPrev, prevLine, prevColumn);
+            info.memAddr, prevFileName.c_str(), instnPrev, prevLine, prevColumn);
   }
 }
+
+void reportDataRace(void* instnAddrPrev, void* instnAddrCur, uint64_t memAddr) {
+  RAW_LOG(INFO, "instn addr: %p vs instn addr: %p @ %p", 
+          instnAddrPrev, instnAddrCur, (void*)memAddr);
+} 
+
 
 }
