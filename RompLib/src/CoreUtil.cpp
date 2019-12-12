@@ -36,7 +36,13 @@ bool prepareAllInfo(int& taskType,
   return true;
 }
 
-void reportDataRace(void* instnAddrPrev, 
+/*
+ * Report data race with line information. The function uses symtabAPI's 
+ * api to get line information. It incurs quite large overhead because of 
+ * the inefficiency of parsing debug information everytime for every 
+ * instruction address. 
+ */
+void reportDataRaceWithLineInfo(void* instnAddrPrev, 
                     void* instnAddrCur, 
                     uint64_t address,
                     Symtab* obj) {
@@ -79,5 +85,11 @@ void reportDataRace(void* instnAddrPrev,
             address, prevFileName.c_str(), instnPrev, prevLine, prevColumn);
   }
 }
+
+void reportDataRace(void* instnAddrPrev, void* instnAddrCur, uint64_t memAddr) {
+  RAW_LOG(INFO, "instn addr: %p vs instn addr: %p @ %p", 
+          instnAddrPrev, instnAddrCur, (void*)memAddr);
+} 
+
 
 }

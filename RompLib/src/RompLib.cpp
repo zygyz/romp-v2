@@ -17,8 +17,6 @@
 #include "ThreadData.h"
 
 namespace fs = std::filesystem;
-using namespace Dyninst;
-using namespace SymtabAPI;
 
 namespace romp {
 
@@ -26,6 +24,7 @@ using LabelPtr = std::shared_ptr<Label>;
 using LockSetPtr = std::shared_ptr<LockSet>;
 
 ShadowMemory<AccessHistory> shadowMemory;
+Dyninst::SymtabAPI::Symtab* symtabHandle = nullptr;
 
 /*
  * Driver function to do data race checking and access history management.
@@ -67,10 +66,17 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
       if (analyzeRaceCondition(histRecord, curRecord, isHistBeforeCurrent, 
                   diffIndex)) {
         gDataRaceFound = true;
+        gNumDataRace++;
+        if (gReportLineInfo) {
+          reportDataRaceWithLineInfo(histRecord.getInstnAddr(), 
+                                     curRecord.getInstnAddr(), 
+                                     checkInfo.byteAddress,
+                                     symtabHandle);
+        } else {
+          reportDataRace(histRecord.getInstnAddr(), curRecord.getInstnAddr(),
+                         checkInfo.byteAddress);
+        }
         accessHistory->setFlag(eDataRaceFound);  
-        gDataRaceRecord.push_back(DataRaceInfo(histRecord.getInstnAddr(), 
-                                  curRecord.getInstnAddr(), 
-                                  checkInfo.byteAddress));
       }
       auto decision = manageAccessRecord(histRecord, curRecord, 
               isHistBeforeCurrent, diffIndex);
@@ -103,7 +109,7 @@ ompt_start_tool_result_t* ompt_start_tool(
   }
   auto curAppPath = std::string(result, count);
   LOG(INFO) << "ompt_start_tool on executable: " << curAppPath;
-  auto success = Symtab::openFile(gSymtabHandle, curAppPath);
+  auto success = Dyninst::SymtabAPI::Symtab::openFile(symtabHandle, curAppPath);
   if (!success) {
     LOG(FATAL) << "cannot parse executable into symtab: " << curAppPath;
   }
