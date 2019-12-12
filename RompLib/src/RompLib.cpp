@@ -105,11 +105,11 @@ ompt_start_tool_result_t* ompt_start_tool(
   if (count == 0) {
     LOG(FATAL) << "cannot get current executable path";
   }
-  auto curAppPath = std::string(result, count);
-  LOG(INFO) << "ompt_start_tool on executable: " << curAppPath;
-  auto success = Dyninst::SymtabAPI::Symtab::openFile(gSymtabHandle, curAppPath);
+  auto appPath = std::string(result, count);
+  LOG(INFO) << "ompt_start_tool on executable: " << appPath;
+  auto success = Dyninst::SymtabAPI::Symtab::openFile(gSymtabHandle, appPath);
   if (!success) {
-    LOG(FATAL) << "cannot parse executable into symtab: " << curAppPath;
+    LOG(FATAL) << "cannot parse executable into symtab: " << appPath;
   }
   return &startToolResult;
 }
