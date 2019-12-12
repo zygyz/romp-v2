@@ -1,11 +1,14 @@
 #pragma once
 #include <atomic>
 #include <glog/logging.h>
+#include <mutex>
 #include <ompt.h>
 #include <stdlib.h>
 #include <string>
+#include <Symtab.h>
 
 #include "Callbacks.h"
+#include "CoreUtil.h"
 #include "QueryFuncs.h"
 
 /* 
@@ -17,7 +20,11 @@ namespace romp{
 bool gOmptInitialized = false; 
 bool gDataRaceFound = false;
 bool gReportLineInfo = false;
+Dyninst::SymtabAPI::Symtab* gSymtabHandle = nullptr;
+
+std::mutex gDataRaceLock;
 std::atomic_int gNumDataRace = 0;
+std::vector<DataRaceInfo> gDataRaceRecords;
 
 ompt_get_task_info_t omptGetTaskInfo;
 ompt_get_parallel_info_t omptGetParallelInfo;
@@ -79,6 +86,11 @@ void omptFinalize(ompt_data_t* toolData) {
   LOG(INFO) << "finalizing ompt";
   if (gDataRaceFound) {
     LOG(INFO) << "found " << gNumDataRace.load() << " data races";
+    if (gReportLineInfo) {
+      for (const auto& info : gDataRaceRecords) {
+        reportDataRaceWithLineInfo(info, gSymtabHandle);
+      } 
+    }
   }
 }
 
