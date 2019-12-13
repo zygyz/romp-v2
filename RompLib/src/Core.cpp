@@ -106,7 +106,7 @@ bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex) {
       RAW_DLOG(INFO, "hist label: %s cur label: %s histSeg: %s curSeg: %s", 
             histLabel->toString().c_str(), curLabel->toString().c_str(),
             histSegment->toString().c_str(), curSegment->toString().c_str());
-      RAW_LOG(FATAL, "not expecting hist and cure segment re not workshare");
+      RAW_LOG(FATAL, "not expecting hist and cure segment are not workshare");
     }
     return analyzeOrderedSection(histLabel, curLabel,  diffIndex);
   } else { // left span == right span and span > 1, implicit task
