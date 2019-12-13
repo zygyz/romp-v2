@@ -104,6 +104,9 @@ bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex) {
     auto curType = curSegment->getType();
     RAW_CHECK((histType == eWorkShare && curType == eWorkShare), "not \
             expecting hist and cur segment are not workshare segment");
+    RAW_DLOG(INFO, "hist label: %s cur label: %s histSeg: %s curSeg: %s", 
+            histLabel->toString().c_str(), curLabel->toString().c_str(),
+            histSegment->toString().c_str(), curSegment->toString().c_str());
     return analyzeOrderedSection(histLabel, curLabel,  diffIndex);
   } else { // left span == right span and span > 1, implicit task
     if (histOffset != curOffset) { 
