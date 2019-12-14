@@ -102,6 +102,17 @@ bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex) {
      */ 
     auto histType = histSegment->getType();
     auto curType = curSegment->getType();
+    if (histType == eImplicit && curType == eImplicit) {
+      /* 
+       * T(histLabel, diffIndex) and T(curLabel, diffIndex) are both the root
+       * task, T(curLabel) should have encountered a barrier counstruct
+       */
+      RAW_CHECK(histOffset < curOffset, "not expecting hist \
+              offset >= cur offset");
+      return true;
+    }  
+    // otherwise, we assert that histSegment and curSegment should both be 
+    // workshare segments
     if (!(histType == eWorkShare && curType == eWorkShare)) {
       RAW_DLOG(INFO, "hist label: %s cur label: %s histSeg: %s curSeg: %s", 
             histLabel->toString().c_str(), curLabel->toString().c_str(),

@@ -407,7 +407,7 @@ void on_ompt_callback_parallel_end(
        ompt_data_t *encounteringTaskData,
        int flags,
        const void *codePtrRa) {
-  RAW_LOG(INFO, "parallel end et:%lx p:%lx %d", encounteringTaskData, 
+  RAW_DLOG(INFO, "parallel end et:%lx p:%lx %d", encounteringTaskData, 
            parallelData, flags);
   auto parRegionData = parallelData->ptr;
   delete static_cast<ParRegionData*>(parRegionData);
@@ -422,7 +422,7 @@ void on_ompt_callback_task_create(
         const void *codePtrRa) {
   auto taskData = new TaskData();
   if (flags == ompt_task_initial) {
-    RAW_LOG(INFO, "generating initial task: %lx", taskData);
+    RAW_DLOG(INFO, "generating initial task: %lx", taskData);
     auto newTaskLabel = genInitTaskLabel();
     taskData->label = std::move(newTaskLabel);
   } else if (flags == ompt_task_explicit) {
@@ -452,12 +452,12 @@ void on_ompt_callback_task_schedule(
     return;
   }
   if (!nextTaskData || !nextTaskData->ptr) {
-    RAW_LOG(INFO, "next task data pointer is null");
+    RAW_DLOG(INFO, "next task data pointer is null");
     return;
   }
   if (priorTaskStatus == ompt_task_early_fulfill || 
           priorTaskStatus == ompt_task_late_fulfill) {
-    RAW_LOG(INFO, "prior task status is early/late fulfill");
+    RAW_DLOG(INFO, "prior task status is early/late fulfill");
     return;
   }
   void* threadDataPtr = nullptr;
