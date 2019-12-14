@@ -70,7 +70,7 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
           gDataRaceRecords.push_back(DataRaceInfo(histRecord.getInstnAddr(),
                                                   curRecord.getInstnAddr(),
                                                   checkInfo.byteAddress));
-        } else {
+        } else if (gReportAtRuntime) {
           reportDataRace(histRecord.getInstnAddr(), curRecord.getInstnAddr(),
                          checkInfo.byteAddress);
         }
