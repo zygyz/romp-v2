@@ -228,6 +228,7 @@ std::shared_ptr<Label> mutateSectionEnd(Label* label) {
  * single executor bit.
  */
 std::shared_ptr<Label> mutateSingleExecBegin(Label* label) {
+  RAW_DLOG(INFO, "mutateSingleExecBegin");
   auto newLabel = std::make_shared<Label>(*label); 
   auto newSegment = std::make_shared<WorkShareSegment>(); 
   newSegment->setSingleFlag(true);

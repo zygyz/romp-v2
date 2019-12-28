@@ -77,8 +77,8 @@ bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex) {
       case static_cast<int>(eLeftIsPrefix):
         return true;
       case static_cast<int>(eRightIsPrefix):
-        RAW_LOG(FATAL, "right label: %s -> left label: %s", 
-                histLabel->toString().c_str(), curLabel->toString().c_str());
+        RAW_LOG(FATAL, "cur Label: %s -> hist label: %s", 
+                curLabel->toString().c_str(), histLabel->toString().c_str());
         return false;
       default:
         RAW_LOG(FATAL, "unknown label compare result");

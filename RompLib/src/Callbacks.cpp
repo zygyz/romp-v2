@@ -363,24 +363,31 @@ void on_ompt_callback_work(
   std::shared_ptr<Label> mutatedLabel = nullptr;
   switch(wsType) {
     case ompt_work_loop: 
+      RAW_DLOG(INFO, "ompt_work_loop");
       mutatedLabel = handleOmpWorkLoop(endPoint, label);
       break;
     case ompt_work_sections:
+      RAW_DLOG(INFO, "ompt_work_sections");
       mutatedLabel = handleOmpWorkSections(endPoint, label, count);
       break;
     case ompt_work_single_executor:
+      RAW_DLOG(INFO, "ompt_work_single_executor");
       mutatedLabel = handleOmpWorkSingleExecutor(endPoint, label);
       break;
     case ompt_work_single_other:
+      RAW_DLOG(INFO, "ompt_work_single_other");
       mutatedLabel = handleOmpWorkSingleOther(endPoint, label);
       break;
     case ompt_work_workshare:
+      RAW_DLOG(INFO, "ompt_work_workshare");
       mutatedLabel = handleOmpWorkWorkShare(endPoint, label, count);
       break;
     case ompt_work_distribute:
+      RAW_DLOG(INFO, "ompt_work_distribute");
       mutatedLabel = handleOmpWorkDistribute(endPoint, label, count);
       break;
     case ompt_work_taskloop:
+      RAW_DLOG(INFO, "ompt_work_taskloop");
       mutatedLabel = handleOmpWorkTaskLoop(endPoint, label, count);
       break;
     default:
@@ -447,6 +454,7 @@ void on_ompt_callback_task_schedule(
         ompt_data_t *priorTaskData,
         ompt_task_status_t priorTaskStatus,
         ompt_data_t *nextTaskData) {
+  RAW_DLOG(INFO, "ompt_callback_task_schedule"); 
   if (!priorTaskStatus || !priorTaskData->ptr) {
     RAW_LOG(FATAL, "prior task data pointer is null"); 
     return;
