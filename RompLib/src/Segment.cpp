@@ -248,9 +248,9 @@ SegmentType BaseSegment::getType() const {
 
 std::string WorkShareSegment::toString() const {
   std::stringstream stream;
-  stream << std::hex << _value;
-  auto result = "[" + stream.str() + "," + 
-      std::to_string(_workShareId) + "]";
+  stream << std::hex << std::setw(16) << std::setfill('0') << 
+      _value << "," << _workShareId;
+  auto result = "[" + stream.str() + "]";
   return result;
 }
 

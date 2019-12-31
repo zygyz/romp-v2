@@ -442,6 +442,10 @@ void on_ompt_callback_task_create(
     auto parentLabel = (parentTaskData->label).get();
     auto newTaskLabel = genExpTaskLabel(parentLabel);
     taskData->label = std::move(newTaskLabel);
+    auto mutatedParentLabel = mutateParentTaskCreate(parentLabel); 
+    parentTaskData->label = std::move(mutatedParentLabel);
+    RAW_LOG(INFO, "mutated parent task label: %s", 
+            parentTaskData->label->toString().c_str());
     parentTaskData->childExpTaskData.push_back(static_cast<void*>(taskData));
   } else if (flags == ompt_task_target) {
     // TODO: prepare the task data pointer for target 
@@ -450,24 +454,55 @@ void on_ompt_callback_task_create(
   newTaskData->ptr = static_cast<void*>(taskData);
 }
 
+/*
+ * This helper function is called when task status is ompt_task_complete.
+ * It mutates the label of the encountering task and set the stored label
+ * to the mutated one.
+ */
+void handleTaskComplete(void* ptr) {
+  auto taskDataPtr = static_cast<TaskData*>(ptr);
+  auto label = (taskDataPtr->label).get();
+  auto mutatedLabel = mutateTaskComplete(label);
+  taskDataPtr->label = std::move(mutatedLabel);
+}
+
 void on_ompt_callback_task_schedule(
         ompt_data_t *priorTaskData,
         ompt_task_status_t priorTaskStatus,
         ompt_data_t *nextTaskData) {
   RAW_DLOG(INFO, "ompt_callback_task_schedule"); 
-  if (!priorTaskStatus || !priorTaskData->ptr) {
+  auto taskPtr = priorTaskData->ptr;
+  if (!taskPtr) {
     RAW_LOG(FATAL, "prior task data pointer is null"); 
-    return;
   }
-  if (!nextTaskData || !nextTaskData->ptr) {
-    RAW_DLOG(INFO, "next task data pointer is null");
-    return;
-  }
-  if (priorTaskStatus == ompt_task_early_fulfill || 
-          priorTaskStatus == ompt_task_late_fulfill) {
-    RAW_DLOG(INFO, "prior task status is early/late fulfill");
-    return;
-  }
+  switch(priorTaskStatus) {
+    case ompt_task_complete:
+      RAW_DLOG(INFO, "task complete encountered");
+      handleTaskComplete(taskPtr);
+      break;
+    case ompt_task_yield:
+      RAW_DLOG(INFO, "taskyield construct encountered");
+      break;
+    case ompt_task_cancel:
+      RAW_LOG(INFO, "task cancel encountered");
+      break;
+    case ompt_task_detach:
+      RAW_LOG(INFO, "task detach encountered"); 
+      break;
+    case ompt_task_early_fulfill:
+      RAW_LOG(INFO, "task early fulfill encountered");
+      break;
+    case ompt_task_late_fulfill:
+      RAW_LOG(INFO, "task late fulfill encountered");
+      break;
+    case ompt_task_switch:
+      RAW_DLOG(INFO, "task switch encountered");
+      break;
+  } 
+  // TODO
+  // mark the memory region [lowerbound, upperbound] as recycled  
+  // for completed tasks
+  /*
   void* threadDataPtr = nullptr;
   if (!queryOmpThreadInfo(threadDataPtr)) {
     RAW_LOG(FATAL, "cannot get thread data");
@@ -476,8 +511,7 @@ void on_ompt_callback_task_schedule(
   auto threadData = static_cast<ThreadData*>(threadDataPtr); 
   auto priorTaskUpperBound = threadData->activeTaskExitFrame; 
   auto priorTaskLowerBound = threadData->lowestAccessedAddr;
-  // mark the memory region [lowerbound, upperbound] as recycled  
-  // TODO
+  */
 }
 
 void on_ompt_callback_dependences(
