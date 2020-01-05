@@ -137,11 +137,14 @@ std::shared_ptr<Label> mutateParentImpEnd(Label* childLabel) {
  */
 std::shared_ptr<Label> mutateParentTaskCreate(Label* parentLabel) {
   auto newLabel = std::make_shared<Label>(*parentLabel);  
-  auto lastSeg =  newLabel->getLastKthSegment(1);
-  auto taskCreate = lastSeg->getTaskcreate();
-  lastSeg->setTaskcreate(taskCreate + 1); // increment the task create count
+  auto lastSegment = newLabel->popSegment();
+  auto taskCreate = lastSegment->getTaskcreate();
+  auto newSegment = lastSegment->clone();
+  newSegment->setTaskcreate(taskCreate + 1);  
+  newLabel->appendSegment(newSegment);
   return newLabel;
 }
+
 /*
  * Given the task label `label`, generate the mutated label for encounteing 
  * the barrier. This mutation is done by adding span to the offset field of 
