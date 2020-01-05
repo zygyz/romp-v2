@@ -132,6 +132,20 @@ std::shared_ptr<Label> mutateParentImpEnd(Label* childLabel) {
 }
 
 /*
+ * Upon creating explicit task, increase the task create count in the segment 
+ * of parent task.
+ */
+std::shared_ptr<Label> mutateParentTaskCreate(Label* parentLabel) {
+  auto newLabel = std::make_shared<Label>(*parentLabel);  
+  auto lastSegment = newLabel->popSegment();
+  auto taskCreate = lastSegment->getTaskcreate();
+  auto newSegment = lastSegment->clone();
+  newSegment->setTaskcreate(taskCreate + 1);  
+  newLabel->appendSegment(newSegment);
+  return newLabel;
+}
+
+/*
  * Given the task label `label`, generate the mutated label for encounteing 
  * the barrier. This mutation is done by adding span to the offset field of 
  * the second last segment of the label.
@@ -228,6 +242,7 @@ std::shared_ptr<Label> mutateSectionEnd(Label* label) {
  * single executor bit.
  */
 std::shared_ptr<Label> mutateSingleExecBegin(Label* label) {
+  RAW_DLOG(INFO, "mutateSingleExecBegin");
   auto newLabel = std::make_shared<Label>(*label); 
   auto newSegment = std::make_shared<WorkShareSegment>(); 
   newSegment->setSingleFlag(true);
@@ -338,6 +353,19 @@ std::shared_ptr<Label> mutateTaskGroupEnd(Label* label) {
   newSegment->setTaskGroupId(taskGroupId);
   newSegment->setTaskGroupLevel(taskGroupLevel);
   newLabel->appendSegment(newSegment);
+  return newLabel;
+}
+
+/*
+ * Mutate the label of the task that encounters the completion of explicit task.
+ * This is done by poping the last label segment, which should be an explicit 
+ * task segment.
+ */
+std::shared_ptr<Label> mutateTaskComplete(Label* label) {
+  auto newLabel = std::make_shared<Label>(*label);
+  auto lastSeg = newLabel->popSegment();       
+  auto lastSegType = lastSeg->getType(); 
+  RAW_CHECK(lastSegType == eExplicit, "last segment should be explicit");
   return newLabel;
 }
 

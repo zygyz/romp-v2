@@ -1,5 +1,6 @@
 #include "Segment.h"
 
+#include <iomanip>
 #include <glog/logging.h>
 #include <glog/raw_logging.h>
 #include <sstream>
@@ -57,7 +58,7 @@ namespace romp {
  */
 std::string BaseSegment::toString() const {
   std::stringstream stream;
-  stream << std::hex << _value;
+  stream << std::hex << std::setw(16) << std::setfill('0') << _value;
   auto result = "[" + stream.str() + "]";
   return result;
 }
@@ -247,9 +248,9 @@ SegmentType BaseSegment::getType() const {
 
 std::string WorkShareSegment::toString() const {
   std::stringstream stream;
-  stream << std::hex << _value;
-  auto result = "[" + stream.str() + "," + 
-      std::to_string(_workShareId) + "]";
+  stream << std::hex << std::setw(16) << std::setfill('0') << 
+      _value << "," << _workShareId;
+  auto result = "[" + stream.str() + "]";
   return result;
 }
 

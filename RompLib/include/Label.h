@@ -45,6 +45,7 @@ std::shared_ptr<Label> genInitTaskLabel();
 std::shared_ptr<Label> genExpTaskLabel(Label* parentLabel);
 
 std::shared_ptr<Label> mutateParentImpEnd(Label* childLabel);
+std::shared_ptr<Label> mutateParentTaskCreate(Label* parentLabel);
 
 std::shared_ptr<Label> mutateBarrierEnd(Label* label);
 std::shared_ptr<Label> mutateTaskWait(Label* label);
@@ -63,5 +64,5 @@ std::shared_ptr<Label> mutateSectionDispatch(Label* label, void* id);
 std::shared_ptr<Label> mutateWorkShareDispatch(Label* l, uint64_t id, bool sec);
 std::shared_ptr<Label> mutateTaskGroupBegin(Label* label);
 std::shared_ptr<Label> mutateTaskGroupEnd(Label* label);
-
+std::shared_ptr<Label> mutateTaskComplete(Label* label);
 }
