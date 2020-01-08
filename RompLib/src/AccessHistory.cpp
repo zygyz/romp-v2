@@ -29,8 +29,20 @@ void AccessHistory::setFlag(AccessHistoryFlag flag) {
   _state |= flag;
 }
 
+void AccessHistory::clearFlag(AccessHistoryFlag flag) {
+  _state &= ~flag; 
+}
+
+void AccessHistory::clearFlags() {
+  _state = 0; 
+}
+
 bool AccessHistory::dataRaceFound() const {
   return (_state & eDataRaceFound) != 0;
+}
+
+bool AccessHistory::memIsRecycled() const {
+  return (_state & eMemoryRecycled) != 0;
 }
 
 }

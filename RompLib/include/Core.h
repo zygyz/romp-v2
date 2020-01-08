@@ -61,5 +61,4 @@ void modifyAccessHistory(RecordManagement decision,
                          std::vector<Record>* records,
                          std::vector<Record>::iterator& cit);
 
-
 }

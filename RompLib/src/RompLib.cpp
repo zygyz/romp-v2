@@ -32,7 +32,8 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
   std::unique_lock<std::mutex> guard(accessHistory->getMutex());
   auto records = accessHistory->getRecords();
   if (accessHistory->dataRaceFound()) {
-    /* data race has already been found on this memory location, romp only 
+    /* 
+     * data race has already been found on this memory location, romp only 
      * reports one data race on any memory location in one run. Once the data 
      * race is reported, romp clears the access history with respect to this
      * memory location and mark this memory location as found. Future access 
@@ -43,6 +44,15 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
       records->clear();
     }
     return;
+  }
+  if (accessHistory->memIsRecycled()) {
+    /*
+     * The memory slot is recycled because of the end of explicit task. 
+     * reset the memory state flag and clear the access records.
+     */
+     accessHistory->clearFlags();
+     records->clear();
+     return;
   }
   //RAW_LOG(INFO, "access record length: %d", records->size());
   auto curRecord = Record(checkInfo.isWrite, curLabel, curLockSet, 

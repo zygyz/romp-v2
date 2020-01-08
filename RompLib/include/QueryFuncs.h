@@ -10,6 +10,7 @@ namespace romp {
 extern ompt_get_task_info_t omptGetTaskInfo;
 extern ompt_get_parallel_info_t omptGetParallelInfo;
 extern ompt_get_thread_data_t omptGetThreadData;
+extern ompt_get_task_memory_t omptGetTaskMemory;
 
 typedef struct AllTaskInfo {
   ompt_data_t* taskData;
@@ -42,5 +43,7 @@ bool queryParallelInfo(
 bool queryOmpThreadInfo(void*& dataPtr);
 
 bool queryThreadStackInfo(void*& stackAddr, size_t& stackSize);
-        
+
+bool queryTaskMemoryInfo(void** addr, size_t* size);
+
 }

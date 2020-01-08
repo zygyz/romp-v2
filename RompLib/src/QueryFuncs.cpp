@@ -138,4 +138,13 @@ bool queryThreadStackInfo(void*& stackAddr, size_t& stackSize) {
   return true;
 }
 
+/*
+ * Query the task private data memory associated with the explicit task.
+ * The base address of the data memory is stored in `addr`. The size of the 
+ * memory is stored in `size`.
+ */
+bool queryTaskMemoryInfo(void** addr, size_t* size) {
+  return omptGetTaskMemory(addr, size, 0) == 1; 
+}
+
 }

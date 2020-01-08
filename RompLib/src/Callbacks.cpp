@@ -4,6 +4,7 @@
 #include <glog/raw_logging.h>
 
 #include "AccessHistory.h"
+#include "DataSharing.h"
 #include "Label.h"
 #include "ParRegionData.h"
 #include "QueryFuncs.h"
@@ -24,15 +25,14 @@ void on_ompt_callback_implicit_task(
        int flags) {
   RAW_DLOG(INFO, "on_ompt_callback_implicit_task called:%u p:%lx t:%lx %u %u %d",
           endPoint, parallelData, taskData, actualParallelism, index, flags);
-
-  if (flags == ompt_task_initial || actualParallelism == 1) {
-    /*
-     * TODO: looks like ompt_task_initial never shows up. Could be 
-     * some bug in runtime libray. If the actualParallelism is 1, it 
-     * should be an initial task according to spec.
-     */
+  if (flags == ompt_task_initial) {
+    RAW_DLOG(INFO, "generating initial task: %lx", taskData);
+    auto initTaskData = new TaskData();
+    auto newTaskLabel = genInitTaskLabel();
+    initTaskData->label = std::move(newTaskLabel);
+    taskData->ptr = static_cast<void*>(initTaskData);
     return;
-  }
+  } 
   auto taskDataPtr = static_cast<TaskData*>(taskData->ptr);
   if (actualParallelism == 0 && index != 0) {
     /* 
@@ -429,6 +429,11 @@ void on_ompt_callback_task_create(
         const void *codePtrRa) {
   auto taskData = new TaskData();
   if (flags == ompt_task_initial) {
+    /*
+     * In recent diff (https://reviews.llvm.org/D68615), initial task creation 
+     * ompt callback is moved to ompt_callback_implicit_task. The code here 
+     * is not executed. We leave the code here for backward compatibility.
+     */
     RAW_DLOG(INFO, "generating initial task: %lx", taskData);
     auto newTaskLabel = genInitTaskLabel();
     taskData->label = std::move(newTaskLabel);
@@ -479,6 +484,7 @@ void on_ompt_callback_task_schedule(
     case ompt_task_complete:
       RAW_DLOG(INFO, "task complete encountered");
       handleTaskComplete(taskPtr);
+      recycleTaskPrivateMemory();
       break;
     case ompt_task_yield:
       RAW_DLOG(INFO, "taskyield construct encountered");
@@ -497,6 +503,7 @@ void on_ompt_callback_task_schedule(
       break;
     case ompt_task_switch:
       RAW_DLOG(INFO, "task switch encountered");
+      recycleTaskPrivateMemory();
       break;
   } 
   // TODO
