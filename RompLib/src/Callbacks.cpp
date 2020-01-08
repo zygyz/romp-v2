@@ -506,19 +506,6 @@ void on_ompt_callback_task_schedule(
       recycleTaskPrivateMemory();
       break;
   } 
-  // TODO
-  // mark the memory region [lowerbound, upperbound] as recycled  
-  // for completed tasks
-  /*
-  void* threadDataPtr = nullptr;
-  if (!queryOmpThreadInfo(threadDataPtr)) {
-    RAW_LOG(FATAL, "cannot get thread data");
-    return;
-  }
-  auto threadData = static_cast<ThreadData*>(threadDataPtr); 
-  auto priorTaskUpperBound = threadData->activeTaskExitFrame; 
-  auto priorTaskLowerBound = threadData->lowestAccessedAddr;
-  */
 }
 
 void on_ompt_callback_dependences(
