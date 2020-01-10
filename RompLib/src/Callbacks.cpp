@@ -4,6 +4,7 @@
 #include <glog/raw_logging.h>
 
 #include "AccessHistory.h"
+#include "DataSharing.h"
 #include "Label.h"
 #include "ParRegionData.h"
 #include "QueryFuncs.h"
@@ -24,15 +25,14 @@ void on_ompt_callback_implicit_task(
        int flags) {
   RAW_DLOG(INFO, "on_ompt_callback_implicit_task called:%u p:%lx t:%lx %u %u %d",
           endPoint, parallelData, taskData, actualParallelism, index, flags);
-
-  if (flags == ompt_task_initial || actualParallelism == 1) {
-    /*
-     * TODO: looks like ompt_task_initial never shows up. Could be 
-     * some bug in runtime libray. If the actualParallelism is 1, it 
-     * should be an initial task according to spec.
-     */
+  if (flags == ompt_task_initial) {
+    RAW_DLOG(INFO, "generating initial task: %lx", taskData);
+    auto initTaskData = new TaskData();
+    auto newTaskLabel = genInitTaskLabel();
+    initTaskData->label = std::move(newTaskLabel);
+    taskData->ptr = static_cast<void*>(initTaskData);
     return;
-  }
+  } 
   auto taskDataPtr = static_cast<TaskData*>(taskData->ptr);
   if (actualParallelism == 0 && index != 0) {
     /* 
@@ -51,8 +51,7 @@ void on_ompt_callback_implicit_task(
   }
   int parentTaskType, parentThreadNum;
   void* parentDataPtr = nullptr;
-  if (!queryTaskInfo(1, eTaskData, parentTaskType, parentThreadNum,
-             parentDataPtr)) {
+  if (!queryTaskInfo(1, parentTaskType, parentThreadNum, parentDataPtr)) {
     RAW_LOG(FATAL, "cannot get parent task info");     
     return;
   }   
@@ -206,7 +205,7 @@ void on_ompt_callback_mutex_acquired(
   RAW_DLOG(INFO, "on_ompt_callback_mutex_acquired called");
   int taskType, threadNum;
   void* dataPtr;
-  if (!queryTaskInfo(0, eTaskData, taskType, threadNum, dataPtr)) {
+  if (!queryTaskInfo(0, taskType, threadNum, dataPtr)) {
     RAW_LOG(FATAL, "task data pointer is null");
     return;
   }
@@ -232,7 +231,7 @@ void on_ompt_callback_mutex_released(
   RAW_DLOG(INFO, "on_ompt_callback_mutex_released called");
   int taskType, threadNum;
   void* dataPtr;
-  if (!queryTaskInfo(0, eTaskData, taskType, threadNum, dataPtr)) {
+  if (!queryTaskInfo(0, taskType, threadNum, dataPtr)) {
     RAW_LOG(FATAL, "task data pointer is null");
     return;
   } 
@@ -429,6 +428,11 @@ void on_ompt_callback_task_create(
         const void *codePtrRa) {
   auto taskData = new TaskData();
   if (flags == ompt_task_initial) {
+    /*
+     * In recent diff (merged from https://reviews.llvm.org/D68615),initial task
+     * creation ompt callback is moved to ompt_callback_implicit_task. The code 
+     * here is not executed. We leave the code here for backward compatibility.
+     */
     RAW_DLOG(INFO, "generating initial task: %lx", taskData);
     auto newTaskLabel = genInitTaskLabel();
     taskData->label = std::move(newTaskLabel);
@@ -444,8 +448,6 @@ void on_ompt_callback_task_create(
     taskData->label = std::move(newTaskLabel);
     auto mutatedParentLabel = mutateParentTaskCreate(parentLabel); 
     parentTaskData->label = std::move(mutatedParentLabel);
-    RAW_LOG(INFO, "mutated parent task label: %s", 
-            parentTaskData->label->toString().c_str());
     parentTaskData->childExpTaskData.push_back(static_cast<void*>(taskData));
   } else if (flags == ompt_task_target) {
     // TODO: prepare the task data pointer for target 
@@ -479,6 +481,8 @@ void on_ompt_callback_task_schedule(
     case ompt_task_complete:
       RAW_DLOG(INFO, "task complete encountered");
       handleTaskComplete(taskPtr);
+      recycleTaskThreadStackMemory(taskPtr);
+      recycleTaskPrivateMemory();
       break;
     case ompt_task_yield:
       RAW_DLOG(INFO, "taskyield construct encountered");
@@ -497,21 +501,10 @@ void on_ompt_callback_task_schedule(
       break;
     case ompt_task_switch:
       RAW_DLOG(INFO, "task switch encountered");
+      recycleTaskThreadStackMemory(taskPtr);
+      recycleTaskPrivateMemory();
       break;
   } 
-  // TODO
-  // mark the memory region [lowerbound, upperbound] as recycled  
-  // for completed tasks
-  /*
-  void* threadDataPtr = nullptr;
-  if (!queryOmpThreadInfo(threadDataPtr)) {
-    RAW_LOG(FATAL, "cannot get thread data");
-    return;
-  }
-  auto threadData = static_cast<ThreadData*>(threadDataPtr); 
-  auto priorTaskUpperBound = threadData->activeTaskExitFrame; 
-  auto priorTaskLowerBound = threadData->lowestAccessedAddr;
-  */
 }
 
 void on_ompt_callback_dependences(

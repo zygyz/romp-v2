@@ -2,7 +2,13 @@
 
 #include <glog/logging.h>
 #include <glog/raw_logging.h>
+#include <memory>
 
+#include "AccessHistory.h"
+#include "CoreUtil.h"
+#include "QueryFuncs.h"
+#include "ShadowMemory.h"
+#include "TaskData.h"
 #include "ThreadData.h"
 
 namespace romp {
@@ -50,7 +56,70 @@ DataSharingType analyzeDataSharing(const void* threadDataPtr,
   return eUndefined;
 }
 
+/*
+ * This function is responsible for marking memory ranges in 
+ * [lowerBound, upperBound] to be deallocated.
+ */
+void recycleMemRange(void* lowerBound, void* upperBound) {
+  if (upperBound < lowerBound) {
+    RAW_LOG(FATAL, "upper bound is smaller than lower bound: %lx %lx", 
+            upperBound, lowerBound);
+  }
+  auto start = reinterpret_cast<uint64_t>(lowerBound);
+  auto end = reinterpret_cast<uint64_t>(upperBound);
+  ShadowMemory<AccessHistory> shadowMemory;
+  for (auto addr = start; addr <= end; addr++) {
+    auto accessHistory = shadowMemory.getShadowMemorySlot(addr);
+    std::unique_lock<std::mutex> guard(accessHistory->getMutex());
+    accessHistory->setFlag(eMemoryRecycled);
+  }
 }
 
+/*
+ * This function is called when an explicit task is completed. This function 
+ * looks up the task private thread stack memory locations and marks these 
+ * locations as deallocated. Because a 
+ */
+void recycleTaskThreadStackMemory(void* taskData) {
+  ompt_frame_t omptFrame;
+  int taskType = 0;
+  if (!queryFrameInfo(0, taskType, &omptFrame)) {
+    RAW_LOG(FATAL, "cannot get frame info");
+    return;
+  }
+  auto taskDataPtr = static_cast<TaskData*>(taskData);
+  auto exitFrameAddr = taskDataPtr->exitFrame;
+  void* threadInfo = nullptr;
+  if (!queryOmpThreadInfo(threadInfo)) {
+    RAW_LOG(FATAL, "cannot get thread info");
+    return;
+  }
+  auto threadInfoPtr = static_cast<ThreadData*>(threadInfo);
+  auto threadStackBase = threadInfoPtr->stackBaseAddr; 
+  auto lowerBound = threadStackBase; 
+  auto upperBound = exitFrameAddr;
+  recycleMemRange(lowerBound, upperBound);
+}
+
+/*
+ * This function is called when an explicit task is completed or is switched
+ * out for other tasks. This function looks up the private memory allocated 
+ * for the explicit task on heap, marks these memory location as deallocated.
+ */
+void recycleTaskPrivateMemory() {
+  void* taskPrivateDataBase = nullptr;
+  size_t taskPrivateDataSize = 0;
+  if (!queryTaskMemoryInfo(&taskPrivateDataBase, &taskPrivateDataSize)) {
+    RAW_LOG(INFO, "cannot get task private data memory info");
+    return;
+  }
+  RAW_DLOG(INFO, "task private mem base: %lx, task private data size: %lu",
+           taskPrivateDataBase, taskPrivateDataSize); 
+  auto taskPrivateDataEnd = computeAddressRangeEnd(taskPrivateDataBase, 
+          taskPrivateDataSize);
+  recycleMemRange(taskPrivateDataBase, taskPrivateDataEnd);
+}
+
+}
 
 

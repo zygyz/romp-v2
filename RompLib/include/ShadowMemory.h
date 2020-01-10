@@ -86,7 +86,7 @@ ShadowMemory<T>::ShadowMemory(const uint64_t l1PageTableBits,
                               const uint64_t l2PageTableBits,
                               const uint64_t numMemAddrBits, 
                               Granularity granularity) {
-  LOG(INFO) << "ShadowMemory constructor ";
+  DLOG(INFO) << "ShadowMemory constructor ";
   uint64_t lowZeroMask = 0;
   switch(granularity) {
     case eByteLevel:
@@ -129,7 +129,7 @@ ShadowMemory<T>::ShadowMemory(const uint64_t l1PageTableBits,
 template<typename T>
 ShadowMemory<T>::~ShadowMemory() {
   // we should explicitly delete the shadow page
-  LOG(INFO) << "shadow memory destructor";
+  DLOG(INFO) << "shadow memory destructor";
   for (int i = 0; i < _numL1PageTableEntries; ++i) {
     if (_pageTable[i] != 0) {
       for (int j = 0; j < _numL2PageTableEntries; ++j) {

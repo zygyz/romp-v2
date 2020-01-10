@@ -10,6 +10,7 @@ namespace romp {
 
 enum AccessHistoryFlag {
   eDataRaceFound = 0x1,
+  eMemoryRecycled = 0x2,
 };
 
 class AccessHistory {
@@ -19,12 +20,16 @@ public:
   std::mutex& getMutex();
   std::vector<Record>* getRecords();
   void setFlag(AccessHistoryFlag flag);
+  void clearFlags();
+  void clearFlag(AccessHistoryFlag flag);
   bool dataRaceFound() const;
+  bool memIsRecycled() const;
+  uint64_t getState() const;
 private:
   void _initRecords();
 private:
   std::mutex _mutex; // use simple mutex, avoid premature optimization
-  uint8_t _state;  
+  uint64_t _state;  
   std::unique_ptr<std::vector<Record>> _records; 
 
 };

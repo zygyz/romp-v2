@@ -17,10 +17,12 @@ typedef struct TaskData {
   std::shared_ptr<LockSet> lockSet;
   bool inReduction;
   std::vector<void*> childExpTaskData;
+  void* exitFrame; 
   TaskData() {
     label = nullptr;
     lockSet = nullptr;
     inReduction = false;
+    exitFrame = nullptr;
   }
 } TaskData;
 

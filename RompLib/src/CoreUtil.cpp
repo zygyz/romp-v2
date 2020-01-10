@@ -88,5 +88,12 @@ void reportDataRace(void* instnAddrPrev, void* instnAddrCur, uint64_t memAddr) {
           instnAddrPrev, instnAddrCur, (void*)memAddr);
 } 
 
+/*
+ * Given the base address and chunk size, return the address of the last byte.
+ */
+void* computeAddressRangeEnd(void* baseAddr, size_t chunkSize) {
+  auto rangeEnd = reinterpret_cast<uint64_t>(baseAddr) + chunkSize - 1;
+  return reinterpret_cast<void*>(rangeEnd);
+}
 
 }

@@ -11,11 +11,9 @@ namespace romp {
 typedef struct ThreadData {
   void* stackBaseAddr;
   void* stackTopAddr;
-  void* activeTaskExitFrame;
   void* lowestAccessedAddr;
   ThreadData() : stackBaseAddr(nullptr), 
                  stackTopAddr(nullptr), 
-                 activeTaskExitFrame(nullptr), 
                  lowestAccessedAddr((void*)ADDR_MAX) {}
 
   void setLowestAddr(void* addr) {
