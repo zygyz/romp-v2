@@ -24,6 +24,7 @@ public:
   void clearFlag(AccessHistoryFlag flag);
   bool dataRaceFound() const;
   bool memIsRecycled() const;
+  uint64_t getState() const;
 private:
   void _initRecords();
 private:

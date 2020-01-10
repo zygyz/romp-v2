@@ -14,6 +14,7 @@ DataSharingType analyzeDataSharing(const void* threadDataPtr,
                                    const void* address,
                                    const ompt_frame_t* taskFrame);
 
+void recycleTaskThreadStackMemory(void* taskData);
 void recycleTaskPrivateMemory();
 void recycleMemRange(void* lowerBound, void* higherBound);
 

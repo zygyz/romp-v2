@@ -51,8 +51,7 @@ void on_ompt_callback_implicit_task(
   }
   int parentTaskType, parentThreadNum;
   void* parentDataPtr = nullptr;
-  if (!queryTaskInfo(1, eTaskData, parentTaskType, parentThreadNum,
-             parentDataPtr)) {
+  if (!queryTaskInfo(1, parentTaskType, parentThreadNum, parentDataPtr)) {
     RAW_LOG(FATAL, "cannot get parent task info");     
     return;
   }   
@@ -206,7 +205,7 @@ void on_ompt_callback_mutex_acquired(
   RAW_DLOG(INFO, "on_ompt_callback_mutex_acquired called");
   int taskType, threadNum;
   void* dataPtr;
-  if (!queryTaskInfo(0, eTaskData, taskType, threadNum, dataPtr)) {
+  if (!queryTaskInfo(0, taskType, threadNum, dataPtr)) {
     RAW_LOG(FATAL, "task data pointer is null");
     return;
   }
@@ -232,7 +231,7 @@ void on_ompt_callback_mutex_released(
   RAW_DLOG(INFO, "on_ompt_callback_mutex_released called");
   int taskType, threadNum;
   void* dataPtr;
-  if (!queryTaskInfo(0, eTaskData, taskType, threadNum, dataPtr)) {
+  if (!queryTaskInfo(0, taskType, threadNum, dataPtr)) {
     RAW_LOG(FATAL, "task data pointer is null");
     return;
   } 
@@ -430,9 +429,9 @@ void on_ompt_callback_task_create(
   auto taskData = new TaskData();
   if (flags == ompt_task_initial) {
     /*
-     * In recent diff (https://reviews.llvm.org/D68615), initial task creation 
-     * ompt callback is moved to ompt_callback_implicit_task. The code here 
-     * is not executed. We leave the code here for backward compatibility.
+     * In recent diff (merged from https://reviews.llvm.org/D68615),initial task
+     * creation ompt callback is moved to ompt_callback_implicit_task. The code 
+     * here is not executed. We leave the code here for backward compatibility.
      */
     RAW_DLOG(INFO, "generating initial task: %lx", taskData);
     auto newTaskLabel = genInitTaskLabel();
@@ -449,8 +448,6 @@ void on_ompt_callback_task_create(
     taskData->label = std::move(newTaskLabel);
     auto mutatedParentLabel = mutateParentTaskCreate(parentLabel); 
     parentTaskData->label = std::move(mutatedParentLabel);
-    RAW_LOG(INFO, "mutated parent task label: %s", 
-            parentTaskData->label->toString().c_str());
     parentTaskData->childExpTaskData.push_back(static_cast<void*>(taskData));
   } else if (flags == ompt_task_target) {
     // TODO: prepare the task data pointer for target 
@@ -484,6 +481,7 @@ void on_ompt_callback_task_schedule(
     case ompt_task_complete:
       RAW_DLOG(INFO, "task complete encountered");
       handleTaskComplete(taskPtr);
+      recycleTaskThreadStackMemory(taskPtr);
       recycleTaskPrivateMemory();
       break;
     case ompt_task_yield:
@@ -503,6 +501,7 @@ void on_ompt_callback_task_schedule(
       break;
     case ompt_task_switch:
       RAW_DLOG(INFO, "task switch encountered");
+      recycleTaskThreadStackMemory(taskPtr);
       recycleTaskPrivateMemory();
       break;
   } 

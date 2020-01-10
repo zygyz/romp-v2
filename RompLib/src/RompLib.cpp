@@ -30,6 +30,9 @@ ShadowMemory<AccessHistory> shadowMemory;
 void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel, 
                    const LockSetPtr& curLockSet, const CheckInfo& checkInfo) {
   std::unique_lock<std::mutex> guard(accessHistory->getMutex());
+  if (checkInfo.dataSharingType == eThreadPrivateBelowExit) {
+    return;
+  }
   auto records = accessHistory->getRecords();
   if (accessHistory->dataRaceFound()) {
     /* 
@@ -160,6 +163,7 @@ void checkAccess(void* address,
     return;
   }
   auto curTaskData = static_cast<TaskData*>(allTaskInfo.taskData->ptr);
+  curTaskData->exitFrame = allTaskInfo.taskFrame->exit_frame.ptr;
   auto& curLabel = curTaskData->label;
   auto& curLockSet = curTaskData->lockSet;
   

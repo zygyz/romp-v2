@@ -45,44 +45,46 @@ bool queryAllTaskInfo(const int ancestorLevel,
 }
 
 /*
- * Query openmp task information given the task level and specified query type.
- * If the information is available, set dataPtr to the pointer to actual data, 
- * then return true. If the information is not available, set dataPtr to 
- * nullptr and return false. 
+ * Query openmp task information given the task level. If the information is
+ * available, set dataPtr to the pointer to actual data, then return true. 
+ * If the information is not available, set dataPtr to nullptr and return false. 
  */
 bool queryTaskInfo(const int ancestorLevel,
-                   const OmptTaskQueryType& queryType, 
                    int& taskType,
                    int& threadNum,
                    void*& dataPtr) {
   int retVal = -1;
-  ompt_data_t omptTaskData;
   dataPtr = nullptr;
+  ompt_data_t omptTaskData;
   auto taskDataPtr = &omptTaskData;
-  if (queryType == eTaskData) {
-    auto taskDataPtrPtr = &taskDataPtr;
-    retVal = omptGetTaskInfo(ancestorLevel, &taskType, taskDataPtrPtr, 
-                                  NULL, NULL, &threadNum);
-    dataPtr = taskDataPtr->ptr;
-  } else if (queryType == eTaskFrame) {
-    //TODO: implement the query task frame procedure
-     
-  } else if (queryType == eParallelData) {
-    //TODO: implement the query parallel data procedure
-  } else {
-    RAW_LOG(FATAL, "unknown query type");  
+  auto taskDataPtrPtr = &taskDataPtr;   
+  retVal = omptGetTaskInfo(ancestorLevel, &taskType, taskDataPtrPtr, NULL,
+              NULL, &threadNum);
+  dataPtr = taskDataPtr->ptr;
+  if (!dataPtr || !infoIsAvailable(retVal)) {
+    RAW_LOG(WARNING, "task data info is not available");
+    return false;
   }
-  if (!infoIsAvailable(retVal) || !dataPtr) {
-    if (!infoIsAvailable(retVal)) {
-      RAW_LOG(WARNING, "info is not available");
-    }
-    if (!dataPtr) {
-      RAW_LOG(WARNING, "data pointer is null");
-    }
-    return false;  
-  }
-  return true;
+  return true; 
 }
+
+/*
+ * Query openmp task's frame information given the task level. If the 
+ * information is available, set 
+ */
+bool queryFrameInfo(const int ancestorLevel, 
+                    int& taskType,
+                    ompt_frame_t* omptFramePtr) {
+  int retVal = -1;
+  auto omptFramePtrPtr = &omptFramePtr;
+  retVal = omptGetTaskInfo(ancestorLevel, &taskType, NULL, omptFramePtrPtr,
+          NULL, NULL);
+  if (!infoIsAvailable(retVal)) {
+    RAW_LOG(WARNING, "ompt frame info is not available");
+    return false;
+  } 
+  return true; 
+} 
 
 /*
  * Query openmp runtime information about the parallel region. 

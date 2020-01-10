@@ -45,4 +45,8 @@ bool AccessHistory::memIsRecycled() const {
   return (_state & eMemoryRecycled) != 0;
 }
 
+uint64_t AccessHistory::getState() const {
+  return _state;
+}
+
 }

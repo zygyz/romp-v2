@@ -8,6 +8,7 @@
 #include "CoreUtil.h"
 #include "QueryFuncs.h"
 #include "ShadowMemory.h"
+#include "TaskData.h"
 #include "ThreadData.h"
 
 namespace romp {
@@ -60,6 +61,10 @@ DataSharingType analyzeDataSharing(const void* threadDataPtr,
  * [lowerBound, upperBound] to be deallocated.
  */
 void recycleMemRange(void* lowerBound, void* upperBound) {
+  if (upperBound < lowerBound) {
+    RAW_LOG(FATAL, "upper bound is smaller than lower bound: %lx %lx", 
+            upperBound, lowerBound);
+  }
   auto start = reinterpret_cast<uint64_t>(lowerBound);
   auto end = reinterpret_cast<uint64_t>(upperBound);
   ShadowMemory<AccessHistory> shadowMemory;
@@ -71,22 +76,37 @@ void recycleMemRange(void* lowerBound, void* upperBound) {
 }
 
 /*
- * This function is called when an explicit task is completed or is switched
- * out for other tasks. This function looks up the private memory accessed 
- * by the task, both on thread stack and in the heap allocated region by 
- * runtime. Then mark these memory location as deallocated. Thus other 
- * tasks reusing these memory regions would not trigger false positives.
+ * This function is called when an explicit task is completed. This function 
+ * looks up the task private thread stack memory locations and marks these 
+ * locations as deallocated. Because a 
  */
-void recycleTaskPrivateMemory() {
-  void* threadDataPtr = nullptr;
-  if (!queryOmpThreadInfo(threadDataPtr)) {
-    RAW_LOG(FATAL, "cannot get thread data");
+void recycleTaskThreadStackMemory(void* taskData) {
+  ompt_frame_t omptFrame;
+  int taskType = 0;
+  if (!queryFrameInfo(0, taskType, &omptFrame)) {
+    RAW_LOG(FATAL, "cannot get frame info");
     return;
   }
-  auto threadData = static_cast<ThreadData*>(threadDataPtr);
-  auto taskThreadUpperBound = threadData->activeTaskExitFrame;
-  auto taskThreadLowerBound = threadData->lowestAccessedAddr; 
-  recycleMemRange(taskThreadLowerBound, taskThreadUpperBound);
+  auto taskDataPtr = static_cast<TaskData*>(taskData);
+  auto exitFrameAddr = taskDataPtr->exitFrame;
+  void* threadInfo = nullptr;
+  if (!queryOmpThreadInfo(threadInfo)) {
+    RAW_LOG(FATAL, "cannot get thread info");
+    return;
+  }
+  auto threadInfoPtr = static_cast<ThreadData*>(threadInfo);
+  auto threadStackBase = threadInfoPtr->stackBaseAddr; 
+  auto lowerBound = threadStackBase; 
+  auto upperBound = exitFrameAddr;
+  recycleMemRange(lowerBound, upperBound);
+}
+
+/*
+ * This function is called when an explicit task is completed or is switched
+ * out for other tasks. This function looks up the private memory allocated 
+ * for the explicit task on heap, marks these memory location as deallocated.
+ */
+void recycleTaskPrivateMemory() {
   void* taskPrivateDataBase = nullptr;
   size_t taskPrivateDataSize = 0;
   if (!queryTaskMemoryInfo(&taskPrivateDataBase, &taskPrivateDataSize)) {
