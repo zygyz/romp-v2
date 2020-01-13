@@ -221,7 +221,9 @@ void on_ompt_callback_mutex_acquired(
     }
     taskDataPtr->lockSet->addLock(static_cast<uint64_t>(waitId));
   }
-  taskDataPtr->label = std::move(mutatedLabel);
+  if (mutatedLabel) {
+    taskDataPtr->label = std::move(mutatedLabel);
+  }
 }
 
 void on_ompt_callback_mutex_released(
@@ -243,7 +245,9 @@ void on_ompt_callback_mutex_released(
   } else {
     taskDataPtr->lockSet->removeLock(waitId);
   }
-  taskDataPtr->label = std::move(mutatedLabel);
+  if (mutatedLabel) {
+    taskDataPtr->label = std::move(mutatedLabel);
+  }
 }
 
 /*
