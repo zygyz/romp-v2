@@ -10,6 +10,7 @@
  * and the actual form of access history. We assume the shadow memory works
  * on 64 bits system. So we use uint64_t to represent void*
  */
+#define CANONICAL_FORM_MASK 0x0000ffffffffffff
 namespace romp {
 
 enum Granularity {
@@ -146,10 +147,14 @@ ShadowMemory<T>::~ShadowMemory() {
 /* 
  * Given the memory address, using the high bits to get the index into the 
  * first level page table.
+ * Note that if the memory address is represented in canonical form, bits
+ * [48, 64] (lowest bit as bit 1), are copies of bit 47. One should first
+ * mask out bits [48, 64] to avoid overflow of first level page index.
  */
 template<typename T>
 uint64_t ShadowMemory<T>::_getL1PageIndex(const uint64_t address) {  
-  return static_cast<uint64_t>(address >> _l1PageTableShift);
+  return static_cast<uint64_t>((address & CANONICAL_FORM_MASK) >> 
+          _l1PageTableShift);
 }
 
 /*
@@ -178,7 +183,9 @@ T* ShadowMemory<T>::getShadowMemorySlot(const uint64_t address) {
  */
 template<typename T>
 T* ShadowMemory<T>::_getOrCreatePageForMemAddr(const uint64_t address) {
+  RAW_LOG(INFO, "_getOrCreatePageForMemAddr %lx", reinterpret_cast<void*>(address));
   auto l1Index = _getL1PageIndex(address);
+  RAW_LOG(INFO, "shadow memory, l1 index: %lu %lx",l1Index, address);
   if (_pageTable[l1Index] == 0) { 
     // the first level page is not allocated yet.
     auto freshL1Page = _getL1Page(_numL2PageTableEntries);
