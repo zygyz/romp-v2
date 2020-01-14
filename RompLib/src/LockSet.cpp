@@ -51,7 +51,7 @@ bool SmallLockSet::hasCommonLock(const LockSet& other) const {
       auto otherLock = otherLockSet._locks[j]; 
       if (otherLock == lock) {
         return true;
-      }
+      } 
     } 
   }
   return false;
@@ -107,6 +107,10 @@ bool isSubset(LockSet* me, LockSet* other) {
     } 
   }
   return true;
+}
+
+std::shared_ptr<LockSet> SmallLockSet::clone() const {
+  return std::make_shared<SmallLockSet>(*this);
 }
 
 }

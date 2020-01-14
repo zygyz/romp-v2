@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include <string>
 
 namespace romp {
@@ -7,6 +8,7 @@ class LockSet {
 public:
   virtual std::string toString() const = 0;
   virtual bool hasCommonLock(const LockSet& other) const = 0;
+  virtual std::shared_ptr<LockSet> clone() const = 0;
   virtual void addLock(uint64_t lock) = 0;
   virtual void removeLock(uint64_t lock) = 0;
   virtual void* getLocks() = 0;
@@ -23,6 +25,7 @@ public:
   SmallLockSet();
   SmallLockSet(const SmallLockSet& lockset);
   std::string toString() const override;
+  std::shared_ptr<LockSet> clone() const override; 
   bool hasCommonLock(const LockSet& other) const override;
   void addLock(uint64_t lock) override;
   void removeLock(uint64_t lock) override;

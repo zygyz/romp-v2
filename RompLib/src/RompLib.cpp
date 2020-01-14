@@ -57,12 +57,10 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
      records->clear();
      return;
   }
-  //RAW_LOG(INFO, "access record length: %d", records->size());
   auto curRecord = Record(checkInfo.isWrite, curLabel, curLockSet, 
           checkInfo.taskPtr, checkInfo.instnAddr);
   if (records->empty()) {
     // no access record, add current access to the record
-    //RAW_DLOG(INFO, "records list is empty, add record");
     records->push_back(curRecord);
   } else {
     // check previous access records with current access
