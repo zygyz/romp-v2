@@ -11,6 +11,7 @@
 #include "TaskData.h"
 #include "ThreadData.h"
 
+#define STATIC_THREAD_PRIVATE_LOWER_BOUND  0xfff8000000000000
 namespace romp {
   
 /*
@@ -41,6 +42,10 @@ DataSharingType analyzeDataSharing(const void* threadDataPtr,
     return eUndefined;
   }
   const auto addressValue = reinterpret_cast<const uint64_t>(address);
+  if (addressValue >= reinterpret_cast<const uint64_t>(
+                  STATIC_THREAD_PRIVATE_LOWER_BOUND)) {
+    return eStaticThreadPrivate;  
+  }
   if (addressValue < reinterpret_cast<const uint64_t>(stackBaseAddr) || 
       addressValue > reinterpret_cast<const uint64_t>(stackTopAddr)) {
     // Current memory access falls out of the thread stack's 

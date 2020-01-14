@@ -30,7 +30,9 @@ ShadowMemory<AccessHistory> shadowMemory;
 void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel, 
                    const LockSetPtr& curLockSet, const CheckInfo& checkInfo) {
   std::unique_lock<std::mutex> guard(accessHistory->getMutex());
-  if (checkInfo.dataSharingType == eThreadPrivateBelowExit) {
+  auto dataSharingType = checkInfo.dataSharingType;
+  if (dataSharingType == eThreadPrivateBelowExit || 
+          dataSharingType == eStaticThreadPrivate) {
     return;
   }
   auto records = accessHistory->getRecords();

@@ -4,6 +4,7 @@
 namespace romp {
 
 enum DataSharingType { 
+    eStaticThreadPrivate, 
     eNonThreadPrivate,
     eThreadPrivateBelowExit, 
     eThreadPrivateAboveExit,
