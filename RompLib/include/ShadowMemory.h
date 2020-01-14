@@ -130,7 +130,6 @@ ShadowMemory<T>::ShadowMemory(const uint64_t l1PageTableBits,
 template<typename T>
 ShadowMemory<T>::~ShadowMemory() {
   // we should explicitly delete the shadow page
-  DLOG(INFO) << "shadow memory destructor";
   for (int i = 0; i < _numL1PageTableEntries; ++i) {
     if (_pageTable[i] != 0) {
       for (int j = 0; j < _numL2PageTableEntries; ++j) {
@@ -183,9 +182,7 @@ T* ShadowMemory<T>::getShadowMemorySlot(const uint64_t address) {
  */
 template<typename T>
 T* ShadowMemory<T>::_getOrCreatePageForMemAddr(const uint64_t address) {
-  RAW_LOG(INFO, "_getOrCreatePageForMemAddr %lx", reinterpret_cast<void*>(address));
   auto l1Index = _getL1PageIndex(address);
-  RAW_LOG(INFO, "shadow memory, l1 index: %lu %lx",l1Index, address);
   if (_pageTable[l1Index] == 0) { 
     // the first level page is not allocated yet.
     auto freshL1Page = _getL1Page(_numL2PageTableEntries);
