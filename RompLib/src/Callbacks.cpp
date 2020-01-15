@@ -180,8 +180,9 @@ void on_ompt_callback_sync_region(
         markExpChildSyncTaskGroupEnd(taskDataPtr, labelPtr);
         break;
       case ompt_sync_region_barrier:
-      case ompt_sync_region_barrier_implicit:
       case ompt_sync_region_barrier_explicit:
+      case ompt_sync_region_barrier_implementation:
+      case ompt_sync_region_barrier_implicit:
         mutatedLabel = mutateBarrierEnd(labelPtr);
         break;
       case ompt_sync_region_reduction:
