@@ -215,6 +215,7 @@ void on_ompt_callback_mutex_acquired(
   if (kind == ompt_mutex_ordered) {
     mutatedLabel = mutateOrderSection(label.get()); 
   } else {
+    RAW_DLOG(INFO, "mutex acquired on wait id: %lu", waitId);
     if (taskDataPtr->lockSet == nullptr) {
       auto lockSet = std::make_shared<SmallLockSet>();
       taskDataPtr->lockSet = std::move(lockSet);
