@@ -81,8 +81,6 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
                   diffIndex)) {
         gDataRaceFound = true;
         gNumDataRace++;
-        RAW_LOG(INFO, "hist label: %s cur label: %s %lx", histRecord.getLabel()->toString().c_str(),
-                curLabel->toString().c_str(), checkInfo.byteAddress);
         if (gReportLineInfo) {
           std::unique_lock<std::mutex> recordGuard(gDataRaceLock);
           gDataRaceRecords.push_back(DataRaceInfo(histRecord.getInstnAddr(),

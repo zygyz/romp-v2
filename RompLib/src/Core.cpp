@@ -643,7 +643,6 @@ inline CheckCase buildCheckCase(SegmentType histType, SegmentType curType) {
  */
 bool dispatchAnalysis(CheckCase checkCase, Label* hist, Label* cur, 
         int diffIndex) {
-  RAW_LOG(INFO, "dispatch analysis: %d", checkCase);
   switch(checkCase) {
     case eImpImp:
       RAW_LOG(FATAL, "not expected case: imp-imp");

@@ -111,10 +111,8 @@ uint16_t BaseSegment::getTaskGroupId() const {
 void BaseSegment::setTaskGroupId(uint16_t taskGroupId) {
   _taskGroup = static_cast<uint32_t>(
           static_cast<uint64_t>(_taskGroup) & ~TASKGROUP_ID_MASK);
-  RAW_LOG(INFO, "set task group id: %u %lx", taskGroupId, _taskGroup);
   _taskGroup |= static_cast<uint32_t>(
           (static_cast<uint64_t>(taskGroupId) << 16) & TASKGROUP_ID_MASK);
-  RAW_LOG(INFO, "set task group id new task group: %u %lx", taskGroupId, _taskGroup);
 }
 
 /*
@@ -212,7 +210,6 @@ void BaseSegment::setTaskcreate(uint64_t taskcreate) {
   RAW_CHECK(taskcreate < (1 << 15), "taskcreate count is overflowing");
   _value &= ~TASK_CREATE_MASK;
   _value |= (taskcreate << TASK_CREATE_SHIFT) & TASK_CREATE_MASK;
-  RAW_LOG(INFO, "set task create %lu value: %lx", taskcreate, _value);
 }
 
 uint64_t BaseSegment::getTaskcreate() const {
