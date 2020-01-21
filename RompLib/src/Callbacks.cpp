@@ -124,20 +124,40 @@ void markExpChildSyncTaskGroupEnd(TaskData* taskData, Label* curLabel) {
   auto seg = getLastSegment(curLabel);
   auto phase = seg->getPhase();
   auto taskGroupLevel = seg->getTaskGroupLevel();
+  auto taskGroupId = seg->getTaskGroupId(); 
   auto it = taskData->childExpTaskData.begin();
+  auto lenParentLabel = curLabel->getLabelLength();
+  RAW_LOG(INFO, "mark explicit child task group end: %s phase: %lu tgl: %lu taskgroup id: %lu", 
+          curLabel->toString().c_str(), phase, taskGroupLevel, taskGroupId);
   while (it != taskData->childExpTaskData.end()) {
-    auto childTaskData = static_cast<const TaskData*>(*it);
+    // looks like we assume the child task is not completed yet so the label 
+    // does not get mutated, which is problematic
+    // when encountering the end of task group, the affected tasks should have been 
+    // completed 
+    auto childTaskData = static_cast<TaskData*>(*it);
     auto childLabel = childTaskData->label;
-    auto lenLabel = childLabel->getLabelLength();
-    auto lastSeg = childLabel->getKthSegment(lenLabel - 1);
-    auto parentSeg = childLabel->getKthSegment(lenLabel - 2);
-    if (parentSeg->getTaskGroupLevel() == taskGroupLevel) {
-      lastSeg->setTaskGroupSync();
-      lastSeg->setTaskGroupPhase(phase);
-      it = taskData->childExpTaskData.erase(it); 
-      //erase the synced child explicit task
+    RAW_LOG(INFO, "child task ptr: %lx child label: %s", (void*)childTaskData,
+            childLabel->toString().c_str());
+    auto lenChildLabel = childLabel->getLabelLength();
+    if (lenChildLabel > lenParentLabel) {
+      // This child task is not inside current task group
+      it++; 
     } else {
-      it++;
+      auto lastSeg = childLabel->getLastKthSegment(1);    
+      // check if the task group id matches  
+      auto childTaskGroupId = lastSeg->getTaskGroupId();
+      RAW_LOG(INFO, "child tg id: %lu", childTaskGroupId);
+      if (childTaskGroupId == taskGroupId) {
+        RAW_LOG(INFO, "task group id match: %lu", childTaskGroupId);
+        auto mutatedChildLabel = mutateTaskGroupSyncChild(childLabel.get());
+        RAW_LOG(INFO, "mutated label: %s", mutatedChildLabel->toString().c_str());
+        childTaskData->label = std::move(mutatedChildLabel);
+        it = taskData->childExpTaskData.erase(it);
+      } else {
+        RAW_LOG(INFO, "child tg id not matching parent tg id %lu %lu", 
+                childTaskGroupId, taskGroupId);
+        it++;
+      }
     }
   }
 }
@@ -164,6 +184,8 @@ void on_ompt_callback_sync_region(
         break;
       case ompt_sync_region_taskgroup:
         mutatedLabel = mutateTaskGroupBegin(labelPtr);
+        RAW_LOG(INFO, "taskgroup begin old label: %s mutated: %s", 
+                labelPtr->toString().c_str(), mutatedLabel->toString().c_str());
         break;
       default:
         RAW_DLOG(WARNING, "ignoring endpoint type %d", kind);
@@ -178,6 +200,8 @@ void on_ompt_callback_sync_region(
       case ompt_sync_region_taskgroup:
         mutatedLabel = mutateTaskGroupEnd(labelPtr);
         markExpChildSyncTaskGroupEnd(taskDataPtr, labelPtr);
+        RAW_LOG(INFO, "taskgroup end old label: %s mutated: %s", 
+                labelPtr->toString().c_str(), mutatedLabel->toString().c_str());
         break;
       case ompt_sync_region_barrier:
       case ompt_sync_region_barrier_explicit:
@@ -462,6 +486,9 @@ void on_ompt_callback_task_create(
     taskData->label = std::move(newTaskLabel);
     auto mutatedParentLabel = mutateParentTaskCreate(parentLabel); 
     parentTaskData->label = std::move(mutatedParentLabel);
+    RAW_LOG(INFO, "exp task create, mutated parent label: %s new task label: %s task data: %lx",\  
+            parentTaskData->label->toString().c_str(), taskData->label->toString().c_str(), 
+            (void*)taskData);
     parentTaskData->childExpTaskData.push_back(static_cast<void*>(taskData));
   } else if (flags == ompt_task_target) {
     // TODO: prepare the task data pointer for target 
@@ -479,6 +506,8 @@ void handleTaskComplete(void* ptr) {
   auto taskDataPtr = static_cast<TaskData*>(ptr);
   auto label = (taskDataPtr->label).get();
   auto mutatedLabel = mutateTaskComplete(label);
+  RAW_LOG(INFO, "task complete: %lx, old label: %s new label: %s", 
+          ptr, label->toString().c_str(), mutatedLabel->toString().c_str());
   taskDataPtr->label = std::move(mutatedLabel);
 }
 

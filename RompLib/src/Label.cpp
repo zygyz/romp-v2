@@ -369,4 +369,19 @@ std::shared_ptr<Label> mutateTaskComplete(Label* label) {
   return newLabel;
 }
 
+/*
+ * Mutate the label of the child task inside a taskgroup construct when the 
+ * taskgroup construct finishes. Set the taskgroup sync mark.
+ */
+std::shared_ptr<Label> mutateTaskGroupSyncChild(Label* label) {
+  RAW_LOG(INFO, "mutate task group sync child: %s", label->toString().c_str());
+  auto newLabel = std::make_shared<Label>(*label); 
+  auto lastSeg = newLabel->getLastKthSegment(1);
+  lastSeg->setTaskGroupSync();
+  RAW_LOG(INFO, "task group child mutated");
+  return newLabel;
+}
+
+
+
 }

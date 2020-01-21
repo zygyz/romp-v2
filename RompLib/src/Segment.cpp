@@ -58,15 +58,25 @@ namespace romp {
  */
 std::string BaseSegment::toString() const {
   std::stringstream stream;
-  stream << std::hex << std::setw(16) << std::setfill('0') << _value;
-  auto result = "[" + stream.str() + "]";
-  return result;
+  if (_taskGroup == 0) {
+    stream << std::hex << std::setw(16) << std::setfill('0') << _value;
+  } else if (_orderSecVal == 0) {
+    stream << std::hex << std::setw(16) << std::setfill('0') << _value << 
+     std::setfill('0') << ",tg:" << std::hex << _taskGroup;
+  } else {
+    stream << std::hex << std::setw(16) << std::setfill('0') << _value << 
+    std::setfill('0') << ",tg:" << _taskGroup << ",osv:" << 
+    _orderSecVal;
+  }
+  return "[" + stream.str() + "]";
 }
 
 BaseSegment::BaseSegment(SegmentType type, uint64_t offset, 
         uint64_t span) {
   RAW_CHECK(span < (1 << OFFSET_SPAN_WIDTH), "span is overflowing");
   _value = 0;
+  _taskGroup = 0;
+  _orderSecVal = 0;
   setType(type);
   setOffsetSpan(offset, span);
 }
@@ -100,9 +110,11 @@ uint16_t BaseSegment::getTaskGroupId() const {
                                    
 void BaseSegment::setTaskGroupId(uint16_t taskGroupId) {
   _taskGroup = static_cast<uint32_t>(
-          static_cast<uint64_t>(_taskGroup) & TASKGROUP_ID_MASK);
+          static_cast<uint64_t>(_taskGroup) & ~TASKGROUP_ID_MASK);
+  RAW_LOG(INFO, "set task group id: %u %lx", taskGroupId, _taskGroup);
   _taskGroup |= static_cast<uint32_t>(
           (static_cast<uint64_t>(taskGroupId) << 16) & TASKGROUP_ID_MASK);
+  RAW_LOG(INFO, "set task group id new task group: %u %lx", taskGroupId, _taskGroup);
 }
 
 /*
@@ -169,6 +181,8 @@ bool BaseSegment::isTaskGroupSync() const {
 }
 
 void BaseSegment::setTaskGroupLevel(uint16_t taskGroupLevel) {
+  _taskGroup = static_cast<uint32_t>(
+          static_cast<uint64_t>(_taskGroup) & ~TASKGROUP_LEVEL_MASK);
   _taskGroup |= static_cast<uint32_t>(
           static_cast<uint64_t>(taskGroupLevel) & TASKGROUP_LEVEL_MASK);
 }
@@ -198,6 +212,7 @@ void BaseSegment::setTaskcreate(uint64_t taskcreate) {
   RAW_CHECK(taskcreate < (1 << 15), "taskcreate count is overflowing");
   _value &= ~TASK_CREATE_MASK;
   _value |= (taskcreate << TASK_CREATE_SHIFT) & TASK_CREATE_MASK;
+  RAW_LOG(INFO, "set task create %lu value: %lx", taskcreate, _value);
 }
 
 uint64_t BaseSegment::getTaskcreate() const {
@@ -248,9 +263,10 @@ SegmentType BaseSegment::getType() const {
 
 std::string WorkShareSegment::toString() const {
   std::stringstream stream;
-  stream << std::hex << std::setw(16) << std::setfill('0') << 
-      _value << "," << _workShareId;
-  auto result = "[" + stream.str() + "]";
+  auto baseResult = BaseSegment::toString();
+  stream << "ws:" << std::hex << std::setw(16) << std::setfill('0') << 
+      _workShareId;
+  auto result = "[" + baseResult + stream.str() + "]";
   return result;
 }
 

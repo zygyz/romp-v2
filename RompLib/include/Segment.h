@@ -62,8 +62,9 @@ public:
  */
 class BaseSegment : public Segment {
 public:
-  BaseSegment(): _value(0) {}
-  BaseSegment(const BaseSegment& segment): _value(segment._value) {}
+  BaseSegment(): _value(0), _taskGroup(0), _orderSecVal(0) {}
+  BaseSegment(const BaseSegment& segment): _value(segment._value), 
+             _taskGroup(segment._taskGroup), _orderSecVal(segment._orderSecVal) {}
   BaseSegment(SegmentType type, uint64_t offset, uint64_t span);
   std::string toString() const override;
   void setType(SegmentType type) override;
@@ -106,10 +107,12 @@ protected:
  */
 class WorkShareSegment: public BaseSegment {
 public:
-  WorkShareSegment() : _workShareId(0) { setType(eWorkShare); }
+  WorkShareSegment() : _workShareId(0) { setType(eWorkShare); 
+      setOffsetSpan(0, 1); }
   WorkShareSegment(uint64_t id, bool isSection): _workShareId(id) { 
     setType(eWorkShare); 
     setWorkShareType(isSection);
+    setOffsetSpan(0, 1);
   } 
   WorkShareSegment(const WorkShareSegment& segment): BaseSegment(segment), 
      _workShareId(segment._workShareId) { }                       
