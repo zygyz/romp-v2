@@ -8,7 +8,7 @@
 #define SEG_TYPE_MASK        0x0000000000000003
 #define OFFSET_MASK          0xffff000000000000
 #define SPAN_MASK            0x0000ffff00000000
-#define TASKWAIT_MASK        0x00000000f0000000
+#define TASKWAIT_MASK        0xffffffff0fffffff
 #define PHASE_MASK           0x000000000f000000
 #define WS_PLACE_HOLDER_MASK 0xfffffffffffffffb
 #define LOOP_CNT_MASK        0x0000000000f00000
@@ -197,12 +197,12 @@ bool BaseSegment::operator!=(const Segment& segment) const {
  */
 void BaseSegment::setTaskwait(uint64_t taskwait) {
   RAW_CHECK(taskwait < 16, "taskwait count is overflowing");
-  _value &= ~TASKWAIT_MASK; // clear the taskwait field
-  _value |= (taskwait << TASKWAIT_SHIFT) & TASKWAIT_MASK;
+  _value &= TASKWAIT_MASK; // clear the taskwait field
+  _value |= (taskwait << TASKWAIT_SHIFT) & ~TASKWAIT_MASK;
 }
 
 uint64_t BaseSegment::getTaskwait() const {
-  uint64_t taskwait = (_value & TASKWAIT_MASK) >> TASKWAIT_SHIFT;
+  uint64_t taskwait = (_value & ~TASKWAIT_MASK) >> TASKWAIT_SHIFT;
   return taskwait;
 }
 
