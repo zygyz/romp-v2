@@ -113,35 +113,38 @@ bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex) {
     RAW_LOG(FATAL, "left span: %lu != right span: %lu", histSpan, curSpan);
   }
   if (histSpan == 1) { // explicit task or work share task or initial task
-    /*
-     * T(histLabel, diffIndex) and T(curLabel, diffIndex) can not be 
-     * explicit tasks. Otherwise, histLabel[diffIndex-1] and
-     * curLabel[diffIndex - 1] should have been different.
-     */ 
     auto histType = histSegment->getType();
     auto curType = curSegment->getType();
-    if (histType == eImplicit && curType == eImplicit) {
-      /* 
-       * T(histLabel, diffIndex) and T(curLabel, diffIndex) are both the root
-       * task, T(curLabel) should have encountered a barrier counstruct
-       */
-      RAW_CHECK(histOffset < curOffset, "not expecting hist \
-              offset >= cur offset");
-      return true;
-    }  
-    // otherwise, we assert that histSegment and curSegment should both be 
-    // workshare segments
-    if (!(histType == eWorkShare && curType == eWorkShare)) {
-      RAW_DLOG(INFO, "hist label: %s cur label: %s histSeg: %s curSeg: %s", 
-            histLabel->toString().c_str(), curLabel->toString().c_str(),
-            histSegment->toString().c_str(), curSegment->toString().c_str());
-      RAW_LOG(FATAL, "not expecting hist and cure segment are not workshare");
+    RAW_CHECK(histType == curType, "not expecting hist seg type\
+            != cur seg type");
+    switch(histType) {
+      case eImplicit:
+        /* 
+         * T(histLabel, diffIndex) and T(curLabel, diffIndex) are both the root
+         * task, T(curLabel) should have encountered a barrier counstruct
+         */
+        RAW_CHECK(histOffset < curOffset, "not expecting hist offset >=\
+                cur offset");
+        return true;
+      case eWorkShare:
+        if (static_cast<WorkShareSegment*>(histSegment)->isSingleExecutor() && 
+            static_cast<WorkShareSegment*>(curSegment)->isSingleExecutor()) { 
+          return analyzeSingleExecutor(histLabel, curLabel, diffIndex);
+        } else {
+          return analyzeOrderedSection(histLabel, curLabel,  diffIndex);
+        }
+      case eExplicit:
+        /*
+         * T(histLabel, diffIndex) and T(curLabel, diffIndex) are both explicit
+         * tasks. In this case, they are the same explicit task. If the segment
+         * is different, 
+         */
+        return analyzeSameTask(histLabel, curLabel, diffIndex);
+      default:
+        break;
     }
-    if (static_cast<WorkShareSegment*>(histSegment)->isSingleExecutor() && 
-            static_cast<WorkShareSegment*>(curSegment)->isSingleExecutor()) {
-      return analyzeSingleExecutor(histLabel, curLabel, diffIndex);
-    }
-    return analyzeOrderedSection(histLabel, curLabel,  diffIndex);
+    RAW_LOG(FATAL, "unexpected segment type: %d", histType);
+    return false;
   } else { // left span == right span and span > 1, implicit task
     if (histOffset != curOffset) { 
       auto span = histSpan;
@@ -158,7 +161,7 @@ bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex) {
         return analyzeSiblingImpTask(histLabel, curLabel, diffIndex);
       }
     } else { 
-      return analyzeSameImpTask(histLabel, curLabel, diffIndex); 
+      return analyzeSameTask(histLabel, curLabel, diffIndex); 
     }
   }
 }
@@ -356,16 +359,17 @@ bool analyzeSyncChain(Label* label, int startIndex) {
 
 /*
  * This function analyzes happens-before relation when first pair of different 
- * segments are implicit segment, where offset are the same. This means that 
+ * segments are implicit segment, or explicit task, where offset are the same. 
+ * This means that 
  * T(histLabel, diffIndex) and T(curLabel, diffIndex) are the same implicit 
- * task, denote it as T'. T(histLabel), T(curLabel) are descendent tasks of 
- * T'.
+ * task, or explicit task, denote it as T'. T(histLabel), T(curLabel) are 
+ * descendent tasks of T'.
  *
  * Return true if T(histLabel) -> T(curLabel)
  * Return false if T(histLabel) || T(curLabel)
  * Issue fatal warning if T(curLabel) -> T(histLabel)
  */
-bool analyzeSameImpTask(Label* histLabel, Label* curLabel, int diffIndex) {
+bool analyzeSameTask(Label* histLabel, Label* curLabel, int diffIndex) {
   auto lenHistLabel = histLabel->getLabelLength(); 
   auto lenCurLabel = curLabel->getLabelLength();
   if (diffIndex == (lenHistLabel - 1)) {
