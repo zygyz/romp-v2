@@ -124,20 +124,27 @@ void markExpChildSyncTaskGroupEnd(TaskData* taskData, Label* curLabel) {
   auto seg = getLastSegment(curLabel);
   auto phase = seg->getPhase();
   auto taskGroupLevel = seg->getTaskGroupLevel();
+  auto taskGroupId = seg->getTaskGroupId(); 
   auto it = taskData->childExpTaskData.begin();
+  auto lenParentLabel = curLabel->getLabelLength();
   while (it != taskData->childExpTaskData.end()) {
-    auto childTaskData = static_cast<const TaskData*>(*it);
+    auto childTaskData = static_cast<TaskData*>(*it);
     auto childLabel = childTaskData->label;
-    auto lenLabel = childLabel->getLabelLength();
-    auto lastSeg = childLabel->getKthSegment(lenLabel - 1);
-    auto parentSeg = childLabel->getKthSegment(lenLabel - 2);
-    if (parentSeg->getTaskGroupLevel() == taskGroupLevel) {
-      lastSeg->setTaskGroupSync();
-      lastSeg->setTaskGroupPhase(phase);
-      it = taskData->childExpTaskData.erase(it); 
-      //erase the synced child explicit task
+    auto lenChildLabel = childLabel->getLabelLength();
+    if (lenChildLabel > lenParentLabel) {
+      // This child task is not inside current task group
+      it++; 
     } else {
-      it++;
+      auto lastSeg = childLabel->getLastKthSegment(1);    
+      // check if the task group id matches  
+      auto childTaskGroupId = lastSeg->getTaskGroupId();
+      if (childTaskGroupId == taskGroupId) {
+        auto mutatedChildLabel = mutateTaskGroupSyncChild(childLabel.get());
+        childTaskData->label = std::move(mutatedChildLabel);
+        it = taskData->childExpTaskData.erase(it);
+      } else {
+        it++;
+      }
     }
   }
 }

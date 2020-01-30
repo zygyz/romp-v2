@@ -31,7 +31,6 @@ public:
   int getLabelLength() const;
 private:
   std::vector<std::shared_ptr<Segment> > _label;
-
 };
 
 int compareLabels(Label* left, Label* right);
@@ -65,4 +64,5 @@ std::shared_ptr<Label> mutateWorkShareDispatch(Label* l, uint64_t id, bool sec);
 std::shared_ptr<Label> mutateTaskGroupBegin(Label* label);
 std::shared_ptr<Label> mutateTaskGroupEnd(Label* label);
 std::shared_ptr<Label> mutateTaskComplete(Label* label);
+std::shared_ptr<Label> mutateTaskGroupSyncChild(Label* label);
 }

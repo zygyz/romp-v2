@@ -32,7 +32,7 @@ enum RecordManagement{
 
 bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex);
 bool analyzeSiblingImpTask(Label* histLabel, Label* curLabel, int index);
-bool analyzeSameImpTask(Label* histLabel, Label* curLabel, int index);
+bool analyzeSameTask(Label* histLabel, Label* curLabel, int index);
 bool analyzeOrderedSection(Label* histLabel, Label* curLabel, int index);
 bool analyzeNextImpExp(Label* histLabel, Label* curLabel, int index);
 bool analyzeNextImpWork(Label* histLabel, Label* curLabel, int index);
@@ -43,10 +43,13 @@ bool analyzeNextWorkImp(Label* histLabel, Label* curLabel, int index);
 bool analyzeNextWorkExp(Label* histLabel, Label* curLabel, int index);
 bool analyzeNextWorkWork(Label* histLabel , Label* curLabel, int index);
 bool analyzeOrderedDescendents(Label* histLabel, int index, uint64_t histPhase);
+bool analyzeSingleExecutor(Label* histLabel, Label* curLabel, int index);
 bool analyzeSyncChain(Label* label, int index);
 bool analyzeMutualExclusion(const Record& histRecord, const Record& curRecord);
 bool analyzeRaceCondition(const Record& histRecord, const Record& curRecord, 
                           bool& isHistBeforeCur, int& diffIndex);
+bool analyzeTaskGroupSync(Label* histLabel, Label* curLabel, int index);
+
 bool dispatchAnalysis(CheckCase checkCase, Label* hist, Label* cur, int index);
 uint64_t computeExitRank(uint64_t phase);
 uint64_t computeEnterRank(uint64_t phase);

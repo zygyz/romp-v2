@@ -8,7 +8,7 @@
 #define SEG_TYPE_MASK        0x0000000000000003
 #define OFFSET_MASK          0xffff000000000000
 #define SPAN_MASK            0x0000ffff00000000
-#define TASKWAIT_MASK        0x00000000f0000000
+#define TASKWAIT_MASK        0xffffffff0fffffff
 #define PHASE_MASK           0x000000000f000000
 #define WS_PLACE_HOLDER_MASK 0xfffffffffffffffb
 #define LOOP_CNT_MASK        0x0000000000f00000
@@ -58,15 +58,25 @@ namespace romp {
  */
 std::string BaseSegment::toString() const {
   std::stringstream stream;
-  stream << std::hex << std::setw(16) << std::setfill('0') << _value;
-  auto result = "[" + stream.str() + "]";
-  return result;
+  if (_taskGroup == 0) {
+    stream << std::hex << std::setw(16) << std::setfill('0') << _value;
+  } else if (_orderSecVal == 0) {
+    stream << std::hex << std::setw(16) << std::setfill('0') << _value << 
+     std::setfill('0') << ",tg:" << std::hex << _taskGroup;
+  } else {
+    stream << std::hex << std::setw(16) << std::setfill('0') << _value << 
+    std::setfill('0') << ",tg:" << _taskGroup << ",osv:" << 
+    _orderSecVal;
+  }
+  return "[" + stream.str() + "]";
 }
 
 BaseSegment::BaseSegment(SegmentType type, uint64_t offset, 
         uint64_t span) {
   RAW_CHECK(span < (1 << OFFSET_SPAN_WIDTH), "span is overflowing");
   _value = 0;
+  _taskGroup = 0;
+  _orderSecVal = 0;
   setType(type);
   setOffsetSpan(offset, span);
 }
@@ -100,7 +110,7 @@ uint16_t BaseSegment::getTaskGroupId() const {
                                    
 void BaseSegment::setTaskGroupId(uint16_t taskGroupId) {
   _taskGroup = static_cast<uint32_t>(
-          static_cast<uint64_t>(_taskGroup) & TASKGROUP_ID_MASK);
+          static_cast<uint64_t>(_taskGroup) & ~TASKGROUP_ID_MASK);
   _taskGroup |= static_cast<uint32_t>(
           (static_cast<uint64_t>(taskGroupId) << 16) & TASKGROUP_ID_MASK);
 }
@@ -169,6 +179,8 @@ bool BaseSegment::isTaskGroupSync() const {
 }
 
 void BaseSegment::setTaskGroupLevel(uint16_t taskGroupLevel) {
+  _taskGroup = static_cast<uint32_t>(
+          static_cast<uint64_t>(_taskGroup) & ~TASKGROUP_LEVEL_MASK);
   _taskGroup |= static_cast<uint32_t>(
           static_cast<uint64_t>(taskGroupLevel) & TASKGROUP_LEVEL_MASK);
 }
@@ -185,12 +197,12 @@ bool BaseSegment::operator!=(const Segment& segment) const {
  */
 void BaseSegment::setTaskwait(uint64_t taskwait) {
   RAW_CHECK(taskwait < 16, "taskwait count is overflowing");
-  _value &= ~TASKWAIT_MASK; // clear the taskwait field
-  _value |= (taskwait << TASKWAIT_SHIFT) & TASKWAIT_MASK;
+  _value &= TASKWAIT_MASK; // clear the taskwait field
+  _value |= (taskwait << TASKWAIT_SHIFT) & ~TASKWAIT_MASK;
 }
 
 uint64_t BaseSegment::getTaskwait() const {
-  uint64_t taskwait = (_value & TASKWAIT_MASK) >> TASKWAIT_SHIFT;
+  uint64_t taskwait = (_value & ~TASKWAIT_MASK) >> TASKWAIT_SHIFT;
   return taskwait;
 }
 
@@ -248,9 +260,10 @@ SegmentType BaseSegment::getType() const {
 
 std::string WorkShareSegment::toString() const {
   std::stringstream stream;
-  stream << std::hex << std::setw(16) << std::setfill('0') << 
-      _value << "," << _workShareId;
-  auto result = "[" + stream.str() + "]";
+  auto baseResult = BaseSegment::toString();
+  stream << "ws:" << std::hex << std::setw(16) << std::setfill('0') << 
+      _workShareId;
+  auto result = "[" + baseResult + stream.str() + "]";
   return result;
 }
 

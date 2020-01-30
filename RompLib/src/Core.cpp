@@ -55,6 +55,23 @@ bool analyzeMutualExclusion(const Record& histRecord, const Record& curRecord) {
 }
 
 /*
+ * This function analyzes happens before relationship between T(histLabel) 
+ * and T(curLabel). In this case, T(histLabel, index) and T(curLabel, index)
+ * are represents the same single construct.
+ */
+bool analyzeSingleExecutor(Label* histLabel, Label* curLabel, int index) {
+  auto histNextSeg = histLabel->getKthSegment(index + 1);
+  auto curNextSeg = curLabel->getKthSegment(index + 1);
+  auto histNextType = histNextSeg->getType();
+  auto curNextType = curNextSeg->getType();
+  RAW_CHECK(!(histNextType == eImplicit && curNextType == eImplicit),
+            "not expecting next level tasks are sibling implicit tasks");
+  // invoke different checking depending on next segment's type 
+  auto checkCase = buildCheckCase(histNextType, curNextType);
+  return dispatchAnalysis(checkCase, histLabel, curLabel, index);
+}
+
+/*
  * This function analyzes the happens-before relationship between two memory
  * accesses based on their associated task labels. The idea is that task label
  * encodes nodes relationship in openmp task graph. If there exists a directed
@@ -96,31 +113,38 @@ bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex) {
     RAW_LOG(FATAL, "left span: %lu != right span: %lu", histSpan, curSpan);
   }
   if (histSpan == 1) { // explicit task or work share task or initial task
-    /*
-     * T(histLabel, diffIndex) and T(curLabel, diffIndex) can not be 
-     * explicit tasks. Otherwise, histLabel[diffIndex-1] and
-     * curLabel[diffIndex - 1] should have been different.
-     */ 
     auto histType = histSegment->getType();
     auto curType = curSegment->getType();
-    if (histType == eImplicit && curType == eImplicit) {
-      /* 
-       * T(histLabel, diffIndex) and T(curLabel, diffIndex) are both the root
-       * task, T(curLabel) should have encountered a barrier counstruct
-       */
-      RAW_CHECK(histOffset < curOffset, "not expecting hist \
-              offset >= cur offset");
-      return true;
-    }  
-    // otherwise, we assert that histSegment and curSegment should both be 
-    // workshare segments
-    if (!(histType == eWorkShare && curType == eWorkShare)) {
-      RAW_DLOG(INFO, "hist label: %s cur label: %s histSeg: %s curSeg: %s", 
-            histLabel->toString().c_str(), curLabel->toString().c_str(),
-            histSegment->toString().c_str(), curSegment->toString().c_str());
-      RAW_LOG(FATAL, "not expecting hist and cure segment are not workshare");
+    RAW_CHECK(histType == curType, "not expecting hist seg type\
+            != cur seg type");
+    switch(histType) {
+      case eImplicit:
+        /* 
+         * T(histLabel, diffIndex) and T(curLabel, diffIndex) are both the root
+         * task, T(curLabel) should have encountered a barrier counstruct
+         */
+        RAW_CHECK(histOffset < curOffset, "not expecting hist offset >=\
+                cur offset");
+        return true;
+      case eWorkShare:
+        if (static_cast<WorkShareSegment*>(histSegment)->isSingleExecutor() && 
+            static_cast<WorkShareSegment*>(curSegment)->isSingleExecutor()) { 
+          return analyzeSingleExecutor(histLabel, curLabel, diffIndex);
+        } else {
+          return analyzeOrderedSection(histLabel, curLabel,  diffIndex);
+        }
+      case eExplicit:
+        /*
+         * T(histLabel, diffIndex) and T(curLabel, diffIndex) are both explicit
+         * tasks. In this case, they are the same explicit task. If the segment
+         * is different, 
+         */
+        return analyzeSameTask(histLabel, curLabel, diffIndex);
+      default:
+        break;
     }
-    return analyzeOrderedSection(histLabel, curLabel,  diffIndex);
+    RAW_LOG(FATAL, "unexpected segment type: %d", histType);
+    return false;
   } else { // left span == right span and span > 1, implicit task
     if (histOffset != curOffset) { 
       auto span = histSpan;
@@ -137,7 +161,7 @@ bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex) {
         return analyzeSiblingImpTask(histLabel, curLabel, diffIndex);
       }
     } else { 
-      return analyzeSameImpTask(histLabel, curLabel, diffIndex); 
+      return analyzeSameTask(histLabel, curLabel, diffIndex); 
     }
   }
 }
@@ -335,16 +359,17 @@ bool analyzeSyncChain(Label* label, int startIndex) {
 
 /*
  * This function analyzes happens-before relation when first pair of different 
- * segments are implicit segment, where offset are the same. This means that 
+ * segments are implicit segment, or explicit task, where offset are the same. 
+ * This means that 
  * T(histLabel, diffIndex) and T(curLabel, diffIndex) are the same implicit 
- * task, denote it as T'. T(histLabel), T(curLabel) are descendent tasks of 
- * T'.
+ * task, or explicit task, denote it as T'. T(histLabel), T(curLabel) are 
+ * descendent tasks of T'.
  *
  * Return true if T(histLabel) -> T(curLabel)
  * Return false if T(histLabel) || T(curLabel)
  * Issue fatal warning if T(curLabel) -> T(histLabel)
  */
-bool analyzeSameImpTask(Label* histLabel, Label* curLabel, int diffIndex) {
+bool analyzeSameTask(Label* histLabel, Label* curLabel, int diffIndex) {
   auto lenHistLabel = histLabel->getLabelLength(); 
   auto lenCurLabel = curLabel->getLabelLength();
   if (diffIndex == (lenHistLabel - 1)) {
@@ -489,38 +514,57 @@ bool analyzeNextExpImp(Label* histLabel, Label* curLabel, int diffIndex) {
 
 /*
  * This function analyzes case when T(histLabel, diffIndex) and 
- * T(curLabel, diffIndex) are the same implicit task, T'. T(histLabel) and
- * T(curLabel) are descendent tasks of T'. T(histLabel, diffIndex+1) is 
- * explicit task, T(curLabel, diffIndex+1) is also explicit task. 
- * Check syncrhonization that could affect the happens-before relation. 
- * e.g., taskwait, taskgroup. Note that we treat explicit task dependency 
- * as an extra syncrhonization imposed on tasks and is checked separately
+ * T(curLabel, diffIndex) are the same implicit task or single workshare
+ * task, T'. T(histLabel) and T(curLabel) are descendent tasks of T'. 
+ * T(histLabel, diffIndex+1) is explicit task, T(curLabel, diffIndex+1) is 
+ * also explicit task. Check syncrhonization that could affect the 
+ * happens-before relation. e.g., taskwait, taskgroup. Note that we treat 
+ * explicit task dependency as an extra syncrhonization imposed on tasks and 
+ * is checked separately
  *
- * Return true if T(histLabel) happens before T(curLabel) w
+ * Return true if T(histLabel) happens before T(curLabel) 
  * Return false otherwise.
  */
 bool analyzeNextExpExp(Label* histLabel, Label* curLabel, int diffIndex) {
+  // First check if ordered by task group construct   
+  if (analyzeTaskGroupSync(histLabel, curLabel, diffIndex)) {
+    return true;
+  }
   auto histSeg = histLabel->getKthSegment(diffIndex);      
-  auto histNextSeg = histLabel->getKthSegment(diffIndex + 1);
-  if (!histNextSeg->isTaskGroupSync()) {
-    auto histTaskwait = histSeg->getTaskwait();
-    auto curSeg = curLabel->getKthSegment(diffIndex);
-    auto curTaskwait = curSeg->getTaskwait();
-    if (histTaskwait == curTaskwait) {
-      return false;
-    } else if (histTaskwait < curTaskwait) {
-      // there is taskwait between creation of T(histLabel, diffIndex + 1) and 
-      // T(curLabel, diffIndex + 1)  
-      return analyzeSyncChain(histLabel, diffIndex + 1); 
-    } else {
-      RAW_LOG(FATAL, "not expecting hist taskwait to be larger than \
+  auto curSeg = curLabel->getKthSegment(diffIndex);
+  auto histTaskwait = histSeg->getTaskwait();
+  auto curTaskwait = curSeg->getTaskwait();
+  if (histTaskwait == curTaskwait) {
+    return false;
+  } else if (histTaskwait < curTaskwait) {
+    // there is taskwait between creation of T(histLabel, diffIndex + 1) and 
+    // T(curLabel, diffIndex + 1)  
+    return analyzeSyncChain(histLabel, diffIndex + 1); 
+  } else {
+    RAW_LOG(FATAL, "not expecting hist taskwait to be larger than \
             cur taskwait");
-      return false;
-    }
-  } 
+    return false;
+  }
   return true;
 }
 
+/*
+ * This function analyzes if T(histLabel) and T(curLabel) are synchronized by 
+ * task group construct. In this case, T(histLabel, diffIndex) and 
+ * T(curLabel, diffIndex) are the same implicit task or worksahre single task.
+ * While T(histLabel, diffIndex + 1) are T(curLabel, diffIndex + 1) are explicit
+ * tasks. 
+ */
+bool analyzeTaskGroupSync(Label* histLabel, Label* curLabel, int diffIndex) {
+  auto histSeg = histLabel->getKthSegment(diffIndex);
+  auto curSeg = curLabel->getKthSegment(diffIndex);
+  auto histTaskGroupId = histSeg->getTaskGroupId(); 
+  auto histTaskGroupLevel = histSeg->getTaskGroupLevel();
+  auto curTaskGroupId = curSeg->getTaskGroupId();
+  auto curTaskGroupLevel = curSeg->getTaskGroupLevel();
+  return (histTaskGroupId < curTaskGroupId) && (histTaskGroupLevel >= 
+          curTaskGroupLevel);
+}
 /*
  * This function analyzes case when T(histLabel, diffIndex) and 
  * T(curLabel, diffIndex) are the same implicit task, T'. T(histLabel) and 
