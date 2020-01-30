@@ -109,7 +109,7 @@ ShadowMemory<T>::ShadowMemory(const uint64_t l1PageTableBits,
   }
   _l1PageTableShift = numMemAddrBits - l1PageTableBits;  
   _l2PageTableShift = _l1PageTableShift - l2PageTableBits; 
-  _l2IndexMask = 1 << l2PageTableBits - 1;
+  _l2IndexMask = (1 << l2PageTableBits) - 1;
 
   _numEntriesPerPage = 1 << (_l2PageTableShift - lowZeroMask);  
 
