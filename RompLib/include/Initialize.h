@@ -20,7 +20,7 @@ namespace romp{
 bool gOmptInitialized = false; 
 bool gDataRaceFound = false;
 bool gReportLineInfo = false;
-bool gReportAtRuntime = true;
+bool gReportAtRuntime = false;
 Dyninst::SymtabAPI::Symtab* gSymtabHandle = nullptr;
 
 std::mutex gDataRaceLock;
@@ -58,8 +58,8 @@ int omptInitialize(ompt_function_lookup_t lookup,
   }
   flag = nullptr;
   flag = getenv("ROMP_REPORT");
-  if (flag != nullptr && std::string(flag) == "off") {
-    gReportAtRuntime = false;
+  if (flag != nullptr && std::string(flag) == "on") {
+    gReportAtRuntime = true;
   }
   auto ompt_set_callback = 
       (ompt_set_callback_t)lookup("ompt_set_callback");
