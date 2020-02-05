@@ -46,7 +46,6 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
      * race is reported, romp clears the access history with respect to this
      * memory location and mark this memory location as found. Future access 
      * to this memory location does not go through data race checking.
-     * TODO: implement the logic described above.
      */
     if (!records->empty()) {
       records->clear();
