@@ -30,6 +30,11 @@ enum RecordManagement{
   eDelHist,
 };
 
+enum NodeRelation {
+  eSibling,
+  eNonSibling,
+};
+
 bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex);
 bool analyzeSiblingImpTask(Label* histLabel, Label* curLabel, int index);
 bool analyzeSameTask(Label* histLabel, Label* curLabel, int index);
@@ -62,5 +67,7 @@ RecordManagement manageAccessRecord(const Record& histRecord,
 void modifyAccessHistory(RecordManagement decision,
                          std::vector<Record>* records,
                          std::vector<Record>::iterator& cit);
+
+NodeRelation computeNodeRelation(Label* hist, Label* cur, int index);
 
 }

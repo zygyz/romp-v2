@@ -695,4 +695,12 @@ void modifyAccessHistory(RecordManagement decision,
   }
 }
 
+/*
+ * Given two task labels, compute the node relationship.
+ * histLabel[index] and curLabel[index] are the first pair of different segment
+ */
+NodeRelation computeNodeRelation(Label* histLabel, Label* curLabel, int index) {
+
+}
+
 }
