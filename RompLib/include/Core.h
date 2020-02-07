@@ -31,8 +31,11 @@ enum RecordManagement{
 };
 
 enum NodeRelation {
+  eParentChild,
   eSibling,
-  eNonSibling,
+  eNonSiblingSameCover,
+  eNonSiblingHistCover,
+  eNonSiblingCurCover,  
 };
 
 bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex);
@@ -68,6 +71,8 @@ void modifyAccessHistory(RecordManagement decision,
                          std::vector<Record>* records,
                          std::vector<Record>::iterator& cit);
 
-NodeRelation computeNodeRelation(Label* hist, Label* cur, int index);
-
+NodeRelation calcNodeRelation(Label* hist, Label* cur, int index, bool prefix);
+NodeRelation calcRelationSameRank(Label* hist, Label* cur, int index);
+NodeRelation dispatchRelationCalc(CheckCase checkCase, Label* hist, Label* cur, 
+		                  int index);
 }
