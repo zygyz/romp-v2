@@ -26,7 +26,6 @@ Dyninst::SymtabAPI::Symtab* gSymtabHandle = nullptr;
 std::mutex gDataRaceLock;
 std::atomic_int gNumDataRace = 0;
 std::vector<DataRaceInfo> gDataRaceRecords;
-int gMaxNumRecords = 0;
 
 ompt_get_task_info_t omptGetTaskInfo;
 ompt_get_parallel_info_t omptGetParallelInfo;
@@ -104,7 +103,6 @@ void omptFinalize(ompt_data_t* toolData) {
   } else {
     LOG(INFO) << "no data race found";
   }
-  LOG(INFO) << "max num records: " << gMaxNumRecords;
 }
 
 }

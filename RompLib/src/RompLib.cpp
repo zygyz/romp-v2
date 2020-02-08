@@ -61,8 +61,6 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
      records->clear();
      return;
   }
-  gMaxNumRecords = records->size() > gMaxNumRecords ? 
-	  records->size() : gMaxNumRecords;
   auto curRecord = Record(checkInfo.isWrite, curLabel, curLockSet, 
           checkInfo.taskPtr, checkInfo.instnAddr);
   if (records->empty()) {
