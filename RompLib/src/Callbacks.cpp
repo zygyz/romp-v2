@@ -532,7 +532,13 @@ void on_ompt_callback_dependences(
         ompt_data_t *taskData,
         const ompt_dependence_t *deps,
         int ndeps) {
-
+  RAW_DLOG(INFO, "callback dependencies -- num deps: %lu", ndeps);
+  for (int i = 0; i < ndeps; ++i) {
+    auto variable = deps[i].variable; 
+    auto depType = deps[i].dependence_type;
+    RAW_DLOG(INFO, "dependencies type: %lu variable.value: %lx variable.ptr: %lx", 
+		    depType, variable.value, variable.ptr);
+  }
 }
 
 void on_ompt_callback_thread_begin(
