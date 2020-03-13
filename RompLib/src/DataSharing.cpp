@@ -67,15 +67,18 @@ DataSharingType analyzeDataSharing(const void* threadDataPtr,
  */
 void recycleMemRange(void* lowerBound, void* upperBound) {
   if (upperBound < lowerBound) {
-    RAW_LOG(FATAL, "upper bound is smaller than lower bound: %lx %lx", 
+    RAW_LOG(WARNING, "upper bound is smaller than lower bound: %lx %lx, abort recycling", 
             upperBound, lowerBound);
+    return;
   }
   auto start = reinterpret_cast<uint64_t>(lowerBound);
   auto end = reinterpret_cast<uint64_t>(upperBound);
   ShadowMemory<AccessHistory> shadowMemory;
   for (auto addr = start; addr <= end; addr++) {
     auto accessHistory = shadowMemory.getShadowMemorySlot(addr);
-    std::unique_lock<std::mutex> guard(accessHistory->getMutex());
+    //std::unique_lock<std::mutex> guard(accessHistory->getMutex());
+    McsNode node;
+    LockGuard guard(&(accessHistory->getLock()), &node);
     accessHistory->setFlag(eMemoryRecycled);
   }
 }

@@ -29,7 +29,8 @@ ShadowMemory<AccessHistory> shadowMemory;
  */
 void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel, 
                    const LockSetPtr& curLockSet, const CheckInfo& checkInfo) {
-  std::unique_lock<std::mutex> guard(accessHistory->getMutex());
+  McsNode node;
+  LockGuard guard(&(accessHistory->getLock()), &node);
   if (checkInfo.hwLock) {
     return;
   }
@@ -81,7 +82,8 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
         gDataRaceFound = true;
         gNumDataRace++;
         if (gReportLineInfo) {
-          std::unique_lock<std::mutex> recordGuard(gDataRaceLock);
+          McsNode node;	
+          LockGuard recordGuard(&gDataRaceLock, &node);
           gDataRaceRecords.push_back(DataRaceInfo(histRecord.getInstnAddr(),
                                                   curRecord.getInstnAddr(),
                                                   checkInfo.byteAddress));
