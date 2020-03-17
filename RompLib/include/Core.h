@@ -36,6 +36,7 @@ enum NodeRelation {
   eNonSiblingSameCover,
   eNonSiblingHistCover,
   eNonSiblingCurCover,  
+  eError,
 };
 
 bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex);

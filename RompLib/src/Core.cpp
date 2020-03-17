@@ -701,7 +701,10 @@ NodeRelation dispatchRelationCalc(CheckCase checkCase, Label* histLabel,
       return calcRelationImpExp(histLabel, curLabel, index);
     case eExpImp:
       return calcRelationExpImp(histLabel, curLabel, index);
+    default:
+      return eError; 
   }
+  return eError;
 }	
 
 /*
