@@ -44,6 +44,7 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
     return;
   }
   auto records = accessHistory->getRecords();
+  gNumRecordsVisit++;
   if (accessHistory->dataRaceFound()) {
     /* 
      * data race has already been found on this memory location, romp only 
@@ -71,7 +72,6 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
   auto curRecord = Record(checkInfo.isWrite, curLabel, curLockSet, 
           checkInfo.taskPtr, checkInfo.instnAddr);
   gNumTotalRecords += records->size();
-  gNumRecordsVisit += 1;
   if (gMaxRecordsLength.load() < records->size()) {
     gMaxRecordsLength = records->size();
   }
