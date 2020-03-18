@@ -21,6 +21,7 @@ bool gOmptInitialized = false;
 bool gDataRaceFound = false;
 bool gReportLineInfo = false;
 bool gReportAtRuntime = false;
+bool gPerfMeasure = false;
 Dyninst::SymtabAPI::Symtab* gSymtabHandle = nullptr;
 
 McsLock gDataRaceLock;
@@ -32,6 +33,11 @@ ompt_get_parallel_info_t omptGetParallelInfo;
 ompt_get_thread_data_t omptGetThreadData;
 ompt_get_task_memory_t omptGetTaskMemory;
 
+std::atomic_ulong gNumCheckAccess = 0;
+std::atomic_ulong gNumTotalRecords = 0;
+std::atomic_ulong gNumRecordsVisit = 0;
+std::atomic_ulong gNumModify = 0;
+std::atomic_int gMaxRecordsLength = 0;
 /* 
  * Define macro for registering ompt callback functions. 
  */
@@ -60,6 +66,11 @@ int omptInitialize(ompt_function_lookup_t lookup,
   flag = getenv("ROMP_REPORT");
   if (flag != nullptr && std::string(flag) == "on") {
     gReportAtRuntime = true;
+  }
+  flag = nullptr; 
+  flag = getenv("PERF_MEASURE");
+  if (flag != nullptr && std::string(flag) == "on") {
+    gPerfMeasure = true;
   }
   auto ompt_set_callback = 
       (ompt_set_callback_t)lookup("ompt_set_callback");
@@ -102,6 +113,16 @@ void omptFinalize(ompt_data_t* toolData) {
     }
   } else {
     LOG(INFO) << "no data race found";
+  }
+  if (gPerfMeasure) {
+    LOG(INFO) << "num checkAccess call: " << gNumCheckAccess.load();
+    LOG(INFO) << "max records length: " << gMaxRecordsLength.load();
+    LOG(INFO) << "records modify rate: " << 
+	    (double)gNumModify.load() / (double)gNumCheckAccess.load();
+    LOG(INFO) << "records visit rate: " << 
+	    (double)gNumRecordsVisit.load() / (double)gNumCheckAccess.load();
+    LOG(INFO) << "avg records length per visit: " << 
+	    (double)gNumTotalRecords.load() / (double)gNumRecordsVisit.load();
   }
 }
 

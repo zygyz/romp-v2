@@ -31,6 +31,10 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
                    const LockSetPtr& curLockSet, const CheckInfo& checkInfo) {
   McsNode node;
   LockGuard guard(&(accessHistory->getLock()), &node);
+  auto recordsModified = false;
+  if (gPerfMeasure) {
+    gNumCheckAccess++;
+  }	  
   if (checkInfo.hwLock) {
     return;
   }
@@ -48,8 +52,9 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
      * memory location and mark this memory location as found. Future access 
      * to this memory location does not go through data race checking.
      */
-    if (!records->empty()) {
+    if (!records->empty()) { 
       records->clear();
+      gNumModify++;     
     }
     return;
   }
@@ -60,13 +65,20 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
      */
      accessHistory->clearFlags();
      records->clear();
+     gNumModify++;
      return;
   }
   auto curRecord = Record(checkInfo.isWrite, curLabel, curLockSet, 
           checkInfo.taskPtr, checkInfo.instnAddr);
+  gNumTotalRecords += records->size();
+  gNumRecordsVisit += 1;
+  if (gMaxRecordsLength.load() < records->size()) {
+    gMaxRecordsLength = records->size();
+  }
   if (records->empty()) {
     // no access record, add current access to the record
     records->push_back(curRecord);
+    recordsModified = true;
   } else {
     // check previous access records with current access
     auto isHistBeforeCurrent = false;
@@ -95,6 +107,9 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
       }
       auto decision = manageAccessRecord(histRecord, curRecord, 
               isHistBeforeCurrent, diffIndex);
+      if (decision != eNoOp) {
+        recordsModified = true;
+      }
       if (decision == eSkipAddCur) {
         skipAddCur = true;
       }
@@ -103,6 +118,9 @@ void checkDataRace(AccessHistory* accessHistory, const LabelPtr& curLabel,
     if (!skipAddCur) {
       records->push_back(curRecord); 
     }
+  }
+  if (gPerfMeasure && recordsModified) {
+    gNumModify++;    
   }
 }
 
