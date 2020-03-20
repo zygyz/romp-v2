@@ -688,23 +688,101 @@ bool dispatchAnalysis(CheckCase checkCase, Label* hist, Label* cur,
   return false;
 }
 
+
+/*
+ * Calculate node relation between two task nodes, where the first pair of 
+ * different segments are both implicit task type.
+ * histRec: history record 
+ * curRec:  current record
+ * index:   index of first pair of different segment
+ * return node relation
+ */
+NodeRelation calcRelationImpImp(const Record& histRec, const Record& curRec,
+		                int index) {
+  // TODO: implementation
+  return eErrorRelation;     
+}
+
+NodeRelation calcRelationImpExp(const Record& histRec, const Record& curRec,
+                                int index) {
+  // TODO: implementation  
+  return eErrorRelation; 
+}	
+
+NodeRelation calcRelationImpWork(const Record& histRec, const Record& curRec,
+                                int index) {
+  // TODO: implementation  
+  return eErrorRelation; 
+}	
+
+NodeRelation calcRelationExpImp(const Record& histRec, const Record& curRec,
+                                int index) {
+  // TODO: implementation  
+  return eErrorRelation; 
+}	
+
+NodeRelation calcRelationExpExp(const Record& histRec, const Record& curRec,
+                                int index) {
+  // TODO: implementation  
+  return eErrorRelation; 
+}	
+
+NodeRelation calcRelationExpWork(const Record& histRec, const Record& curRec,
+                                int index) {
+  // TODO: implementation  
+  return eErrorRelation; 
+}	
+
+NodeRelation calcRelationWorkImp(const Record& histRec, const Record& curRec,
+                                int index) {
+  // TODO: implementation  
+  return eErrorRelation; 
+}	
+
+NodeRelation calcRelationWorkExp(const Record& histRec, const Record& curRec,
+                                int index) {
+  // TODO: implementation  
+  return eErrorRelation; 
+}	
+
+NodeRelation calcRelationWorkWork(const Record& histRec, const Record& curRec,
+                                int index) {
+  // TODO: implementation  
+  return eErrorRelation; 
+}	
+
 /*
  * Dispatch task node relationship calculation functions depending on 
- * the type of label segments
+ * the type of first different label segments. All cases are enumerated
+ * exhaustively.
  */
-NodeRelation dispatchRelationCalc(CheckCase checkCase, Label* histLabel,
-		                  Label* curLabel, int index) {
+NodeRelation dispatchRelationCalc(CheckCase checkCase,
+	                          const Record& histRec,	
+				  const Record& curRec,
+                                  int index) {
   switch(checkCase) {
     case eImpImp:  
-      return calcRelationImpImp(histLabel, curLabel, index);
+      return calcRelationImpImp(histRec, curRec, index);
     case eImpExp:
-      return calcRelationImpExp(histLabel, curLabel, index);
+      return calcRelationImpExp(histRec, curRec, index);
+    case eImpWork:
+      return calcRelationImpWork(histRec, curRec, index);
     case eExpImp:
-      return calcRelationExpImp(histLabel, curLabel, index);
+      return calcRelationExpImp(histRec, curRec, index);
+    case eExpExp:
+      return calcRelationExpExp(histRec, curRec, index); 
+    case eExpWork:
+      return calcRelationExpWork(histRec, curRec, index);
+    case eWorkImp:
+      return calcRelationWorkImp(histRec, curRec, index);
+    case eWorkExp:
+      return calcRelationWorkExp(histRec, curRec, index);       
+    case eWorkWork:
+      return calcRelationWorkWork(histRec, curRec, index);
     default:
-      return eError; 
+      return eErrorRelation; 
   }
-  return eError;
+  return eErrorRelation;
 }	
 
 /*
@@ -721,6 +799,13 @@ RecordManagement manageAccessRecord(const Record& histRecord,
   auto curIsWrite = curRecord.isWrite();
   auto histLockSet = histRecord.getLockSet();
   auto curLockSet = curRecord.getLockSet();
+  auto histLabel = histRecord.getLabel(); 
+  auto curLabel = curRecord.getLabel(); 
+  auto histSegType = histLabel->getKthSegment(diffIndex)->getType();
+  auto curSegType = curLabel->getKthSegment(diffIndex)->getType();
+  auto checkCase = buildCheckCase(histSegType, curSegType);
+  auto relation = dispatchRelationCalc(checkCase, histRecord, curRecord, 
+		  diffIndex);
   if (((histIsWrite && curIsWrite) || !histIsWrite) && 
           isHistBeforeCurrent && isSubset(curLockSet, histLockSet)) {
     return eDelHist;  
@@ -758,7 +843,8 @@ NodeRelation calcRelationSameRank(Label* histLabel, Label* curLabel,
   auto curSegment = curLabel->getKthSegment(index);
   auto histType = histSegment->getType();
   auto curType = curSegment->getType();   
-  
+  auto lenHistLabel = histLabel->getLabelLength();
+  auto lenCurLabel = curLabel->getLabelLength(); 
   if (histType == eImplicit && curType == eImplicit) {
    /*
     * T(histLabel) and T(curLabel) fall under the parallel region by 
@@ -846,6 +932,5 @@ NodeRelation calcNodeRelation(Label* histLabel, Label* curLabel,
   }
 }
   
-}
 
 }

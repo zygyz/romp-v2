@@ -36,7 +36,7 @@ enum NodeRelation {
   eNonSiblingSameCover,
   eNonSiblingHistCover,
   eNonSiblingCurCover,  
-  eError,
+  eErrorRelation,
 };
 
 bool happensBefore(Label* histLabel, Label* curLabel, int& diffIndex);
@@ -74,6 +74,8 @@ void modifyAccessHistory(RecordManagement decision,
 
 NodeRelation calcNodeRelation(Label* hist, Label* cur, int index, bool prefix);
 NodeRelation calcRelationSameRank(Label* hist, Label* cur, int index);
-NodeRelation dispatchRelationCalc(CheckCase checkCase, Label* hist, Label* cur, 
+NodeRelation dispatchRelationCalc(CheckCase checkCase, 
+		                  const Record& histRec, 
+				  const Record& curRec,  
 		                  int index);
 }
