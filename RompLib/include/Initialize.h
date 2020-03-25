@@ -11,6 +11,7 @@
 #include "McsLock.h"
 #include "QueryFuncs.h"
 
+#include "papi_sde_interface.h"
 /* 
  * This header file defines functions that are used 
  * to initialize OMPT interface. 
@@ -32,6 +33,8 @@ ompt_get_parallel_info_t omptGetParallelInfo;
 ompt_get_thread_data_t omptGetThreadData;
 ompt_get_task_memory_t omptGetTaskMemory;
 
+long long gLocalVal;
+papi_handle_t gPapiHandle = nullptr;
 /* 
  * Define macro for registering ompt callback functions. 
  */
@@ -45,6 +48,12 @@ do {                                                         \
 
 #define register_callback(name) register_callback_t(name, name##_t)
 
+void initPapiSde() {
+  gPapiHandle = papi_sde_init("ROMP");
+  papi_sde_register_counter(gPapiHandle, "test_event", 
+		  PAPI_SDE_RO|PAPI_SDE_DELTA, PAPI_SDE_long_long, &gLocalVal);
+  LOG(INFO) << "register papi sde";
+}
 /** 
  *  initialize OMPT interface by registering callback functions
  */
@@ -83,7 +92,8 @@ int omptInitialize(ompt_function_lookup_t lookup,
   omptGetParallelInfo = (ompt_get_parallel_info_t)lookup("ompt_get_parallel_info");
   omptGetThreadData = (ompt_get_thread_data_t)lookup("ompt_get_thread_data");
   omptGetTaskMemory = (ompt_get_task_memory_t)lookup("ompt_get_task_memory"); 
-
+  
+  initPapiSde();
   gOmptInitialized = true;
   return 1;
 }
